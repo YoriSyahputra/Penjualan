@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends('layouts.admin')
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
@@ -17,6 +17,36 @@
                 </div>
             @endif
 
+            <div class="current-images mb-6">
+    <label class="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        @forelse($product->productImages as $image)
+        <div class="relative group aspect-[4/3]">
+            <img src="{{ Storage::url($image->path_gambar) }}" 
+                alt="Product image" 
+                class="w-full h-full object-cover rounded-lg shadow-sm">
+            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <form action="{{ route('dashboard.delete_product_image', $image->id) }}" 
+                      method="POST" 
+                      class="inline delete-image-form">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" 
+                            class="bg-white/80 backdrop-blur-sm p-1.5 rounded-full text-gray-700 hover:bg-red-500 hover:text-white transition-all">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+        @empty
+        <div class="col-span-full text-center py-4 text-gray-500">
+            No images uploaded yet
+        </div>
+        @endforelse
+    </div>
+</div>
             <form id="editProductForm" action="{{ route('dashboard.update_product', $product->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
@@ -117,11 +147,11 @@
                         <div id="packageContainer" class="space-y-2">
                             @foreach($product->packages as $index => $package)
                             <div class="flex items-center space-x-2 package-item">
-                                <div class="flex-1 p-2 bg-gray-50 border rounded-md flex justify-between items-center">
+                                <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
                                     <input type="text" name="packages[]" value="{{ $package->name }}" 
-                                        class="bg-transparent border-none focus:ring-0 w-full"
+                                        class="bg-transparent border-none focus:ring-0 w-full text-gray-700"
                                         placeholder="Enter package name">
-                                    <button type="button" class="text-red-500 hover:text-red-700 delete-package">
+                                    <button type="button" class="text-gray-400 hover:text-red-500 delete-package transition-colors">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -137,29 +167,9 @@
                     </div>
 
                     <!-- Current Images -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            @foreach($product->gambarProduk as $image)
-                            <div class="relative aspect-square group">
-                                <img src="{{ Storage::url($image->path_gambar) }}" 
-                                     alt="Product image" 
-                                     class="w-full h-full object-cover rounded-lg">
-                                <div class="absolute top-2 right-2">
-                                    <form action="{{ route('dashboard.delete_product_image', $image->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="bg-red-500 p-1 rounded-full text-white hover:bg-red-600">
-                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
+
+
+                    <div id="imagePreviewContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
 
                     <!-- New Images -->
                     <div>
@@ -204,7 +214,6 @@
     </div>
 </div>
 
-@push('scripts')
 <!-- Add SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -215,9 +224,9 @@
         const newPackage = document.createElement('div');
         newPackage.className = 'flex items-center space-x-2 package-item';
         newPackage.innerHTML = `
-            <div class="flex-1 p-2 bg-gray-50 border rounded-md flex justify-between items-center">
-                <input type="text" name="packages[]" class="bg-transparent border-none focus:ring-0 w-full" placeholder="Enter package name">
-                <button type="button" class="text-red-500 hover:text-red-700 delete-package">
+            <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
+                <input type="text" name="packages[]" class="bg-transparent border-none focus:ring-0 w-full text-gray-700" placeholder="Enter package name">
+                <button type="button" class="text-gray-400 hover:text-red-500 delete-package transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -225,12 +234,6 @@
             </div>
         `;
         container.appendChild(newPackage);
-    });
-
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.delete-package')) {
-            e.target.closest('.package-item').remove();
-        }
     });
 
     // Image Preview Functionality
@@ -242,6 +245,47 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const preview = document.createElement('div');
-                preview.className = 'relative aspect-square';
+                preview.className = 'relative group aspect-[4/3]';
                 preview.innerHTML = `
-                    <img src="${
+                    <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg shadow-sm">
+                    <button type="button" class="absolute top-2 right-2 bg-white/80 backdrop-blur-sm p-1.5 rounded-full text-gray-700 hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 remove-preview">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                `;
+                container.appendChild(preview);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Remove preview image
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-preview')) {
+            e.target.closest('.relative').remove();
+        }
+    });
+
+    // Form submission with SweetAlert
+    document.getElementById('editProductForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    
+    Swal.fire({
+        title: 'Update Product',
+        text: 'Are you sure you want to update this product?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, update it!',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#d1d5db',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+});
+</script>
+@endsection

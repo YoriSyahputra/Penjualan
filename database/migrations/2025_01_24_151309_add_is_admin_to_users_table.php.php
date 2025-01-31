@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_admin')->default(false);
+            $table->string('is_admin', 50)->default(0);
         });
     }
 
@@ -20,3 +20,4 @@ return new class extends Migration
         });
     }
 };
+
