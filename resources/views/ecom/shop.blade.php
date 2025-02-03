@@ -117,7 +117,11 @@
 
             <!-- Add to Cart Button -->
             <button 
-                onclick="openCartModal({{ $product->id }})"
+                @auth
+                    onclick="openCartModal({{ $product->id }})"
+                @else
+                    onclick="redirectToLogin()"
+                @endauth
                 @if($product->stock <= 0) disabled @endif
                 class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -222,6 +226,9 @@
 
 @push('scripts')
 <script>
+function redirectToLogin() {
+    window.location.href = '{{ route('login') }}';
+    }
 window.showToast = function(message) {
     const toast = document.getElementById('toast');
     toast.textContent = message;

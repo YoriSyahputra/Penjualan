@@ -122,57 +122,87 @@
         </div>
     </div>
 </section>
+<!-- Featured Products -->
+<section class="py-16">
+    <div class="container mx-auto px-4">
+        <h3 class="text-2xl font-bold text-center mb-8">Featured Products</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            @foreach($products as $product)
+            <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <!-- Product Image -->
+                <div class="relative overflow-hidden" style="height: 280px;"> 
+                    @if($product->productImages->isNotEmpty())
+                        <img src="{{ asset('storage/' . $product->productImages->first()->path_gambar) }}"
+                             alt="{{ $product->name }}"
+                             class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
+                    @else
+                        <img src="/api/placeholder/300/300" 
+                             alt="No image"
+                             class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
+                    @endif
+                    
+                    <!-- Category Badge -->
+                    <div class="absolute top-2 right-2">
+                        <span class="bg-black bg-opacity-50 text-white text-xs font-medium px-2.5 py-1 rounded">
+                            {{ $product->category->name }}
+                        </span>
+                    </div>
+                </div>
 
-
-    <!-- Featured Products -->
-    <section class="py-16">
-        <div class="container mx-auto px-4">
-            <h3 class="text-2xl font-bold text-center mb-8">Featured Products</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                @foreach(range(1, 8) as $index)
-                <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-shadow">
-                        <!-- Product Image -->
-                        <div class="relative overflow-hidden">
-                            <img src="/api/placeholder/300/300" alt="Product {{ $index }}" 
-                                 class="w-full h-48 sm:h-56 md:h-64 object-cover group-hover:scale-105 transition-transform duration-300">
-                            <!-- Quick View Button -->
-                            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button class="bg-white text-gray-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transform hover:scale-105 transition-transform">
-                                    Quick View
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Product Info -->
-                        <div class="p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-lg font-semibold text-gray-900">Product {{ $index }}</h3>
-                                <div class="flex items-center">
-                                </div>
-                            </div>
-                            
-                            <!-- Price -->
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <span class="text-gray-500 line-through text-sm">$129.99</span>
-                                    <span class="text-lg font-bold text-gray-900 ml-2">$99.99</span>
-                                </div>
-                                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">23% OFF</span>
-                            </div>
-
-                            <!-- Add to Cart Button -->
-                            <button class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                                Add to Cart
-                            </button>
+                <!-- Product Info -->
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-lg font-semibold text-gray-900 truncate">{{ $product->name }}</h3>
+                    </div>
+                    
+                    <!-- Price -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            @if($product->discount_price)
+                                <span class="text-gray-500 line-through text-sm">Rp.{{ number_format($product->price, 0, ',', '.') }}</span>
+                                <span class="text-lg font-bold text-gray-900 ml-2">Rp.{{ number_format($product->discount_price, 0, ',', '.') }}</span>
+                                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded ml-2">
+                                    {{ round((($product->price - $product->discount_price) / $product->price) * 100) }}% OFF
+                                </span>
+                            @else
+                                <span class="text-lg font-bold text-gray-900">Rp.{{ number_format($product->price, 0, ',', '.') }}</span>
+                            @endif
                         </div>
                     </div>
-                @endforeach
+
+                    <!-- Stock Status -->
+                    @if($product->stock > 0)
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span class="text-sm text-green-600">In Stock ({{ $product->stock }})</span>
+                        </div>
+                    @else
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                            <span class="text-sm text-red-600">Out of Stock</span>
+                        </div>
+                    @endif
+
+                    <!-- Add to Cart Button -->
+                    <button 
+                        @auth
+                            onclick="openCartModal({{ $product->id }})"
+                        @else
+                            onclick="redirectToLogin()"
+                        @endauth
+                        @if($product->stock <= 0) disabled @endif
+                        class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        {{ $product->stock > 0 ? 'Add to Cart' : 'Out of Stock' }}
+                    </button>
+                </div>
             </div>
+            @endforeach
         </div>
-    </section>
+    </div>
+</section>
 
     <style>
     .hide-scrollbar::-webkit-scrollbar {
@@ -185,6 +215,47 @@
     </style>
 
     <script>
+
+    // Add this to your main template or as a separate JS file
+function redirectToLogin() {
+    window.location.href = '{{ route('login') }}';
+}
+
+// Toast notification functionality
+window.showToast = function(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.remove('translate-y-full', 'opacity-0');
+    
+    setTimeout(() => {
+        toast.classList.add('translate-y-full', 'opacity-0');
+    }, 3000);
+}
+
+// Add to cart functionality
+function addToCart(productId) {
+    fetch(`/cart/add/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update cart count
+        const cartCount = document.getElementById('cartCount');
+        cartCount.textContent = parseInt(cartCount.textContent) + 1;
+        
+        // Show success message
+        showToast(data.message);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error adding product to cart');
+    });
+}
+
     function scrollCategories(direction) {
         const container = document.getElementById('categoriesContainer');
         const scrollAmount = direction === 'left' ? -container.offsetWidth : container.offsetWidth;

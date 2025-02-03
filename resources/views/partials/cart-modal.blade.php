@@ -12,17 +12,22 @@
 
         <!-- Product Image with Navigation -->
         <div class="mb-4 relative">
-            <img id="modalProductImage" src="" alt="Product" class="w-full h-48 object-cover rounded-lg">
-            <div id="imageNavigation" class="hidden">
-                <button onclick="previousImage()" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2">
-                    ←
-                </button>
-                <button onclick="nextImage()" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2">
-                    →
-                </button>
+            <div class="relative w-full h-48">
+                <img id="modalProductImage" src="" alt="Product" class="w-full h-48 object-cover rounded-lg">
+                <div id="imageNavigation" class="absolute inset-0 flex justify-between items-center px-2">
+                    <button onclick="previousImage()" class="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <button onclick="nextImage()" class="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
-
         <!-- Product Price -->
         <div class="mb-4">
             <p class="text-lg font-semibold text-gray-900" id="modalProductPrice"></p>
@@ -83,13 +88,11 @@
     </div>
 </div>
 <script>
-// Global state variables
 let currentProductId = null;
 let currentProduct = null;
 let currentImageIndex = 0;
 let currentProductImages = [];
 
-// Open cart modal
 function openCartModal(productId) {
     currentProductId = productId;
     const modal = document.getElementById('cartModal');
@@ -98,67 +101,64 @@ function openCartModal(productId) {
     // Reset form
     document.getElementById('quantityInput').value = 1;
     
-    // Fetch product details
+    // Fetch product details using normal route
     fetch(`/product-details/${productId}`)
         .then(response => response.json())
         .then(data => {
             currentProduct = data.product;
             
             // Handle product images
-            currentProductImages = data.product.productImages || [];
-            const imageElement = document.getElementById('modalProductImage');
-            const imageNavigation = document.getElementById('imageNavigation');
-
-            if (currentProductImages.length > 0) {
-                imageElement.src = currentProductImages[0].path_gambar 
-                    ? `/storage/${currentProductImages[0].path_gambar}`
-                    : '/placeholder-image.jpg';
+            if (data.product.product_images && data.product.product_images.length > 0) {
+                currentProductImages = data.product.product_images;
+                currentImageIndex = 0;
+                updateModalImage();
                 
-                // Show/hide navigation based on image count
-                imageNavigation.classList.toggle('hidden', currentProductImages.length <= 1);
+                // Show/hide navigation buttons based on number of images
+                const imageNavigation = document.getElementById('imageNavigation');
+                imageNavigation.style.display = currentProductImages.length > 1 ? 'flex' : 'none';
             } else {
+                // Set default image if no images available
+                const imageElement = document.getElementById('modalProductImage');
                 imageElement.src = '/placeholder-image.jpg';
-                imageNavigation.classList.add('hidden');
+                document.getElementById('imageNavigation').style.display = 'none';
             }
+
             // Update product name and price
             document.getElementById('modalProductName').textContent = data.product.name;
             
-            const priceElement = document.getElementById('modalProductPrice');
             const price = data.product.discount_price || data.product.price;
-            priceElement.textContent = `Rp ${numberFormat(price)}`;
+            document.getElementById('modalProductPrice').textContent = `Rp ${numberFormat(price)}`;
 
-            // Handle product variants
+            // Handle variants
             const variantSelect = document.getElementById('variantSelect');
             const variantsContainer = document.getElementById('variantsContainer');
-
-            variantSelect.innerHTML = '<option value="">Choose a variant</option>';
             
             if (data.variants && data.variants.length > 0) {
-                variantsContainer.classList.remove('hidden');
+                variantSelect.innerHTML = '<option value="">Choose a variant</option>';
                 data.variants.forEach(variant => {
                     const option = document.createElement('option');
                     option.value = variant.id;
-                    option.textContent = variant.name;
+                    option.textContent = `${variant.name} ${variant.price ? '- Rp ' + numberFormat(variant.price) : ''}`;
                     variantSelect.appendChild(option);
                 });
+                variantsContainer.classList.remove('hidden');
             } else {
                 variantsContainer.classList.add('hidden');
             }
 
-            // Handle product packages
+            // Handle packages
             const packageSelect = document.getElementById('packageSelect');
             const packagesContainer = document.getElementById('packagesContainer');
-
-            packageSelect.innerHTML = '<option value="">Choose a package</option>';
-
+            
             if (data.packages && data.packages.length > 0) {
-                packagesContainer.classList.remove('hidden');
+                packageSelect.innerHTML = '<option value="">Choose a package</option>';
                 data.packages.forEach(pkg => {
                     const option = document.createElement('option');
                     option.value = pkg.id;
-                    option.textContent = pkg.name;
+                    option.textContent = `${pkg.name} ${pkg.price ? '- Rp ' + numberFormat(pkg.price) : ''}`;
                     packageSelect.appendChild(option);
                 });
+                packagesContainer.classList.remove('hidden');
             } else {
                 packagesContainer.classList.add('hidden');
             }
@@ -168,23 +168,30 @@ function openCartModal(productId) {
             showToast('Error loading product details');
         });
 }
+function updateModalImage() {
+    if (currentProductImages.length > 0) {
+        const imageElement = document.getElementById('modalProductImage');
+        const imagePath = currentProductImages[currentImageIndex].path_gambar;
+        imageElement.src = imagePath.startsWith('/') 
+            ? imagePath 
+            : `/storage/${imagePath}`;
+    }
+}
 
-// Image navigation functions
 function nextImage() {
     if (currentProductImages.length > 1) {
         currentImageIndex = (currentImageIndex + 1) % currentProductImages.length;
-        document.getElementById('modalProductImage').src = 
-            `/storage/${currentProductImages[currentImageIndex].path_gambar}`;
+        updateModalImage();
     }
 }
 
 function previousImage() {
     if (currentProductImages.length > 1) {
         currentImageIndex = (currentImageIndex - 1 + currentProductImages.length) % currentProductImages.length;
-        document.getElementById('modalProductImage').src = 
-            `/storage/${currentProductImages[currentImageIndex].path_gambar}`;
+        updateModalImage();
     }
 }
+
 
 // Close modal function
 function closeCartModal() {
@@ -203,6 +210,8 @@ function incrementQuantity() {
     
     if (currentProduct && currentValue < currentProduct.stock) {
         input.value = currentValue + 1;
+    } else {
+        showToast('Maximum stock reached');
     }
 }
 
@@ -234,6 +243,7 @@ function addToCartWithOptions() {
     const variantsContainer = document.getElementById('variantsContainer');
     const packagesContainer = document.getElementById('packagesContainer');
 
+    // Validation checks
     if (!variantsContainer.classList.contains('hidden') && !variantId) {
         showToast('Please select a variant');
         return;
@@ -244,11 +254,18 @@ function addToCartWithOptions() {
         return;
     }
 
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!csrfToken) {
+        showToast('Security token not found');
+        return;
+    }
+
     fetch(`/cart/add/${currentProductId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': csrfToken
         },
         body: JSON.stringify({
             quantity: quantity,
@@ -265,12 +282,12 @@ function addToCartWithOptions() {
         return response.json();
     })
     .then(data => {
-        showToast(data.message);
+        showToast(data.message || 'Product added to cart');
         closeCartModal();
         
-        // Update cart count
+        // Update cart count if element exists
         const cartCount = document.getElementById('cartCount');
-        if (cartCount) {
+        if (cartCount && data.cartCount !== undefined) {
             cartCount.textContent = data.cartCount;
         }
     })
@@ -303,13 +320,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Close modal when clicking outside
-    document.addEventListener('click', function(event) {
-        const modal = document.getElementById('cartModal');
-        const modalContent = modal.querySelector('.relative');
-        
-        if (event.target === modal) {
+    document.getElementById('cartModal')?.addEventListener('click', function(event) {
+        if (event.target === this) {
             closeCartModal();
         }
+    });
+
+    // Prevent modal content clicks from closing the modal
+    document.querySelector('.modal-content')?.addEventListener('click', function(event) {
+        event.stopPropagation();
     });
 });
 </script>

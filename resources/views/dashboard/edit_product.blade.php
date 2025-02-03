@@ -141,10 +141,33 @@
                         </div>
                     </div>
 
-                    <!-- Package Options -->
+                    
+                    <div class="space-y-4">
+                        <label class="block text-sm font-medium text-gray-700">Variants Options</label>
+                        <div id="variantsContainer" class="space-y-2">
+                            @foreach($product->variants as $index => $variant)
+                            <div class="flex items-center space-x-2 variant-item">
+                                <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
+                                    <input type="text" name="variants[]" value="{{ $variant->name }}" 
+                                        class="bg-transparent border-none focus:ring-0 w-full text-gray-700"
+                                        placeholder="Enter variant name">
+                                    <button type="button" class="text-gray-400 hover:text-red-500 delete-variant transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        <button type="button" id="addVariant" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                            Add Variant Option
+                        </button>
+                    </div>
                     <div class="space-y-4">
                         <label class="block text-sm font-medium text-gray-700">Package Options</label>
-                        <div id="packageContainer" class="space-y-2">
+                        <div id="variantsContainer" class="space-y-2">
                             @foreach($product->packages as $index => $package)
                             <div class="flex items-center space-x-2 package-item">
                                 <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
@@ -169,8 +192,6 @@
                     <!-- Current Images -->
 
 
-                    <div id="imagePreviewContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
-
                     <!-- New Images -->
                     <div>
                         <label for="images" class="block text-sm font-medium text-gray-700">Add New Images</label>
@@ -182,7 +203,7 @@
                                 <div class="flex text-sm text-gray-600">
                                     <label for="images" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                                         <span>Upload new images</span>
-                                        <input id="images" name="images[]" type="file" class="sr-only" multiple accept="image/*">
+                                        <input id="images" name="new_images[]" type="file" class="sr-only" multiple accept="image/*">
                                     </label>
                                 </div>
                                 <p class="text-xs text-gray-500">PNG, JPG up to 2MB</p>
@@ -219,11 +240,28 @@
 
 <script>
     // Package Options Functionality
+    document.getElementById('addVariant').addEventListener('click', function() {
+        const container = document.getElementById('variantsContainer');
+        const newVariant = document.createElement('div');
+        newVariant.className = 'flex items-center space-x-2 variant-item';
+        newVariant.innerHTML = `
+            <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
+                <input type="text" name="variants[]" class="bg-transparent border-none focus:ring-0 w-full text-gray-700" placeholder="Enter variant name">
+                <button type="button" class="text-gray-400 hover:text-red-500 delete-variant transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        `;
+        container.appendChild(newVariant);
+    });
+
     document.getElementById('addPackage').addEventListener('click', function() {
         const container = document.getElementById('packageContainer');
         const newPackage = document.createElement('div');
-        newPackage.className = 'flex items-center space-x-2 package-item';
-        newPackage.innerHTML = `
+        newVariants.className = 'flex items-center space-x-2 package-item';
+        newVariants.innerHTML = `
             <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
                 <input type="text" name="packages[]" class="bg-transparent border-none focus:ring-0 w-full text-gray-700" placeholder="Enter package name">
                 <button type="button" class="text-gray-400 hover:text-red-500 delete-package transition-colors">
@@ -269,7 +307,7 @@
 
     // Form submission with SweetAlert
     document.getElementById('editProductForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
     const form = this;
     
     Swal.fire({
@@ -283,6 +321,8 @@
         cancelButtonColor: '#d1d5db',
     }).then((result) => {
         if (result.isConfirmed) {
+            // Submit form programmatically without triggering the event listener again
+            form.removeEventListener('submit', arguments.callee);
             form.submit();
         }
     });

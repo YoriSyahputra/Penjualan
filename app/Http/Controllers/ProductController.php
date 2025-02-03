@@ -92,14 +92,14 @@ public function index(Request $request)
             'stock_alert' => 'required|integer|min:0',
             'category_id' => 'required|numeric|in:' . implode(',', $validCategoryIds),
             'images' => 'required|array|min:1',
-            'images.*' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'variants' => 'nullable|array',
             'variants.*' => 'nullable|string|max:255',
             'packages' => 'nullable|array',
             'packages.*' => 'nullable|string|max:255'
         ], [
             'name.required' => 'Product name is required',
-            'name.max' => 'Product name cannot exceed 255 characters',
+            'name.max' => 'Product name cannot exceed 255 characters',  
             'sku.required' => 'SKU is required',
             'sku.unique' => 'SKU has already been taken',
             'category_id.required' => 'Product category is required',
@@ -155,7 +155,7 @@ public function index(Request $request)
                     ]);
                 }
             }
-            if ($request->has('has_packages') && $request->has('packages')) {
+            if ($request->has('packages')) {
                 $packages = array_filter($request->packages, function($package) {
                     return !empty(trim($package));
                 });
@@ -166,9 +166,11 @@ public function index(Request $request)
                         'name' => $packageName
                     ]);
                 }
-            } 
+            }
             // Handle image uploads
             if ($request->hasFile('images')) {
+                $lastOrder = $product->productImages()->max('urutan') ?? 0;
+            
                 foreach ($request->file('images') as $index => $image) {
                     $filename = time() . '_' . $image->getClientOriginalName();
                     
@@ -196,14 +198,20 @@ public function index(Request $request)
                         ->withInput();
         }
     }
-public function edit(Product $product)
+
+    public function edit(Product $product)
 {
     if ($product->user_id !== auth()->id()) {
         abort(403);
     }
 
+    $product->load(['productImages', 'packages']);
     $categories = Category::pluck('name', 'id');
-    return view('dashboard.edit_product', compact('product', 'categories'));
+
+    return view('dashboard.edit_product', [
+        'product' => $product,
+        'categories' => $categories
+    ]);
 }
 
 public function update(Request $request, Product $product)
@@ -216,13 +224,13 @@ public function update(Request $request, Product $product)
     
     $validated = $request->validate([
         'name' => 'required|max:255',
-        'sku' => 'required|unique:products,sku,' . $product->id,
-        'description' => 'required',
+        'sku' => 'required|unique:products,sku,'.$product->id,
+        'description' => 'required',    
         'price' => 'required|numeric|min:0',
         'discount_price' => 'nullable|numeric|min:0',
         'stock' => 'required|integer|min:0',
         'stock_alert' => 'required|integer|min:0',
-        'category_id' => 'required|numeric|in:' . implode(',', $validCategoryIds),
+        'new_images' => 'nullable|array',
         'new_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         'variants' => 'nullable|array',
         'variants.*' => 'nullable|string|max:255',
@@ -240,14 +248,16 @@ public function update(Request $request, Product $product)
             'price' => $validated['price'],
             'discount_price' => $validated['discount_price'] ?? null,
             'stock' => $validated['stock'],
-            'stock_alert' => $validated['stock_alert'],
-            'category_id' => $validated['category_id']
+            'stock_alert' => $validated['stock_alert']
         ]);
 
-        // Handle variants
+        // Update variants
+        $product->variants()->delete();
         if ($request->has('variants')) {
-            $product->variants()->delete();
-            $variants = array_filter($request->variants, fn($variant) => !empty(trim($variant)));
+            $variants = array_filter($request->variants, function($variant) {
+                return !empty(trim($variant));
+            });
+            
             foreach ($variants as $variantName) {
                 ProductVariant::create([
                     'product_id' => $product->id,
@@ -256,10 +266,13 @@ public function update(Request $request, Product $product)
             }
         }
 
-        // Handle packages
-        if ($request->has('has_packages') && $request->has('packages')) {
-            $product->packages()->delete();
-            $packages = array_filter($request->packages, fn($package) => !empty(trim($package)));
+        // Update packages
+        $product->packages()->delete();
+        if ($request->has('packages')) {
+            $packages = array_filter($request->packages, function($package) {
+                return !empty(trim($package));
+            });
+            
             foreach ($packages as $packageName) {
                 ProductPackage::create([
                     'product_id' => $product->id,
@@ -268,10 +281,10 @@ public function update(Request $request, Product $product)
             }
         }
 
-        // Handle new image uploads
+        // Handle new images
         if ($request->hasFile('new_images')) {
             $lastOrder = $product->productImages()->max('urutan') ?? 0;
-            
+        
             foreach ($request->file('new_images') as $index => $image) {
                 $filename = time() . '_' . $image->getClientOriginalName();
                 $path = $image->storeAs('produk/original', $filename, 'public');
@@ -279,16 +292,16 @@ public function update(Request $request, Product $product)
                 ProductImage::create([
                     'product_id' => $product->id,
                     'path_gambar' => 'produk/original/' . $filename,
-                    'gambar_utama' => false,
+                    'gambar_utama' => $product->productImages()->count() === 0,
                     'urutan' => $lastOrder + $index + 1
                 ]);
             }
         }
-
+        
         DB::commit();
         return redirect()->route('dashboard.list_sale')
-                    ->with('success', 'Product updated successfully');
-
+                       ->with('success', 'Product updated successfully');
+                        
     } catch (\Exception $e) {
         DB::rollBack();
         \Log::error('Product update error: ' . $e->getMessage());
@@ -328,8 +341,6 @@ public function update(Request $request, Product $product)
         Storage::disk('public')->delete("produk/{$type}/{$filename}");
        }
    }
-
-   
    public function deleteImage(ProductImage $image)
    {
        if ($image->produk->user_id !== auth()->id()) {
@@ -342,20 +353,6 @@ public function update(Request $request, Product $product)
            return back()->with('success', 'Image deleted successfully');
        } catch (\Exception $e) {
            return back()->with('error', 'Error deleting image: ' . $e->getMessage());
-       }
-   }
-
-   public function toggleStatus(Product $product)
-   {
-       if ($product->user_id !== auth()->id()) {
-           abort(403);
-       }
-
-       try {
-           $product->update(['is_active' => !$product->is_active]);
-           return back()->with('success', 'Product status updated successfully');
-       } catch (\Exception $e) {
-           return back()->with('error', 'Error updating product status: ' . $e->getMessage());
        }
    }
 }

@@ -8,8 +8,7 @@
     <title>{{ config('app.name', 'Laravel') }} - Register</title>
     
     <!-- Scripts -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.3/cdn.min.js"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/bootstrap.js'])
 </head>
 <body class="bg-gray-100">
     
