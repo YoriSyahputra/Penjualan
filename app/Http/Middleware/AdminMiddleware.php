@@ -10,7 +10,7 @@ class AdminMiddleware
         public function handle($request, Closure $next)
     {
         if (!auth()->user()->is_admin) {
-            return redirect('/')->with('error', 'Unauthorized access');
+            return redirect('/LudWig')->with('error', 'Unauthorized access');
         }
         return $next($request);
     }

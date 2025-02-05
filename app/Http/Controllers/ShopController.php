@@ -16,7 +16,11 @@ class ShopController extends Controller
 
     public function cart()
 {
-    return view('ecom.cart');
+    $cartItems = Cart::with(['product', 'variant', 'package'])
+        ->where('user_id', auth()->id())
+        ->get();
+
+    return view('ecom.cart', ['cartItems' => $cartItems]);
 }
     public function index(Request $request)
     {
@@ -86,84 +90,101 @@ class ShopController extends Controller
     }
     
 
-public function addToCart(Request $request, $id)
-{
-    try {
-        $product = Product::findOrFail($id);
-        
-        // Validate inputs
-        $request->validate([
-            'quantity' => 'required|integer|min:1',
-            'variant_id' => 'nullable|exists:product_variants,id',
-            'package_id' => 'nullable|exists:product_packages,id'
-        ]);
-
-        // Prepare cart item details
-        $cartItem = [
-            'id' => $id,
-            'name' => $product->name,
-            'price' => $product->discount_price ?? $product->price,
-            'quantity' => $request->quantity,
-            'image' => $product->productImages->first()->path_gambar ?? null,
-            'variant_id' => $request->variant_id ?? null,
-            'variant_name' => null,
-            'package_id' => $request->package_id ?? null,
-            'package_name' => null
-        ];    
-
-        // Add variant details if selected
-        if ($request->variant_id) {
-            $variant = ProductVariant::findOrFail($request->variant_id);
-            $cartItem['variant_id'] = $variant->id;
-            $cartItem['variant_name'] = $variant->name;
-        }
-
-        // Add package details if selected
-        if ($request->package_id) {
-            $package = ProductPackage::findOrFail($request->package_id);
-            $cartItem['package_id'] = $package->id;
-            $cartItem['package_name'] = $package->name;
-        }
-
-        // Generate a unique key for the cart item
-        $cartKey = md5(json_encode($cartItem));
-
-        // Get existing cart or initialize
-        $cart = session()->get('cart', []);
-
-        // Check if item exists and update quantity
-        $existingItemKey = null;
-        foreach ($cart as $key => $item) {
-            if ($item['id'] == $id && 
-                ($item['variant_id'] ?? null) == ($cartItem['variant_id'] ?? null) && 
-                ($item['package_id'] ?? null) == ($cartItem['package_id'] ?? null)) {
-                $existingItemKey = $key;
-                break;
+    public function addToCart(Request $request, $id)
+    {
+        try {
+            $user = auth()->user();
+            $product = Product::findOrFail($id);
+            
+            $request->validate([
+                'quantity' => 'required|integer|min:1',
+                'variant_id' => 'nullable|exists:product_variants,id',
+                'package_id' => 'nullable|exists:product_packages,id'
+            ]);
+    
+            // Check for existing cart item with same product, variant, and package
+            $existingCartItem = Cart::where('user_id', $user->id)
+                ->where('product_id', $id)
+                ->where('variant_id', $request->variant_id)
+                ->where('package_id', $request->package_id)
+                ->first();
+    
+            if ($existingCartItem) {
+                // Update quantity if item exists
+                $existingCartItem->quantity += $request->quantity;
+                $existingCartItem->save();
+            } else {
+                // Create new cart item
+                Cart::create([
+                    'user_id' => $user->id,
+                    'product_id' => $id,
+                    'quantity' => $request->quantity,
+                    'variant_id' => $request->variant_id,
+                    'package_id' => $request->package_id
+                ]);
             }
+    
+            return response()->json([
+                'message' => 'Product added to cart successfully',
+                'cartCount' => Cart::where('user_id', $user->id)->count()
+            ]);
+    
+        } catch (\Exception $e) {
+            \Log::error('Add to cart error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error adding product to cart',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        if ($existingItemKey !== null) {
-            $cart[$existingItemKey]['quantity'] += $request->quantity;
-        } else {
-            $cart[$cartKey] = $cartItem;
-        }
-
-        // Update session
-        session()->put('cart', $cart);
-
-        return response()->json([
-            'message' => 'Product added to cart successfully',
-            'cartCount' => count($cart)
-        ]);
-
-    } catch (\Exception $e) {
-        \Log::error('Add to cart error: ' . $e->getMessage());
-        return response()->json([
-            'message' => 'Error adding product to cart',
-            'error' => $e->getMessage()
-        ], 500);
     }
+        
+    public function updateCartQuantity(Request $request, $cartItemId)
+{
+    $user = auth()->user();
+    $cartItem = Cart::where('id', $cartItemId)
+        ->where('user_id', $user->id)
+        ->first();
+
+    if (!$cartItem) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Cart item not found'
+        ], 404);
+    }
+
+    $newQuantity = max(1, $cartItem->quantity + $request->change);
+    $cartItem->quantity = $newQuantity;
+    $cartItem->save();
+
+    return response()->json([
+        'success' => true,
+        'newQuantity' => $newQuantity,
+        'cartCount' => Cart::where('user_id', $user->id)->count()
+    ]);
 }
+public function removeCartItem($cartItemId)
+{
+    $user = auth()->user();
+    $cartItem = Cart::where('id', $cartItemId)
+        ->where('user_id', $user->id)
+        ->first();
+
+    if (!$cartItem) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Cart item not found'
+        ], 404);
+    }
+
+    $cartItem->delete();
+
+    return response()->json([
+        'success' => true,
+        'cartCount' => Cart::where('user_id', $user->id)->count()
+    ]);
+}
+
+
 public function update(Request $request, $key)
 {
     $cart = session()->get('cart', []);
@@ -205,6 +226,51 @@ public function remove($key)
         'success' => false,
         'message' => 'Item not found in cart'
     ]);
+}
+public function checkout(Request $request)
+{
+    $selectedItems = explode(',', $request->items);
+    $cart = session()->get('cart', []);
+    
+    $checkoutItems = [];
+    $subtotal = 0;
+    
+    foreach ($selectedItems as $key) {
+        if (isset($cart[$key])) {
+            $checkoutItems[$key] = $cart[$key];
+            $subtotal += $cart[$key]['price'] * $cart[$key]['quantity'];
+        }
+    }
+    
+    if (empty($checkoutItems)) {
+        return redirect()->route('cart.index')->with('error', 'No items selected for checkout');
+    }
+    
+    $serviceFee = 1000; // Example service fee
+    $shippingFee = 0; // Will be calculated based on shipping option
+    
+    return view('ecom.checkout', [
+        'items' => $checkoutItems,
+        'subtotal' => $subtotal,
+        'serviceFee' => $serviceFee,
+        'shippingFee' => $shippingFee,
+    ]);
+}
+public function placeOrder(Request $request)
+{
+    $request->validate([
+        'address' => 'required|string',
+        'shipping_method' => 'required|string',
+        'payment_method' => 'required|string',
+    ]);
+    
+    // Here you would:
+    // 1. Create order record
+    // 2. Create order items
+    // 3. Clear cart
+    // 4. Redirect to success page
+    
+    return redirect()->route('order.success')->with('success', 'Order placed successfully!');
 }
 
 }

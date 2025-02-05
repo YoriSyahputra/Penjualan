@@ -11,7 +11,6 @@
     @include('partials.cart-modal')
 </head>
 <body class="antialiased">
-    <!-- Header/Navigation -->
     <header class="fixed w-full bg-white shadow-md z-50">
     <nav class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
@@ -28,8 +27,6 @@
                         </svg>
                     </button>
                 </div>
-
-                <!-- Mobile Navigation Dropdown -->
                 <div x-show="isOpen" 
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 transform -translate-y-2"
@@ -125,18 +122,6 @@
                 </div>
                 <div class="flex items-center space-x-4">
                 @auth
-                    <!-- Dashboard Links -->
-                    @if(auth()->user()->is_super_admin)
-                        <a href="{{ route('super-admin.dashboard') }}"
-                        class="text-red-600 hover:text-red-700 transition-colors font-medium">
-                            Super Admin Dashboard
-                        </a>
-                    @elseif(auth()->user()->is_admin)
-                        <a href="{{ route('dashboard.index') }}"
-                        class="text-indigo-600 hover:text-indigo-700 transition-colors">
-                            Admin Dashboard
-                        </a>
-                    @endif
                     <div class="relative">
                         @auth
                             <a href="{{ route('cart.index') }}" class="flex items-center">
@@ -154,7 +139,6 @@
                             </a>
                         @endauth
                     </div>
-                    <!-- Profile Section -->
                     <div class="relative" x-data="{ isProfileOpen: false }">
                         <button @click="isProfileOpen = !isProfileOpen" 
                                 class="flex items-center space-x-2 focus:outline-none">

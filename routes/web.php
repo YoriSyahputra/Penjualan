@@ -9,30 +9,34 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShopController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | Public Routes
+    |--------------------------------------------------------------------------
+    */
 
-Route::get('/', [HomeController::class, 'index'])->name('ecom.home');
+    Route::get('/', [HomeController::class, 'index'])->name('ecom.home');
 
-Route::get('/forgot-password', function () {
-    return view('auth.forgot-password');
-})->middleware('guest')->name('password.request');
+   Route::get('/forgot-password', function () {
+        return view('auth.forgot-password');
+    })->middleware('guest')->name('password.request');
 
-Route::get('/dshb', [StoreController::class, 'index'])->name('dshb');
+    Route::get('/dshb', [StoreController::class, 'index'])->name('dshb');
 
-// Shop & Cart Public Routes
-Route::get('/shop', [ShopController::class, 'index'])->name('shop');
-Route::get('/cart', [ShopController::class, 'cart'])->name('cart.index');
-Route::post('/cart/add/{id}', [ShopController::class, 'addToCart'])->name('cart.add');
-Route::post('/cart/update/{key}', [ShopController::class, 'update'])->name('cart.update');
-Route::post('/cart/remove/{key}', [ShopController::class, 'remove'])->name('cart.remove');
-Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails']);
+    // Shop & Cart Public Routes
+    Route::get('/shop', [ShopController::class, 'index'])->name('shop');
+    Route::get('/cart', [ShopController::class, 'cart'])->name('cart.index');
+    Route::post('/cart/add/{id}', [ShopController::class, 'addToCart'])->name('cart.add');
+    Route::post('/cart/update/{key}', [ShopController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove/{key}', [ShopController::class, 'remove'])->name('cart.remove');
+    Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails']);
+    
+    Route::get('/checkout', [ShopController::class, 'checkout'])->name('checkout');
+    Route::post('/place-order', [ShopController::class, 'placeOrder'])->name('place.order');
 
-// Product Search
-Route::get('/search', [ProductController::class, 'search'])->name('search');
+
+    // Product Search
+    Route::get('/search', [ProductController::class, 'search'])->name('search');
 
 /*
 |--------------------------------------------------------------------------
@@ -94,7 +98,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/list-sale', [ProductController::class, 'index'])->name('list_sale');
         Route::get('/sell-product', [ProductController::class, 'create'])->name('sell_product');
         Route::post('/sell-product', [ProductController::class, 'store'])->name('store_product');
-        
+
         // Perbaikan routes untuk edit dan update
         Route::get('/edit-product/{product}', [ProductController::class, 'edit'])->name('edit_product');
         Route::put('/update-product/{product}', [ProductController::class, 'update'])->name('update_product');

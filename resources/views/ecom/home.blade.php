@@ -1,6 +1,7 @@
 @extends('layouts.depan')
 
 @section('content')
+@include('partials.cart-modal')
 
     <section class="pt-24 bg-gradient-to-r from-indigo-500 to-purple-600">
         <div class="container mx-auto px-4 py-16">
@@ -204,6 +205,11 @@
     </div>
 </section>
 
+<div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full opacity-0 transition-all duration-300">
+    Item added to cart successfully!
+</div>
+
+
     <style>
     .hide-scrollbar::-webkit-scrollbar {
         display: none;
@@ -215,10 +221,9 @@
     </style>
 
     <script>
-
-    // Add this to your main template or as a separate JS file
+// Cart functionality
 function redirectToLogin() {
-    window.location.href = '{{ route('login') }}';
+    window.location.href = '/login';
 }
 
 // Toast notification functionality
@@ -232,7 +237,6 @@ window.showToast = function(message) {
     }, 3000);
 }
 
-// Add to cart functionality
 function addToCart(productId) {
     fetch(`/cart/add/${productId}`, {
         method: 'POST',
@@ -256,29 +260,31 @@ function addToCart(productId) {
     });
 }
 
-    function scrollCategories(direction) {
-        const container = document.getElementById('categoriesContainer');
-        const scrollAmount = direction === 'left' ? -container.offsetWidth : container.offsetWidth;
-        container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+// Categories scroll functionality
+function scrollCategories(direction) {
+    const container = document.getElementById('categoriesContainer');
+    const scrollAmount = direction === 'left' ? -container.offsetWidth : container.offsetWidth;
+    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+}
+
+// Update scroll buttons visibility
+document.getElementById('categoriesContainer').addEventListener('scroll', function() {
+    const container = this;
+    const leftBtn = document.getElementById('scrollLeftBtn');
+    const rightBtn = document.getElementById('scrollRightBtn');
+
+    if (container.scrollLeft > 0) {
+        leftBtn.classList.remove('hidden');
+    } else {
+        leftBtn.classList.add('hidden');
     }
 
-    document.getElementById('categoriesContainer').addEventListener('scroll', function() {
-        const container = this;
-        const leftBtn = document.getElementById('scrollLeftBtn');
-        const rightBtn = document.getElementById('scrollRightBtn');
-
-        if (container.scrollLeft > 0) {
-            leftBtn.classList.remove('hidden');
-            } else {
-            leftBtn.classList.add('hidden');
-            }
-
-        if (container.scrollLeft + container.offsetWidth >= container.scrollWidth) {
-            rightBtn.classList.add('hidden');
-            } else {
-                rightBtn.classList.remove('hidden');
-            }
-    });
+    if (container.scrollLeft + container.offsetWidth >= container.scrollWidth) {
+        rightBtn.classList.add('hidden');
+    } else {
+        rightBtn.classList.remove('hidden');
+    }
+});
 </script>
 
 @endsection
