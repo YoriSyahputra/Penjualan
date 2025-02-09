@@ -1,24 +1,36 @@
 <?php
 
 namespace App\Http\Controllers;
-
-
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Category;
 use App\Models\ProductPackage;
 use App\Models\ProductVariant;
 
+use Illuminate\Http\Request;
+
 class HomeController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['productImages', 'category'])
-            ->where('is_active', true)
-            ->orderBy('created_at', 'desc')
-            ->take(8)  // Limiting to 8 featured products
-            ->get();
+        try {
+            $products = Product::with(['productImages', 'category'])
+                ->where('is_active', true)
+                ->where('stock', '>', 0)
+                ->orderBy('created_at', 'desc')
+                ->take(8)
+                ->get();
 
-        return view('ecom.home', compact('products'));
+            $categories = Category::all();
+
+            return view('ecom.home', [
+                'products' => $products,
+                'categories' => $categories
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Home page error: ' . $e->getMessage());
+            return back()->with('error', 'Unable to load products. Please try again.');
+        }
     }
 }

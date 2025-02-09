@@ -101,7 +101,7 @@ function openCartModal(productId) {
     // Reset form
     document.getElementById('quantityInput').value = 1;
     
-    // Fetch product details using normal route
+    // Fetch product details
     fetch(`/product-details/${productId}`)
         .then(response => response.json())
         .then(data => {
@@ -168,6 +168,7 @@ function openCartModal(productId) {
             showToast('Error loading product details');
         });
 }
+
 function updateModalImage() {
     if (currentProductImages.length > 0) {
         const imageElement = document.getElementById('modalProductImage');
@@ -192,8 +193,6 @@ function previousImage() {
     }
 }
 
-
-// Close modal function
 function closeCartModal() {
     const modal = document.getElementById('cartModal');
     modal.classList.add('hidden');
@@ -203,7 +202,6 @@ function closeCartModal() {
     currentImageIndex = 0;
 }
 
-// Quantity manipulation functions
 function incrementQuantity() {
     const input = document.getElementById('quantityInput');
     const currentValue = parseInt(input.value);
@@ -224,12 +222,10 @@ function decrementQuantity() {
     }
 }
 
-// Number formatting function
 function numberFormat(number) {
     return new Intl.NumberFormat('id-ID').format(number);
 }
 
-// Add to cart function
 function addToCartWithOptions() {
     if (!currentProductId) {
         showToast('Error: Product not selected');
@@ -239,20 +235,6 @@ function addToCartWithOptions() {
     const quantity = parseInt(document.getElementById('quantityInput').value);
     const variantId = document.getElementById('variantSelect').value;
     const packageId = document.getElementById('packageSelect').value;
-
-    const variantsContainer = document.getElementById('variantsContainer');
-    const packagesContainer = document.getElementById('packagesContainer');
-
-    // Validation checks
-    if (!variantsContainer.classList.contains('hidden') && !variantId) {
-        showToast('Please select a variant');
-        return;
-    }
-
-    if (!packagesContainer.classList.contains('hidden') && !packageId) {
-        showToast('Please select a package');
-        return;
-    }
 
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -265,7 +247,8 @@ function addToCartWithOptions() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
         },
         body: JSON.stringify({
             quantity: quantity,
@@ -273,11 +256,15 @@ function addToCartWithOptions() {
             package_id: packageId || null
         })
     })
-    .then(response => {
+    .then(async response => {
         if (!response.ok) {
-            return response.json().then(errorData => {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const errorData = await response.json();
                 throw new Error(errorData.message || 'Error adding product to cart');
-            });
+            } else {
+                throw new Error(`Server error: ${response.status}`);
+            }
         }
         return response.json();
     })
@@ -285,19 +272,18 @@ function addToCartWithOptions() {
         showToast(data.message || 'Product added to cart');
         closeCartModal();
         
-        // Update cart count if element exists
+        // Update cart count - use the server's count
         const cartCount = document.getElementById('cartCount');
         if (cartCount && data.cartCount !== undefined) {
             cartCount.textContent = data.cartCount;
         }
     })
     .catch(error => {
-        console.error('Error adding to cart:', error);
+        console.error('Cart operation failed:', error);
         showToast(error.message || 'Error adding product to cart');
     });
 }
 
-// Show toast notification
 function showToast(message) {
     const toast = document.getElementById('toast');
     if (toast) {

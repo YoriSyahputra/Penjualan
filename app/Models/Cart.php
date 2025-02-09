@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -6,30 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 class Cart extends Model
 {
     protected $fillable = [
-        'user_id', 
-        'product_id', 
-        'quantity', 
-        'variant_id', 
-        'package_id'
+        'user_id',
+        'product_id',
+        'variant_id',
+        'package_id',
+        'quantity'
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function variants()
+    public function variant()
     {
-        return $this->hasMany(ProductVariant::class);
+        return $this->belongsTo(ProductVariant::class);
     }
 
-    public function packages()
+    public function package()
     {
-        return $this->hasMany(ProductPackage::class);
+        return $this->belongsTo(ProductPackage::class);
     }
 }

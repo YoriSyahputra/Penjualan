@@ -65,6 +65,7 @@
             <form class="mt-8 space-y-4 sm:space-y-6" action="{{ route('login') }}" method="POST">
                 @csrf
                 <div class="rounded-md shadow-sm space-y-4">
+
                     <div>
                         <label for="email" class="sr-only">Email address</label>
                         <div class="relative">
@@ -78,6 +79,7 @@
                                 placeholder="Email address">
                         </div>
                     </div>
+                    
                     <div>
                         <label for="password" class="sr-only">Password</label>
                         <div class="relative">

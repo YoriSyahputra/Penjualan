@@ -1,27 +1,16 @@
 <?php
 
 namespace App\Http\Controllers;
-
-
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Category;
 use App\Models\ProductPackage;
 use App\Models\ProductVariant;
-
+use App\Models\Cart;  
 use Illuminate\Http\Request;
 
 class ShopController extends Controller
 {
-
-    public function cart()
-{
-    $cartItems = Cart::with(['product', 'variant', 'package'])
-        ->where('user_id', auth()->id())
-        ->get();
-
-    return view('ecom.cart', ['cartItems' => $cartItems]);
-}
     public function index(Request $request)
     {
         try {
@@ -58,7 +47,7 @@ class ShopController extends Controller
                     $query->orderBy('created_at', 'desc');
             }
 
-            $products = $query->paginate(40); // 4 columns × 10 rows = 40 items per page
+            $products = $query->paginate(40);
             $categories = Category::all();
 
             return view('ecom.shop', [
@@ -75,7 +64,255 @@ class ShopController extends Controller
         }
     }
 
-    // ShopController.php
+    public function cart()
+    {
+        $cartItems = Cart::with(['product.productImages', 'variant', 'package'])
+            ->where('user_id', auth()->id())
+            ->get();
+
+        $cartData = [];
+        $subtotal = 0;
+
+        foreach ($cartItems as $item) {
+            $price = $item->product->discount_price > 0 ? 
+                    $item->product->discount_price : 
+                    $item->product->price;
+            
+            if ($item->variant) {
+                $price += $item->variant->price_adjustment;
+            }
+            
+            if ($item->package) {
+                $price += $item->package->price_adjustment;
+            }
+
+            // Update image handling
+            $image = $item->product->productImages()
+                ->where('gambar_utama', true)
+                ->first();
+
+            $cartData[] = [
+                'id' => $item->id,
+                'product_id' => $item->product->id,
+                'name' => $item->product->name,
+                'original_price' => $item->product->price,
+                'price' => $price,
+                'has_discount' => $item->product->discount_price > 0,
+                'quantity' => $item->quantity,
+                'image' => $image ? $image->path_gambar : null, // Use path_gambar field
+                'variant_id' => $item->variant?->id,
+                'variant_name' => $item->variant?->name,
+                'package_id' => $item->package?->id,
+                'package_name' => $item->package?->name,
+                'subtotal' => $price * $item->quantity
+            ];
+
+            $subtotal += $price * $item->quantity;
+        }
+
+        return view('ecom.cart', [
+            'cartItems' => $cartData,
+            'subtotal' => $subtotal
+        ]);
+    }
+
+
+    public function addToCart(Request $request, $id)
+{
+    try {
+        $product = Product::findOrFail($id);
+        
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'variant_id' => 'nullable|exists:product_variants,id',
+            'package_id' => 'nullable|exists:product_packages,id'
+        ]);
+
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please login first'
+            ], 401);
+        }
+
+        // Check if product exists in cart with same variant and package
+        $cartItem = Cart::where([
+            'user_id' => auth()->id(),
+            'product_id' => $id,
+            'variant_id' => $request->variant_id,
+            'package_id' => $request->package_id,
+        ])->first();
+
+        if ($cartItem) {
+            // Update quantity if product already exists
+            $cartItem->quantity += $request->quantity;
+            $cartItem->save();
+        } else {
+            // Create new cart item if product doesn't exist
+            Cart::create([
+                'user_id' => auth()->id(),
+                'product_id' => $id,
+                'quantity' => $request->quantity,
+                'variant_id' => $request->variant_id,
+                'package_id' => $request->package_id
+            ]);
+        }
+
+        // Get distinct product count
+        $uniqueProductCount = Cart::where('user_id', auth()->id())
+            ->distinct()
+            ->count('product_id');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product added to cart successfully',
+            'cartCount' => $uniqueProductCount
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Add to cart error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error adding product to cart: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+    public function updateCartQuantity(Request $request, $cartItemId)
+    {
+        try {
+            $cartItem = Cart::where('id', $cartItemId)
+                        ->where('user_id', auth()->id())
+                        ->first();
+
+            if (!$cartItem) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cart item not found'
+                ], 404);
+            }
+
+            $newQuantity = max(1, $cartItem->quantity + $request->change);
+            
+            if ($newQuantity > $cartItem->product->stock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Not enough stock available'
+                ], 400);
+            }
+
+            $cartItem->quantity = $newQuantity;
+            $cartItem->save();
+
+            $uniqueProductCount = Cart::where('user_id', auth()->id())
+                                    ->distinct()
+                                    ->count('product_id');
+
+            return response()->json([
+                'success' => true,
+                'newQuantity' => $newQuantity,
+                'cartCount' => $uniqueProductCount  
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Update cart quantity error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating cart quantity'
+            ], 500);
+        }
+    }
+    public function update(Request $request, $key)
+{
+    try {
+        $cart = Cart::where('id', $key)
+                   ->where('user_id', auth()->id())
+                   ->first();
+
+        if (!$cart) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart item not found'
+            ], 404);
+        }
+
+        $product = $cart->product;
+        $newQuantity = $cart->quantity + $request->input('change');
+
+        // Validate quantity
+        if ($newQuantity < 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quantity cannot be less than 1'
+            ], 400);
+        }
+
+        if ($newQuantity > $product->stock) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Not enough stock available'
+            ], 400);
+        }
+
+        // Update the quantity
+        $cart->quantity = $newQuantity;
+        $cart->save();
+
+        // Get the updated cart count
+        $cartCount = Cart::where('user_id', auth()->id())
+            ->distinct()
+            ->count('product_id');
+
+            return response()->json([
+                'success' => true,
+                'distinctCount' => Cart::where('user_id', auth()->id())
+                                     ->select('product_id')
+                                     ->distinct()
+                                     ->count()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating cart'
+            ]);
+        }    
+    }
+
+    public function removeCartItem($cartItemId)
+{
+    try {
+        $cartItem = Cart::where('id', $cartItemId)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (!$cartItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart item not found'
+            ], 404);
+        }
+
+        $cartItem->delete();
+        
+        // Get distinct product count
+        $uniqueProductCount = Cart::where('user_id', auth()->id())
+            ->distinct()
+            ->count('product_id');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Item removed successfully',
+            'cartCount' => $uniqueProductCount
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Remove cart item error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error removing cart item'
+        ], 500);
+    }
+}
     public function getProductDetails($id)
     {
         $product = Product::with(['variants', 'packages', 'productImages'])
@@ -88,189 +325,4 @@ class ShopController extends Controller
             'productImages' => $product->productImages
         ]);
     }
-    
-
-    public function addToCart(Request $request, $id)
-    {
-        try {
-            $user = auth()->user();
-            $product = Product::findOrFail($id);
-            
-            $request->validate([
-                'quantity' => 'required|integer|min:1',
-                'variant_id' => 'nullable|exists:product_variants,id',
-                'package_id' => 'nullable|exists:product_packages,id'
-            ]);
-    
-            // Check for existing cart item with same product, variant, and package
-            $existingCartItem = Cart::where('user_id', $user->id)
-                ->where('product_id', $id)
-                ->where('variant_id', $request->variant_id)
-                ->where('package_id', $request->package_id)
-                ->first();
-    
-            if ($existingCartItem) {
-                // Update quantity if item exists
-                $existingCartItem->quantity += $request->quantity;
-                $existingCartItem->save();
-            } else {
-                // Create new cart item
-                Cart::create([
-                    'user_id' => $user->id,
-                    'product_id' => $id,
-                    'quantity' => $request->quantity,
-                    'variant_id' => $request->variant_id,
-                    'package_id' => $request->package_id
-                ]);
-            }
-    
-            return response()->json([
-                'message' => 'Product added to cart successfully',
-                'cartCount' => Cart::where('user_id', $user->id)->count()
-            ]);
-    
-        } catch (\Exception $e) {
-            \Log::error('Add to cart error: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Error adding product to cart',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-        
-    public function updateCartQuantity(Request $request, $cartItemId)
-{
-    $user = auth()->user();
-    $cartItem = Cart::where('id', $cartItemId)
-        ->where('user_id', $user->id)
-        ->first();
-
-    if (!$cartItem) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Cart item not found'
-        ], 404);
-    }
-
-    $newQuantity = max(1, $cartItem->quantity + $request->change);
-    $cartItem->quantity = $newQuantity;
-    $cartItem->save();
-
-    return response()->json([
-        'success' => true,
-        'newQuantity' => $newQuantity,
-        'cartCount' => Cart::where('user_id', $user->id)->count()
-    ]);
-}
-public function removeCartItem($cartItemId)
-{
-    $user = auth()->user();
-    $cartItem = Cart::where('id', $cartItemId)
-        ->where('user_id', $user->id)
-        ->first();
-
-    if (!$cartItem) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Cart item not found'
-        ], 404);
-    }
-
-    $cartItem->delete();
-
-    return response()->json([
-        'success' => true,
-        'cartCount' => Cart::where('user_id', $user->id)->count()
-    ]);
-}
-
-
-public function update(Request $request, $key)
-{
-    $cart = session()->get('cart', []);
-    
-    if (isset($cart[$key])) {
-        // Ensure quantity doesn't go below 1
-        $cart[$key]['quantity'] = max(1, $cart[$key]['quantity'] + $request->change);
-        session()->put('cart', $cart);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Cart updated successfully',
-            'newQuantity' => $cart[$key]['quantity']
-        ]);
-    }
-    
-    return response()->json([
-        'success' => false,
-        'message' => 'Item not found in cart'
-    ]);
-}
-
-public function remove($key)
-{
-    $cart = session()->get('cart', []);
-    
-    if (isset($cart[$key])) {
-        unset($cart[$key]);
-        session()->put('cart', $cart);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Item removed from cart',
-            'cartCount' => count($cart)
-        ]);
-    }
-    
-    return response()->json([
-        'success' => false,
-        'message' => 'Item not found in cart'
-    ]);
-}
-public function checkout(Request $request)
-{
-    $selectedItems = explode(',', $request->items);
-    $cart = session()->get('cart', []);
-    
-    $checkoutItems = [];
-    $subtotal = 0;
-    
-    foreach ($selectedItems as $key) {
-        if (isset($cart[$key])) {
-            $checkoutItems[$key] = $cart[$key];
-            $subtotal += $cart[$key]['price'] * $cart[$key]['quantity'];
-        }
-    }
-    
-    if (empty($checkoutItems)) {
-        return redirect()->route('cart.index')->with('error', 'No items selected for checkout');
-    }
-    
-    $serviceFee = 1000; // Example service fee
-    $shippingFee = 0; // Will be calculated based on shipping option
-    
-    return view('ecom.checkout', [
-        'items' => $checkoutItems,
-        'subtotal' => $subtotal,
-        'serviceFee' => $serviceFee,
-        'shippingFee' => $shippingFee,
-    ]);
-}
-public function placeOrder(Request $request)
-{
-    $request->validate([
-        'address' => 'required|string',
-        'shipping_method' => 'required|string',
-        'payment_method' => 'required|string',
-    ]);
-    
-    // Here you would:
-    // 1. Create order record
-    // 2. Create order items
-    // 3. Clear cart
-    // 4. Redirect to success page
-    
-    return redirect()->route('order.success')->with('success', 'Order placed successfully!');
-}
-
 }
