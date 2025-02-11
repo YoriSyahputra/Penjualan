@@ -26,6 +26,7 @@ class User extends Authenticatable
         'admin_status',
         'phone_number',
         'address',
+        'gender',
         'profile_photo',
     ];
 
@@ -51,6 +52,7 @@ class User extends Authenticatable
         'is_super_admin' => 'boolean',
     ];
 
+    
     public function store()
     {
     return $this->hasOne(Store::class);
@@ -82,7 +84,41 @@ class User extends Authenticatable
             return Storage::url($this->profile_photo);
         }
 
-        return null;
+        $baseUrl = 'https://api.dicebear.com/7.x/avataaars/svg';
+        $seed = urlencode($this->name);
+        
+        $commonOptions = [
+            'seed=' . $seed,
+            'backgroundColor=b6e3f4',
+            'mouth=smile'
+        ];
+
+        switch ($this->gender) {
+            case 'male':
+                $options = array_merge($commonOptions, [
+                    'gender=male',
+                    'hairColor=brown',
+                    'clothes=shirt',
+                    'clothesColor=blue'
+                ]);
+                break;
+            case 'female':
+                $options = array_merge($commonOptions, [
+                    'gender=female',
+                    'hairColor=black',
+                    'clothes=blazer',
+                    'clothesColor=red'
+                ]);
+                break;
+            default:
+                $options = array_merge($commonOptions, [
+                    'clothes=hoodie',
+                    'clothesColor=gray'
+                ]);
+                break;
+        }
+
+        return $baseUrl . '?' . implode('&', $options);
     }
 
     /**

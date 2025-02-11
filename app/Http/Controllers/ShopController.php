@@ -15,8 +15,8 @@ class ShopController extends Controller
     {
         try {
             $query = Product::with(['productImages', 'category'])
-                ->where('is_active', true);
-
+                ->where('is_active', true);    
+    
             // Handle search
             if ($request->has('search')) {
                 $searchTerm = $request->search;
@@ -25,12 +25,16 @@ class ShopController extends Controller
                       ->orWhere('description', 'like', "%{$searchTerm}%");
                 });
             }
-
-            // Handle category filter
-            if ($request->has('category') && $request->category != 'all') {
-                $query->where('category_id', $request->category);
+    
+            // Handle category filter - Modified this part
+            $selectedCategory = null;
+            if ($request->has('category')) {
+                $selectedCategory = Category::find($request->category);
+                if ($selectedCategory) {
+                    $query->where('category_id', $selectedCategory->id);
+                }
             }
-
+    
             // Sort products
             $sortBy = $request->get('sort', 'latest');
             switch ($sortBy) {
@@ -46,24 +50,22 @@ class ShopController extends Controller
                 default:
                     $query->orderBy('created_at', 'desc');
             }
-
+    
             $products = $query->paginate(40);
             $categories = Category::all();
-
+    
             return view('ecom.shop', [
                 'products' => $products,
                 'categories' => $categories,
-                'selectedCategory' => $request->category ?? 'all',
+                'selectedCategory' => $selectedCategory, // Now passing the Category model object
                 'searchTerm' => $request->search ?? '',
-                'sortBy' => $sortBy
+                'sortBy' => $request->get('sort', 'latest')
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Shop index error: ' . $e->getMessage());
             return back()->with('error', 'Unable to load products. Please try again.');
         }
     }
-
     public function cart()
     {
         $cartItems = Cart::with(['product.productImages', 'variant', 'package'])
@@ -278,7 +280,7 @@ class ShopController extends Controller
         }    
     }
 
-    public function removeCartItem($cartItemId)
+    public function remove($cartItemId)
 {
     try {
         $cartItem = Cart::where('id', $cartItemId)
@@ -325,4 +327,62 @@ class ShopController extends Controller
             'productImages' => $product->productImages
         ]);
     }
+    public function checkout()
+{
+    try {
+        // Ambil item cart dari user yang sedang login
+        $cartItems = Cart::with(['product.productImages', 'variant', 'package'])
+            ->where('user_id', auth()->id())
+            ->get();
+
+        $items = [];
+        $subtotal = 0;
+        $shippingFee = 10000; // Contoh default shipping fee
+        $serviceFee = 1000;   // Contoh default service fee
+
+        foreach ($cartItems as $item) {
+            $price = $item->product->discount_price > 0 ? 
+                    $item->product->discount_price : 
+                    $item->product->price;
+            
+            if ($item->variant) {
+                $price += $item->variant->price_adjustment;
+            }
+            
+            if ($item->package) {
+                $price += $item->package->price_adjustment;
+            }
+
+            // Get main image
+            $image = $item->product->productImages()
+                ->where('gambar_utama', true)
+                ->first();
+
+            $items[] = [
+                'id' => $item->id,
+                'product_id' => $item->product->id,
+                'name' => $item->product->name,
+                'price' => $price,
+                'quantity' => $item->quantity,
+                'image' => $image ? $image->path_gambar : null,
+                'variant_name' => $item->variant?->name,
+                'package_name' => $item->package?->name,
+                'subtotal' => $price * $item->quantity
+            ];
+
+            $subtotal += $price * $item->quantity;
+        }
+
+        return view('ecom.checkout', [
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'shippingFee' => $shippingFee,
+            'serviceFee' => $serviceFee
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Checkout error: ' . $e->getMessage());
+        return redirect()->route('cart.index')->with('error', 'Unable to process checkout. Please try again.');
+    }
+}
 }

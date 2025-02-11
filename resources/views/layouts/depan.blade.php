@@ -64,15 +64,16 @@
                             
                             <!-- Category Items -->
                             <div class="grid grid-cols-1 gap-2">
-                                <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Rumah Tangga</a>
-                                <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Dekorasi</a>
-                                <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Kamar Mandi</a>
-                                <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Kebutuhan Rumah</a>
-                                <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Tempat Penyimpanan</a>
-                                <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Elektronik</a>
-                                <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Action Figure</a>
-                                <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Pakaian</a>
-                                <a href="#" class="block px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Alat Olahraga</a>
+                                <a href="{{ route('shop.index') }}" 
+                                class="block px-4 py-2 {{ !request('category') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600' }} hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                                    All Categories
+                                </a>
+                                @foreach($categories as $category)
+                                    <a href="{{ route('shop.index', ['category' => $category->id]) }}" 
+                                    class="block px-4 py-2 {{ request('category') == $category->id ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600' }} hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                                        {{ $category->name }}
+                                    </a>
+                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -81,47 +82,98 @@
 
             <!-- Desktop Search Bar -->
             <div class="hidden md:block flex-1 max-w-xl mx-4">
-                <form action="#" method="GET" class="relative">
-                    <input type="text" name="query" placeholder="Search products..."
-                           class="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-indigo-500">
-                    <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </button>
-                </form>
-            </div>
-
-            <div class="flex items-center space-x-4">
-                <!-- Mobile Search Icon -->
-                <div class="md:hidden" x-data="{ isSearchOpen: false }">
-                    <button @click="isSearchOpen = true" class="text-gray-600 hover:text-indigo-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </button>
-
-                    <!-- Mobile Search Popup -->
-                    <div x-show="isSearchOpen" 
-                         x-transition:enter="transition ease-out duration-200"
-                         x-transition:enter-start="opacity-0 transform -translate-y-2"
-                         x-transition:enter-end="opacity-100 transform translate-y-0"
-                         x-transition:leave="transition ease-in duration-150"
-                         x-transition:leave-start="opacity-100 transform translate-y-0"
-                         x-transition:leave-end="opacity-0 transform -translate-y-2"
-                         @click.away="isSearchOpen = false"
-                         class="absolute left-0 right-0 top-full mt-2 mx-4 bg-white rounded-lg shadow-lg p-4">
-                        <form action="#" method="GET" class="relative">
-                            <input type="text" name="query" placeholder="Search products..."
-                                   class="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-indigo-500">
+                <form action="{{ route('shop.index') }}" method="GET" class="relative">
+                    <div class="flex gap-2">
+                        <div class="flex-1 relative">
+                            <input type="text" 
+                                name="search" 
+                                value="{{ request('search') }}"
+                                placeholder="Search products..."
+                                class="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-indigo-500">
                             <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </button>
-                        </form>
+                        </div>
+                        
+                        <select name="category" 
+                                class="px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-indigo-500 text-sm">
+                            <option value="all">All Categories</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <select name="sort" 
+                                class="px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-indigo-500 text-sm">
+                            <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest</option>
+                            <option value="price-low" {{ request('sort') == 'price-low' ? 'selected' : '' }}>Price: Low to High</option>
+                            <option value="price-high" {{ request('sort') == 'price-high' ? 'selected' : '' }}>Price: High to Low</option>
+                            <option value="popularity" {{ request('sort') == 'popularity' ? 'selected' : '' }}>Most Popular</option>
+                        </select>
                     </div>
+                </form>
+            </div>
+
+            <!-- Mobile Search Icon and Popup -->
+            <div class="md:hidden" x-data="{ isSearchOpen: false }">
+                <button @click="isSearchOpen = true" class="text-gray-600 hover:text-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </button>
+
+                <!-- Mobile Search Popup -->
+                <div x-show="isSearchOpen" 
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 transform -translate-y-2"
+                    x-transition:enter-end="opacity-100 transform translate-y-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 transform translate-y-0"
+                    x-transition:leave-end="opacity-0 transform -translate-y-2"
+                    @click.away="isSearchOpen = false"
+                    class="absolute left-0 right-0 top-full mt-2 mx-4 bg-white rounded-lg shadow-lg p-4">
+                    <form action="{{ route('shop.index') }}" method="GET" class="space-y-3">
+                        <div class="relative">
+                            <input type="text" 
+                                name="search" 
+                                value="{{ request('search') }}"
+                                placeholder="Search products..."
+                                class="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-indigo-500">
+                            <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <select name="category" 
+                                class="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-indigo-500">
+                            <option value="all">All Categories</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <select name="sort" 
+                                class="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-indigo-500">
+                            <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest</option>
+                            <option value="price-low" {{ request('sort') == 'price-low' ? 'selected' : '' }}>Price: Low to High</option>
+                            <option value="price-high" {{ request('sort') == 'price-high' ? 'selected' : '' }}>Price: High to Low</option>
+                            <option value="popularity" {{ request('sort') == 'popularity' ? 'selected' : '' }}>Most Popular</option>
+                        </select>
+                        <button type="submit" 
+                        class="px-6 py-2 bg-white text-indigo-600 rounded-lg hover:bg-gray-100 transition-colors">
+                            Apply Filters
+                        </button>
+                    </form>
                 </div>
+            </div>
                 <div class="flex items-center space-x-4">
                 @auth
                     <div class="relative">
@@ -203,6 +255,7 @@
                         </div>
                     </div>
                 @else
+                
                     <!-- Guest Links -->
                     <a href="{{ route('login') }}" class="text-gray-600 hover:text-indigo-600 transition-colors">Log in</a>
                     @if (Route::has('register'))

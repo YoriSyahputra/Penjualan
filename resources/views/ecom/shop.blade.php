@@ -5,49 +5,15 @@
 <!-- Shop Header/Hero Section -->
 <section class="bg-gradient-to-r from-indigo-500 to-purple-600 py-12">
     <div class="container mx-auto px-4">
-        <div class="text-center text-white">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4">Our Products</h1>
-            <p class="text-lg mb-8">Discover amazing products at great prices</p>
-            
-            <!-- Filter & Search Form -->
-            <form action="#" method="GET" class="flex flex-col md:flex-row justify-center items-center gap-4 max-w-2xl mx-auto">
-                <div class="relative flex-1 w-full">
-                    <input type="text" 
-                           name="search"
-                           value="{{ $searchTerm }}"
-                           placeholder="Search products..." 
-                           class="w-full px-4 py-2 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                    <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </button>
-                </div>
-                
-                <select name="category" 
-                        class="px-4 py-2 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                    <option value="all">All Categories</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ $selectedCategory == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
-
-                <select name="sort" 
-                        class="px-4 py-2 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                    <option value="latest" {{ $sortBy == 'latest' ? 'selected' : '' }}>Latest</option>
-                    <option value="price-low" {{ $sortBy == 'price-low' ? 'selected' : '' }}>Price: Low to High</option>
-                    <option value="price-high" {{ $sortBy == 'price-high' ? 'selected' : '' }}>Price: High to Low</option>
-                    <option value="popularity" {{ $sortBy == 'popularity' ? 'selected' : '' }}>Most Popular</option>
-                </select>
-
-                <button type="submit" 
-                        class="px-6 py-2 bg-white text-indigo-600 rounded-lg hover:bg-gray-100 transition-colors">
-                    Apply Filters
-                </button>
-            </form>
-        </div>
+<div class="text-center text-white">
+    <h1 class="text-4xl md:text-5xl font-bold mb-4">
+    @if($selectedCategory && $selectedCategory instanceof \App\Models\Category)
+        {{ $selectedCategory->name }}
+    @else
+        All Products
+    @endif
+    </h1>
+</div>
     </div>
 </section>
 

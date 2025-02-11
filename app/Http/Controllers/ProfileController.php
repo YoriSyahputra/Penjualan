@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -19,6 +20,7 @@ class ProfileController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . Auth::id()],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:500'],
+            'gender' => ['required', 'in:male,female,prefer_not_to_say'],
         ]);
 
         Auth::user()->update($validated);
@@ -32,7 +34,13 @@ class ProfileController extends Controller
             'photo' => ['required', 'image', 'max:1024'],
         ]);
 
-        Auth::user()->updateProfilePhoto($request->file('photo'));
+        // Hapus foto lama jika ada
+        if (Auth::user()->profile_photo_path) {
+            Storage::delete(Auth::user()->profile_photo_path);
+        }
+
+        $path = $request->file('photo')->store('profile-photos');
+        Auth::user()->update(['profile_photo_path' => $path]);
 
         return back()->with('success', 'Profile photo updated successfully!');
     }

@@ -25,7 +25,7 @@
                         name="selected_items[]" 
                         value="{{ $item['id'] }}" 
                         data-price="{{ $item['price'] }}"
-                        data-quantity="{{ $item['quantity'] }}"
+                        data-quantity="{{ $item['quantity'] }}"a
                         class="cart-item-checkbox form-checkbox h-5 w-5 text-indigo-600">
                     
                     <div class="flex-shrink-0 ml-4">

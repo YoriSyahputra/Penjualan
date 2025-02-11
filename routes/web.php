@@ -23,8 +23,8 @@ Route::post('/logout', function (Request $request) {
 
 // Home & Shop Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 Route::get('/search', [ProductController::class, 'search'])->name('search');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails'])->name('product.details');
 
 // Guest Cart Routes
@@ -54,8 +54,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('checkout')->group(function () {
         Route::get('/', [ShopController::class, 'checkout'])->name('checkout');
         Route::post('/place-order', [ShopController::class, 'placeOrder'])->name('order.place');
-    });
-
+    });    
     // Profile Management
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');

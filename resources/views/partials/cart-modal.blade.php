@@ -316,5 +316,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.modal-content')?.addEventListener('click', function(event) {
         event.stopPropagation();
     });
+    window.openCartModal = openCartModal;
+    window.closeCartModal = closeCartModal;
+    window.incrementQuantity = incrementQuantity;
+    window.decrementQuantity = decrementQuantity;
+    window.addToCartWithOptions = addToCartWithOptions;
+    window.nextImage = nextImage;
+    window.previousImage = previousImage;
+
 });
 </script>
