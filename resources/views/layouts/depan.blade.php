@@ -3,7 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="user-balance" content="{{ auth()->check() ? auth()->user()->wallet->balance : 0 }}">
+    <meta name="user-has-pin" content="{{ auth()->check() && auth()->user()->hasPin() ? 'true' : 'false' }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+
     <title>{{ config('app.name') }} - Modern E-commerce</title>
     
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/bootstrap.js'])

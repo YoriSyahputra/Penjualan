@@ -8,6 +8,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Storage;
 
+
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -51,8 +53,23 @@ class User extends Authenticatable
         'is_admin' => 'boolean',
         'is_super_admin' => 'boolean',
     ];
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
+    public function sentWalletTransfers()
+    {
+        return $this->hasMany(WalletTransfer::class, 'sender_id');
+    }
+    public function receivedWalletTransfers()
+    {
+        return $this->hasMany(WalletTransfer::class, 'recipient_id');
+    }
 
-    
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
     public function store()
     {
     return $this->hasOne(Store::class);
@@ -60,6 +77,16 @@ class User extends Authenticatable
     public function isPendingAdmin()
     {
         return $this->admin_status === 'pending';
+    }
+
+    public function pin()
+    {
+        return $this->hasOne(Pin::class);
+    }
+
+    public function hasPin()
+    {
+        return $this->pin()->exists();
     }
 
     public function isApprovedAdmin()

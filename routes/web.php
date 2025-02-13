@@ -4,9 +4,12 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\EWalletController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShopController;
+
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -50,17 +53,40 @@ Route::get('/forgot-password', function () {
 */
 
 Route::middleware(['auth'])->group(function () {
-    // Checkout Routes
+
+    Route::post('/payment/create', [PaymentController::class, 'create'])->name('payment.create');
+    Route::post('/payment/process/{payment}', [PaymentController::class, 'process'])->name('payment.process');
+
+    Route::get('/payment', [EWalletController::class, 'showPayment'])->name('ewallet.payment');
+    Route::post('/payment', [EWalletController::class, 'processPayment'])->name('ewallet.process');
+    
+    Route::get('/transfer', [EWalletController::class, 'showSearch'])->name('ewallet.search');
+    Route::get('/transfer/amount/{recipient}', [EWalletController::class, 'showTransferAmount'])->name('transfer.amount');
+    Route::post('/transfer', [EWalletController::class, 'transfer'])->name('ewallet.transfer');
+    
+    Route::get('/api/search-users', [EWalletController::class, 'searchUsers']);
+    Route::post('/pin/create', [EWalletController::class, 'createPin'])->name('user.create-pin');
+    
+    Route::get('/transfer/success/{transfer}', [EWalletController::class, 'transferSuccess'])
+    ->name('ewallet.transfer.success');
+
     Route::prefix('checkout')->group(function () {
         Route::get('/', [ShopController::class, 'checkout'])->name('checkout');
         Route::post('/place-order', [ShopController::class, 'placeOrder'])->name('order.place');
     });    
-    // Profile Management
+
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::post('/photo', [ProfileController::class, 'updatePhoto'])->name('photo');
+
+    Route::prefix('address')->name('address.')->group(function () {
+        Route::post('/', [ProfileController::class, 'addAddress'])->name('add');
+        Route::post('/{address}/primary', [ProfileController::class, 'setPrimaryAddress'])->name('primary');
+        Route::delete('/{address}', [ProfileController::class, 'deleteAddress'])->name('delete');
+        Route::put('/{address}', [ProfileController::class, 'updateAddress'])->name('update');
     });
+});
 
     // Store Management
     Route::prefix('store')->name('store.')->group(function () {
