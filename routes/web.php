@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ProductPaymentController;
+use App\Http\Controllers\LudwigPaymentController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
@@ -8,7 +10,6 @@ use App\Http\Controllers\EWalletController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShopController;
-
 
 use Illuminate\Support\Facades\Route;
 
@@ -30,12 +31,12 @@ Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails'])->name('product.details');
 
-// Guest Cart Routes
 Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [ShopController::class, 'cart'])->name('index');
     Route::post('/add/{id}', [ShopController::class, 'addToCart'])->name('add');
     Route::post('/update/{key}', [ShopController::class, 'update'])->name('update');
     Route::post('/remove/{key}', [ShopController::class, 'remove'])->name('remove');
+    
 });
 
 // Authentication Routes
@@ -54,26 +55,36 @@ Route::get('/forgot-password', function () {
 
 Route::middleware(['auth'])->group(function () {
 
-    Route::post('/payment/create', [PaymentController::class, 'create'])->name('payment.create');
-    Route::post('/payment/process/{payment}', [PaymentController::class, 'process'])->name('payment.process');
+    Route::get('/checkout', [ShopController::class, 'checkout'])->name('checkout'); // Add this line
+    Route::post('/process-checkout', [ShopController::class, 'placeOrder'])->name('checkout.process');
+    Route::get('/order/confirmation/{order}', [ShopController::class, 'orderConfirmation'])->name('order.confirmation');
+    Route::delete('/order/cancel/{order}', [ShopController::class, 'cancel'])->name('order.cancel');
+
+    // Ludwig Payment Routes
+    Route::get('/payment/search', [ProductPaymentController::class, 'showSearch'])
+        ->name('payment.search');
+    
+        Route::get('/api/orders/payment-code/{code}', [ProductPaymentController::class, 'getOrderByPaymentCode']);
+        
+    Route::post('/payment/process', [ProductPaymentController::class, 'processPayment'])
+        ->name('payment.process');
+        Route::post('/order/payment/process', [App\Http\Controllers\ProductPaymentController::class, 'processOrderPayment'])->name('order.payment.process');
+
+    Route::get('/unpaid-orders', [ShopController::class, 'unpaidOrders'])->name('ecom.list_order_payment');
 
     Route::get('/payment', [EWalletController::class, 'showPayment'])->name('ewallet.payment');
     Route::post('/payment', [EWalletController::class, 'processPayment'])->name('ewallet.process');
     
     Route::get('/transfer', [EWalletController::class, 'showSearch'])->name('ewallet.search');
+    
     Route::get('/transfer/amount/{recipient}', [EWalletController::class, 'showTransferAmount'])->name('transfer.amount');
-    Route::post('/transfer', [EWalletController::class, 'transfer'])->name('ewallet.transfer');
+Route::post('/transfer', [EWalletController::class, 'transfer'])->name('ewallet.transfer');
     
     Route::get('/api/search-users', [EWalletController::class, 'searchUsers']);
     Route::post('/pin/create', [EWalletController::class, 'createPin'])->name('user.create-pin');
     
     Route::get('/transfer/success/{transfer}', [EWalletController::class, 'transferSuccess'])
     ->name('ewallet.transfer.success');
-
-    Route::prefix('checkout')->group(function () {
-        Route::get('/', [ShopController::class, 'checkout'])->name('checkout');
-        Route::post('/place-order', [ShopController::class, 'placeOrder'])->name('order.place');
-    });    
 
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');

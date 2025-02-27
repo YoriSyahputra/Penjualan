@@ -9,6 +9,7 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'user_id',
+        'store_id',
         'name',
         'slug',
         'sku',
@@ -19,6 +20,11 @@ class Product extends Model
         'stock_alert',
         'is_active'
     ];
+    public function store()
+{
+    return $this->belongsTo(Store::class);
+}
+
     public function variants()
     {
         return $this->hasMany(ProductVariant::class);

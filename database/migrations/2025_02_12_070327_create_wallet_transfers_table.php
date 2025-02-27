@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('sender_id')->constrained('users');
             $table->foreignId('recipient_id')->constrained('users');
-            $table->decimal('amount', 10, 2);
+            $table->decimal('amount', 15, 2);
             $table->string('notes')->nullable();
             $table->timestamps();
         });

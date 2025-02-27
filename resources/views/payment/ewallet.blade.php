@@ -61,20 +61,17 @@
                     </div>
                 </div>
 
-                <form action="{{ route('ewallet.process') }}" method="POST" class="space-y-6">
-                    @csrf
+                <form action="{{ route('payment.search') }}" method="GET" class="space-y-6">
                     <div class="relative">
-
                         <button type="submit" 
                                 class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transform hover:scale-102 transition-all duration-300 shadow-lg">
                             <div class="flex items-center justify-center space-x-2">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
-                                <span>Complete Payment</span>
+                                <span>Masuk Ke Halaman Pembayaran</span>
                             </div>
                         </button>
-
                     </div>
                 </form>
             </div>

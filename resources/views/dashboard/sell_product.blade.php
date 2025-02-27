@@ -27,7 +27,6 @@
                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
                                required>
                     </div>
-
                     <div>
                         <label for="sku" class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
                         <input type="text" name="sku" id="sku" value="{{ old('sku') }}" 

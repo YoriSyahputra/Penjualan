@@ -70,16 +70,23 @@ public function index(Request $request)
             ->with('error', 'Unable to load products: ' . $e->getMessage());
     }
 }
-   public function create()
-   {
-       $categories = Category::pluck('name', 'id');
-       return view('dashboard.sell_product', compact('categories'));
-   }
+public function create()
+{
+    $categories = Category::pluck('name', 'id');
+    return view('dashboard.sell_product', compact('categories'));
+}
+public function store(Request $request)
+{
+    // Get the user's store ID
+    $userStore = \App\Models\Store::where('user_id', auth()->id())->first();
+    
+    if (!$userStore) {
+        return back()->with('error', 'You need to create a store first')->withInput();
+    }
 
-   public function store(Request $request)
-    {
-        // Convert valid categories array to string for validation rule
-        $validCategoryIds = Category::pluck('id')->toArray();
+    // Convert valid categories array to string for validation rule
+    $validCategoryIds = Category::pluck('id')->toArray();
+    
         
         // Validate request
         $validated = $request->validate([
@@ -96,7 +103,7 @@ public function index(Request $request)
             'variants' => 'nullable|array',
             'variants.*' => 'nullable|string|max:255',
             'packages' => 'nullable|array',
-            'packages.*' => 'nullable|string|max:255'
+            'packages.*' => 'nullable|string|max:255',  
         ], [
             'name.required' => 'Product name is required',
             'name.max' => 'Product name cannot exceed 255 characters',  
@@ -126,22 +133,24 @@ public function index(Request $request)
         ]);
 
         DB::beginTransaction();
-        try {
-            // Create product
-            $product = Product::create([
-                'name' => $validated['name'],
-                'slug' => Str::slug($validated['name']),
-                'sku' => $validated['sku'],
-                'description' => $validated['description'],
-                'price' => $validated['price'],
-                'discount_price' => $validated['discount_price'] ?? null,
-                'stock' => $validated['stock'],
-                'stock_alert' => $validated['stock_alert'],
-                'category_id' => $validated['category_id'],
-                'is_active' => true,
-                'user_id' => auth()->id()
-            ]);
+    try {
+        // Create product with store_id
+        $product = Product::create([
+            'name' => $validated['name'],
+            'slug' => Str::slug($validated['name']),
+            'sku' => $validated['sku'],
+            'description' => $validated['description'],
+            'price' => $validated['price'],
+            'discount_price' => $validated['discount_price'] ?? null,
+            'stock' => $validated['stock'],
+            'stock_alert' => $validated['stock_alert'],
+            'category_id' => $validated['category_id'],
+            'is_active' => true,
+            'user_id' => auth()->id(),
+            'store_id' => $userStore->id, // Add this line to set the store_id
+        ]);
 
+            
             // Handle variants
             if ($request->has('variants')) {
                 $variants = array_filter($request->variants, function($variant) {
@@ -235,7 +244,7 @@ public function update(Request $request, Product $product)
         'variants' => 'nullable|array',
         'variants.*' => 'nullable|string|max:255',
         'packages' => 'nullable|array',
-        'packages.*' => 'nullable|string|max:255'
+        'packages.*' => 'nullable|string|max:255',
     ]);
 
     DB::beginTransaction();
@@ -248,8 +257,9 @@ public function update(Request $request, Product $product)
             'price' => $validated['price'],
             'discount_price' => $validated['discount_price'] ?? null,
             'stock' => $validated['stock'],
-            'stock_alert' => $validated['stock_alert']
+            'stock_alert' => $validated['stock_alert'],
         ]);
+        
 
         // Update variants
         $product->variants()->delete();

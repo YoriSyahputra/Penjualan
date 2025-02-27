@@ -4,14 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 class OrderItem extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'order_id',
         'product_id',
         'quantity',
         'price',
-        'subtotal'
+        'variant_id',
+        'package_id',
     ];
 
     public function order()
@@ -23,5 +27,14 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
-}
 
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class);
+    }
+
+    public function package()
+    {
+        return $this->belongsTo(ProductPackage::class);
+    }
+}

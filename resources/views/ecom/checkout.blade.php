@@ -10,7 +10,7 @@
             </div>
         </div>
 
-        <form action="{{ route('order.place') }}" method="POST" class="checkout-form">
+        <form action="{{ route('checkout.process') }}" method="POST" class="checkout-form">
             @csrf
             <div class="flex flex-col lg:flex-row gap-8">
                 <!-- Left Column -->
@@ -179,26 +179,6 @@
                                     </div>
                                 </div>
                             </label>
-
-                            <!-- Bank Transfer -->
-                            <label class="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-500 transition-colors">
-                                <input type="radio" name="payment_method" value="bank_transfer" class="h-4 w-4 text-indigo-600">
-                                <div class="ml-4">
-                                    <div class="font-medium">Bank Transfer</div>
-                                    <div class="text-sm text-gray-600">Pay via bank transfer</div>
-                                </div>
-                            </label>
-
-                            <!-- Credit Card -->
-                            <label class="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-500 transition-colors">
-                                <input type="radio" name="payment_method" value="credit_card" class="h-4 w-4 text-indigo-600">
-                                <div class="ml-4">
-                                    <div class="font-medium">Credit Card</div>
-                                    <div class="text-sm text-gray-600">Pay with Visa or Mastercard</div>
-                                </div>
-                            </label>
-
-                            <!-- E-Wallet -->
                             <label class="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-500 transition-colors">
                                 <input type="radio" name="payment_method" value="ewallet" class="h-4 w-4 text-indigo-600">
                                 <div class="ml-4">
@@ -206,6 +186,14 @@
                                     <div class="text-sm text-gray-600">GoPay, OVO, Dana, etc</div>
                                 </div>
                             </label>
+                            <label class="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-500 transition-colors">
+                                <input type="radio" name="payment_method" value="cod" class="h-4 w-4 text-indigo-600">
+                                <div class="ml-4">
+                                    <div class="font-medium">COD</div>
+                                    <div class="text-sm text-gray-600">Bayar Di Rumah</div>
+                                </div>
+                            </label>
+
                         </div>
                         <div id="ludwigPaymentInstructions" class="mt-4 p-4 bg-gray-50 rounded-lg hidden">
                             <h3 class="font-medium text-gray-900 mb-2">How to pay with Ludwig Payment:</h3>
@@ -343,6 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+});
 
     // Modify the existing payment processing for Ludwig Payment
     const checkoutForm = document.querySelector('.checkout-form');

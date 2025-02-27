@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Store extends Model
 {
@@ -21,12 +22,28 @@ class Store extends Model
     ];
 
     public function user()
-{
-    return $this->belongsTo(User::class);
-}
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function sellerWallet()
+    {
+        return $this->hasOne(SellerWallet::class);
+    }
 
     public function getLogoUrlAttribute()
     {
         return $this->logo ? Storage::url($this->logo) : null;
     }
+    protected static function booted()
+    {
+        static::created(function ($store) {
+            SellerWallet::create([
+                'user_id' => $store->user_id,
+                'store_id' => $store->id,
+                'balance' => 0,
+            ]);
+        });
+    }
+
 }

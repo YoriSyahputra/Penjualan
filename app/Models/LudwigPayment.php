@@ -14,16 +14,14 @@ class LudwigPayment extends Model
         'order_id',
         'payment_id',
         'amount',
-        'status',
         'payment_method',
-        'transaction_reference',
-        'paid_at'
+        'status',
+        'paid_at',
+        'transaction_reference'
     ];
 
-    protected $dates = [
-        'paid_at',
-        'created_at',
-        'updated_at'
+    protected $casts = [
+        'paid_at' => 'datetime',
     ];
 
     public function user()

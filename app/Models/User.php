@@ -57,6 +57,7 @@ class User extends Authenticatable
     {
         return $this->hasOne(Wallet::class);
     }
+
     public function sentWalletTransfers()
     {
         return $this->hasMany(WalletTransfer::class, 'sender_id');
@@ -98,6 +99,7 @@ class User extends Authenticatable
     {
         return $this->is_super_admin;
     }
+ 
 
 
     /**

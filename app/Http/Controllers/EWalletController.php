@@ -11,6 +11,7 @@ use App\Models\Pin;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class EWalletController extends Controller
 {
@@ -63,24 +64,6 @@ class EWalletController extends Controller
         $total_amount = session('cart_total', 0);
         return view('payment.ewallet', compact('total_amount'));
     }
-
-    public function processPayment(Request $request)
-    {
-        $user = auth()->user();
-        $wallet = $user->wallet;
-        $total_amount = session('cart_total', 0);
-
-        if (!$wallet || $wallet->balance < $total_amount) {
-            return back()->with('error', 'Insufficient balance');
-        }
-
-        $wallet->balance -= $total_amount;
-        $wallet->save();
-
-        session()->forget('cart');
-        return redirect()->route('payment.success');
-    }
-
     public function searchUsers(Request $request)
     {
         $query = $request->get('q');
@@ -215,4 +198,97 @@ class EWalletController extends Controller
     {
         return view('payment.transfer-amount', compact('recipient'));
     }
+    public function processPayment(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'amount' => 'required|numeric|min:1000',
+            'pin' => 'required|digits:6'
+        ]);
+
+        $user = auth()->user();
+        $order = Order::findOrFail($request->order_id);
+        $amount = $request->amount;
+
+        // Verify PIN
+        $pinRecord = Pin::where('user_id', $user->id)->first();
+        if (!$pinRecord) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please set up your PIN first'
+            ], 400);
+        }
+
+        // Check if PIN is locked
+        if ($pinRecord->is_locked && now()->lessThan($pinRecord->locked_until)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PIN has been locked. Please try again later.'
+            ], 400);
+        }
+
+        // Verify PIN
+        if (!Hash::check($request->pin, $pinRecord->pin)) {
+            $pinRecord->increment('attempts');
+
+            if ($pinRecord->attempts >= 3) {
+                $pinRecord->update([
+                    'is_locked' => true,
+                    'locked_until' => now()->addMinutes(30)
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'PIN has been locked. Please try again in 30 minutes.'
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid PIN'
+            ], 400);
+        }
+
+        // Reset attempts after successful verification
+        $pinRecord->update(['attempts' => 0]);
+
+        // Check balance
+        if ($user->wallet->balance < $amount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Insufficient balance'
+            ], 400);
+        }
+
+        try {
+            DB::transaction(function () use ($user, $order, $amount) {
+                // Update wallet balance
+                $user->wallet->decrement('balance', $amount);
+                
+                // Update order status
+                $order->update([
+                    'status' => 'paid',
+                    'payment_method' => 'ewallet',
+                    'paid_at' => now()
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment successful',
+                'redirect' => route('order.confirmation', ['order' => $order->id])
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Payment failed', [ 
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
