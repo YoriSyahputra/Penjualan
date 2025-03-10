@@ -16,13 +16,27 @@
     </div>
 </section>
 
+@if(isset($store) && $store)
+    @include('partials.store-profile', ['store' => $store])
+@else
+    <div class="bg-yellow-100 p-4 text-yellow-800">
+        Debug: Store tidak tersedia. 
+        @if(isset($store))
+            Variabel store ada tetapi nilainya kosong
+        @else
+            Variabel store tidak didefinisikan
+        @endif
+    </div>
+@endif
+
 <!-- Main Content -->
-<section class="py-12 bg-gray-50">
+<section class="py-12 bg-white">
     <div class="container mx-auto px-4">
         <!-- Product Grid -->
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     @foreach($products as $product)
     <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
+    <a href="{{ route('product.details', ['id' => $product->id]) }}">
         <!-- Product Image -->
         <div class="relative overflow-hidden" style="height: 280px;"> 
             @if($product->productImages->isNotEmpty())
@@ -48,6 +62,7 @@
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-lg font-semibold text-gray-900 truncate">{{ $product->name }}</h3>
             </div>
+            </a>
             
             <!-- Price -->
             <div class="flex items-center justify-between mb-4">
@@ -91,6 +106,7 @@
                 </svg>
                 {{ $product->stock > 0 ? 'Add to Cart' : 'Out of Stock' }}
             </button>
+            
         </div>
     </div>
     @endforeach
@@ -178,7 +194,6 @@
 </div>
 </section>
 
-<!-- Toast Notification -->
 <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full opacity-0 transition-all duration-300">
     Item added to cart successfully!
 </div>

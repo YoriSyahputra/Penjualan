@@ -148,10 +148,20 @@
                             @foreach($product->variants as $index => $variant)
                             <div class="flex items-center space-x-2 variant-item">
                                 <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
-                                    <input type="text" name="variants[]" value="{{ $variant->name }}" 
-                                        class="bg-transparent border-none focus:ring-0 w-full text-gray-700"
-                                        placeholder="Enter variant name">
-                                    <button type="button" class="text-gray-400 hover:text-red-500 delete-variant transition-colors">
+                                    <div class="flex-1 flex gap-2">
+                                        <input type="text" name="variants[]" value="{{ $variant->name }}" 
+                                            class="bg-transparent border-none focus:ring-0 w-full text-gray-700"
+                                            placeholder="Enter variant name">
+                                        <div class="relative shadow-sm rounded-md w-1/3">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <span class="text-gray-500 sm:text-sm">$</span>
+                                            </div>
+                                            <input type="number" name="variant_prices[]" value="{{ $variant->price }}" 
+                                                class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                placeholder="Price" step="0.01" min="0">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="text-gray-400 hover:text-red-500 delete-variant transition-colors ml-2">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -165,16 +175,27 @@
                             Add Variant Option
                         </button>
                     </div>
+
                     <div class="space-y-4">
                         <label class="block text-sm font-medium text-gray-700">Package Options</label>
-                        <div id="variantsContainer" class="space-y-2">
+                        <div id="packagesContainer" class="space-y-2">
                             @foreach($product->packages as $index => $package)
                             <div class="flex items-center space-x-2 package-item">
                                 <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
-                                    <input type="text" name="packages[]" value="{{ $package->name }}" 
-                                        class="bg-transparent border-none focus:ring-0 w-full text-gray-700"
-                                        placeholder="Enter package name">
-                                    <button type="button" class="text-gray-400 hover:text-red-500 delete-package transition-colors">
+                                    <div class="flex-1 flex gap-2">
+                                        <input type="text" name="packages[]" value="{{ $package->name }}" 
+                                            class="bg-transparent border-none focus:ring-0 w-full text-gray-700"
+                                            placeholder="Enter package name">
+                                        <div class="relative shadow-sm rounded-md w-1/3">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <span class="text-gray-500 sm:text-sm">$</span>
+                                            </div>
+                                            <input type="number" name="package_prices[]" value="{{ $package->price }}" 
+                                                class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                placeholder="Price" step="0.01" min="0">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="text-gray-400 hover:text-red-500 delete-package transition-colors ml-2">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -188,11 +209,6 @@
                             Add Package Option
                         </button>
                     </div>
-
-                    <!-- Current Images -->
-
-
-                    <!-- New Images -->
                     <div>
                         <label for="images" class="block text-sm font-medium text-gray-700">Add New Images</label>
                         <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
@@ -246,8 +262,16 @@
         newVariant.className = 'flex items-center space-x-2 variant-item';
         newVariant.innerHTML = `
             <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
-                <input type="text" name="variants[]" class="bg-transparent border-none focus:ring-0 w-full text-gray-700" placeholder="Enter variant name">
-                <button type="button" class="text-gray-400 hover:text-red-500 delete-variant transition-colors">
+                <div class="flex-1 flex gap-2">
+                    <input type="text" name="variants[]" class="bg-transparent border-none focus:ring-0 w-full text-gray-700" placeholder="Enter variant name">
+                    <div class="relative shadow-sm rounded-md w-1/3">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" name="variant_prices[]" class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Price" step="0.01" min="0">
+                    </div>
+                </div>
+                <button type="button" class="text-gray-400 hover:text-red-500 delete-variant transition-colors ml-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -258,13 +282,21 @@
     });
 
     document.getElementById('addPackage').addEventListener('click', function() {
-        const container = document.getElementById('packageContainer');
+        const container = document.getElementById('packagesContainer');
         const newPackage = document.createElement('div');
-        newVariants.className = 'flex items-center space-x-2 package-item';
-        newVariants.innerHTML = `
+        newPackage.className = 'flex items-center space-x-2 package-item';
+        newPackage.innerHTML = `
             <div class="flex-1 p-3 bg-white border rounded-lg flex justify-between items-center shadow-sm">
-                <input type="text" name="packages[]" class="bg-transparent border-none focus:ring-0 w-full text-gray-700" placeholder="Enter package name">
-                <button type="button" class="text-gray-400 hover:text-red-500 delete-package transition-colors">
+                <div class="flex-1 flex gap-2">
+                    <input type="text" name="packages[]" class="bg-transparent border-none focus:ring-0 w-full text-gray-700" placeholder="Enter package name">
+                    <div class="relative shadow-sm rounded-md w-1/3">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" name="package_prices[]" class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Price" step="0.01" min="0">
+                    </div>
+                </div>
+                <button type="button" class="text-gray-400 hover:text-red-500 delete-package transition-colors ml-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -272,6 +304,19 @@
             </div>
         `;
         container.appendChild(newPackage);
+    });
+    // Delete variant functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-variant')) {
+            e.target.closest('.variant-item').remove();
+        }
+    });
+
+    // Delete package functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-package')) {
+            e.target.closest('.package-item').remove();
+        }
     });
 
     // Image Preview Functionality

@@ -1,37 +1,49 @@
 <!-- Modal Verifikasi PIN untuk Pembayaran Produk -->
-<div id="productPinModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-  <div class="bg-white rounded p-6 w-96 max-w-[90%]">
-    <h2 class="text-xl font-bold text-center mb-2">Masukkan PIN Anda</h2>
-    <p class="text-gray-600 text-center mb-4">Masukkan PIN 6 digit untuk konfirmasi pembayaran</p>
+<div id="productPinModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md hidden flex items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-lg p-8 w-96 max-w-[90%]">
+    <h2 class="text-2xl font-bold text-center text-gray-800 mb-4">Verifikasi PIN</h2>
+    <p class="text-gray-600 text-center mb-6">Masukkan PIN 6 digit untuk konfirmasi pembayaran Anda</p>
 
     <!-- Ringkasan Pembayaran -->
-    <div class="bg-gray-50 rounded p-4 mb-4">
+    <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 mb-6 border border-blue-200">
       <div class="flex justify-between">
         <span class="text-gray-600">Jumlah:</span>
-        <span class="font-semibold">Rp <span id="paymentSummaryAmount">0</span></span>
+        <span class="font-semibold text-gray-800">Rp <span id="paymentSummaryAmount">0</span></span>
       </div>
-      <div class="flex justify-between mt-2">
+      <div class="flex justify-between mt-3">
         <span class="text-gray-600">Order:</span>
-        <span id="orderNumberSummary" class="font-semibold"></span>
+        <span id="orderNumberSummary" class="font-semibold text-gray-800"></span>
       </div>
     </div>
 
-    <input type="password" id="productPinInput" class="w-full text-center text-2xl tracking-widest mb-4" placeholder="******" readonly maxlength="6">
+    <input type="password" id="productPinInput" class="w-full text-center text-2xl tracking-widest mb-6 border border-gray-300 rounded py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="******" readonly maxlength="6">
 
     <!-- Numpad PIN -->
-    <div class="grid grid-cols-3 gap-2 mb-4">
+    <div class="grid grid-cols-3 gap-3 mb-6">
       @foreach(range(1, 9) as $num)
-      <button type="button" class="product-pin-btn h-12 bg-gray-50 rounded text-xl font-semibold" data-val="{{ $num }}">{{ $num }}</button>
+      <button type="button" class="product-pin-btn h-14 bg-blue-50 rounded-lg text-xl font-bold text-blue-600 hover:bg-blue-100 transition-colors" data-val="{{ $num }}">{{ $num }}</button>
       @endforeach
-      <button type="button" class="h-12 bg-gray-50 rounded text-xl font-semibold" onclick="clearProductPin()">C</button>
-      <button type="button" class="product-pin-btn h-12 bg-gray-50 rounded text-xl font-semibold" data-val="0">0</button>
-      <button type="button" class="h-12 bg-gray-50 rounded text-xl font-semibold" onclick="deleteProductPin()">⌫</button>
+      <button type="button" class="h-14 bg-red-50 rounded-lg text-xl font-bold text-red-600 hover:bg-red-100 transition-colors" onclick="clearProductPin()">C</button>
+      <button type="button" class="product-pin-btn h-14 bg-blue-50 rounded-lg text-xl font-bold text-blue-600 hover:bg-blue-100 transition-colors" data-val="0">0</button>
+      <button type="button" class="h-14 bg-yellow-50 rounded-lg text-xl font-bold text-yellow-600 hover:bg-yellow-100 transition-colors" onclick="deleteProductPin()">⌫</button>
     </div>
 
-    <div class="flex gap-3">
-      <button type="button" onclick="cancelProductPin()" class="flex-1 border rounded px-4 py-2 hover:bg-gray-50">Batal</button>
-      <button type="button" onclick="confirmProductPin()" class="flex-1 bg-indigo-600 text-white rounded px-4 py-2 hover:bg-indigo-700">Konfirmasi</button>
-    </div>
+    <div class="flex gap-4">
+  <button 
+    type="button" 
+    onclick="cancelProductPin()" 
+    class="flex-1 border border-gray-300 bg-gray-200 rounded-lg px-4 py-2 text-gray-800 hover:bg-gray-300 transition duration-200"
+  >
+    Batal
+  </button>
+  <button 
+    type="button" 
+    onclick="confirmProductPin()" 
+    class="flex-1 border border-green-600 bg-green-500 rounded-lg px-4 py-2 text-white hover:bg-green-600 transition duration-200"
+  >
+    Konfirmasi
+  </button>
+</div>
   </div>
 </div>
 

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -20,7 +21,6 @@ class ProductController extends Controller
        'galeri' => [400, 400],
        'original' => [800, 800]
    ];
-
 public function index(Request $request)
 {
     try {
@@ -102,8 +102,12 @@ public function store(Request $request)
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'variants' => 'nullable|array',
             'variants.*' => 'nullable|string|max:255',
+            'variant_prices' => 'nullable|array',
+            'variant_prices.*' => 'nullable|numeric|min:0',
             'packages' => 'nullable|array',
-            'packages.*' => 'nullable|string|max:255',  
+            'packages.*' => 'nullable|string|max:255',
+            'package_prices' => 'nullable|array',
+            'package_prices.*' => 'nullable|numeric|min:0',
         ], [
             'name.required' => 'Product name is required',
             'name.max' => 'Product name cannot exceed 255 characters',  
@@ -157,25 +161,29 @@ public function store(Request $request)
                     return !empty(trim($variant));
                 });
                 
-                foreach ($variants as $variantName) {
+                foreach ($variants as $key => $variantName) {
                     ProductVariant::create([
                         'product_id' => $product->id,
-                        'name' => $variantName
+                        'name' => $variantName,
+                        'price' => $request->variant_prices[$key] ?? 0
                     ]);
                 }
             }
+            
             if ($request->has('packages')) {
                 $packages = array_filter($request->packages, function($package) {
                     return !empty(trim($package));
                 });
                 
-                foreach ($packages as $packageName) {
+                foreach ($packages as $key => $packageName) {
                     ProductPackage::create([
                         'product_id' => $product->id,
-                        'name' => $packageName
+                        'name' => $packageName,
+                        'price' => $request->package_prices[$key] ?? 0
                     ]);
                 }
             }
+            
             // Handle image uploads
             if ($request->hasFile('images')) {
                 $lastOrder = $product->productImages()->max('urutan') ?? 0;
@@ -243,8 +251,12 @@ public function update(Request $request, Product $product)
         'new_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         'variants' => 'nullable|array',
         'variants.*' => 'nullable|string|max:255',
+        'variant_prices' => 'nullable|array',
+        'variant_prices.*' => 'nullable|numeric|min:0',
         'packages' => 'nullable|array',
         'packages.*' => 'nullable|string|max:255',
+        'package_prices' => 'nullable|array',
+        'package_prices.*' => 'nullable|numeric|min:0',
     ]);
 
     DB::beginTransaction();
@@ -268,14 +280,14 @@ public function update(Request $request, Product $product)
                 return !empty(trim($variant));
             });
             
-            foreach ($variants as $variantName) {
+            foreach ($variants as $key => $variantName) {
                 ProductVariant::create([
                     'product_id' => $product->id,
-                    'name' => $variantName
+                    'name' => $variantName,
+                    'price' => $request->variant_prices[$key] ?? 0
                 ]);
             }
         }
-
         // Update packages
         $product->packages()->delete();
         if ($request->has('packages')) {
@@ -283,14 +295,14 @@ public function update(Request $request, Product $product)
                 return !empty(trim($package));
             });
             
-            foreach ($packages as $packageName) {
+            foreach ($packages as $key => $packageName) {
                 ProductPackage::create([
                     'product_id' => $product->id,
-                    'name' => $packageName
+                    'name' => $packageName,
+                    'price' => $request->package_prices[$key] ?? 0
                 ]);
             }
         }
-
         // Handle new images
         if ($request->hasFile('new_images')) {
             $lastOrder = $product->productImages()->max('urutan') ?? 0;
@@ -352,17 +364,30 @@ public function update(Request $request, Product $product)
        }
    }
    public function deleteImage(ProductImage $image)
-   {
-       if ($image->produk->user_id !== auth()->id()) {
-           abort(403);
-       }
+    {
+        // Check if the associated product exists
+        if (!$image->produk) {
+            // Optionally delete the orphaned image or abort
+            try {
+                $this->deleteProductImages($image->path_gambar);
+                $image->delete();
+                return back()->with('success', 'Image deleted successfully');
+            } catch (\Exception $e) {
+                return back()->with('error', 'Error deleting image: ' . $e->getMessage());
+            }
+        }
 
-       try {
-           $this->deleteProductImages($image->path_gambar);
-           $image->delete();
-           return back()->with('success', 'Image deleted successfully');
-       } catch (\Exception $e) {
-           return back()->with('error', 'Error deleting image: ' . $e->getMessage());
-       }
-   }
+        // Proceed with ownership check
+        if ($image->produk->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        try {
+            $this->deleteProductImages($image->path_gambar);
+            $image->delete();
+            return back()->with('success', 'Image deleted successfully');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error deleting image: ' . $e->getMessage());
+        }
+    }
 }

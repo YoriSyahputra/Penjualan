@@ -6,6 +6,7 @@ use App\Models\ProductImage;
 use App\Models\Category;
 use App\Models\ProductPackage;
 use App\Models\ProductVariant;
+use App\Models\Comment;
 use App\Models\Cart;  
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -18,7 +19,7 @@ class ShopController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Product::with(['productImages', 'category'])
+            $query = Product::with(['productImages', 'category', 'store'])
                 ->where('is_active', true);    
     
             // Handle search
@@ -29,48 +30,191 @@ class ShopController extends Controller
                       ->orWhere('description', 'like', "%{$searchTerm}%");
                 });
             }
-    
-            // Handle category filter - Modified this part
-            $selectedCategory = null;
-            if ($request->has('category')) {
-                $selectedCategory = Category::find($request->category);
-                if ($selectedCategory) {
-                    $query->where('category_id', $selectedCategory->id);
-                }
-            }
-    
-            // Sort products
-            $sortBy = $request->get('sort', 'latest');
-            switch ($sortBy) {
-                case 'price-low':
-                    $query->orderBy('price', 'asc');
-                    break;
-                case 'price-high':
-                    $query->orderBy('price', 'desc');
-                    break;
-                case 'popularity':
-                    $query->orderBy('views', 'desc');
-                    break;
-                default:
-                    $query->orderBy('created_at', 'desc');
-            }
-    
-            $products = $query->paginate(40);
-            $categories = Category::all();
-    
-            return view('ecom.shop', [
-                'products' => $products,
-                'categories' => $categories,
-                'selectedCategory' => $selectedCategory, // Now passing the Category model object
-                'searchTerm' => $request->search ?? '',
-                'sortBy' => $request->get('sort', 'latest')
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Shop index error: ' . $e->getMessage());
-            return back()->with('error', 'Unable to load products. Please try again.');
+        $store = null;
+        if ($request->has('store_id')) {
+            $store = \App\Models\Store::find($request->store_id);
+        } else {
+            // Fetch a random store instead of the first one
+            $store = \App\Models\Store::inRandomOrder()->first();
         }
+
+        // Handle category filter
+        $selectedCategory = null;
+        if ($request->has('category')) {
+            $selectedCategory = Category::find($request->category);
+            if ($selectedCategory) {
+                $query->where('category_id', $selectedCategory->id);
+            }
+        }
+
+        // Sort products
+        $sortBy = $request->get('sort', 'latest');
+        switch ($sortBy) {
+            case 'price-low':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price-high':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'popularity':
+                $query->orderBy('views', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+
+        $products = $query->paginate(40);
+        $categories = Category::all();
+
+        return view('ecom.shop', [
+            'products' => $products,
+            'categories' => $categories,
+            'selectedCategory' => $selectedCategory,
+            'searchTerm' => $request->search ?? '',
+            'sortBy' => $request->get('sort', 'latest'),
+            'store' => $store ? $store : null
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Shop index error: ' . $e->getMessage());
+        return back()->with('error', 'Unable to load products. Please try again.');
     }
-    public function cart()
+}
+public function storeProducts(Request $request, $storeId)
+{
+    try {
+        $store = \App\Models\Store::findOrFail($storeId);
+        
+        $query = Product::with(['productImages', 'category', 'store'])
+                ->where('store_id', $store->id) // Filter berdasarkan store
+                ->where('is_active', true);
+
+
+        
+        // Handle search
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%");
+            });
+        }
+        
+        // Handle category filter
+        $selectedCategory = null;
+        if ($request->has('category')) {
+            $selectedCategory = Category::find($request->category);
+            if ($selectedCategory) {
+                $query->where('category_id', $selectedCategory->id);
+            }
+        }
+        
+        // Sort products
+        $sortBy = $request->get('sort', 'latest');
+        switch ($sortBy) {
+            case 'price-low':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price-high':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'popularity':
+                $query->orderBy('views', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+        
+        $products = $query->paginate(12);
+        $categories = Category::all();
+        
+        // Ensure we're using the store.products view template
+        return view('store.products', data: [
+            'store' => $store,
+            'products' => $products,
+            'categories' => $categories,
+            'selectedCategory' => $selectedCategory,
+            'searchTerm' => $request->search ?? '',
+            'sortBy' => $sortBy
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Store products error: ' . $e->getMessage());
+        return back()->with('error', 'Unable to load store products. Please try again.');
+    }
+}
+public function storeProductsAjax(Request $request, $storeId)
+{
+    try {
+        $store = \App\Models\Store::findOrFail($storeId);
+        
+        $query = Product::with(['productImages', 'category'])
+            ->where('user_id', $store->user_id)
+            ->where('is_active', true);
+        
+        // Handle search
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%");
+            });
+        }
+        
+        // Handle category filter
+        $selectedCategory = null;
+        if ($request->has('category') && !empty($request->category)) {
+            $selectedCategory = Category::find($request->category);
+            if ($selectedCategory) {
+                $query->where('category_id', $selectedCategory->id);
+            }
+        }
+        
+        // Sort products
+        $sortBy = $request->get('sort', 'latest');
+        switch ($sortBy) {
+            case 'price-low':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price-high':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'popularity':
+                $query->orderBy('views', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+        
+        $products = $query->paginate(12);
+        
+        if ($request->ajax()) {
+            // Render products HTML
+            $productsHtml = view('partials.product-grid', [
+                'products' => $products,
+                'store' => $store
+            ])->render();
+            
+            // Render pagination HTML
+            $paginationHtml = $products->appends(request()->query())->links()->toHtml();
+            
+            return response()->json([
+                'html' => $productsHtml,
+                'pagination' => $paginationHtml,
+                'total' => $products->total()
+            ]);
+        }
+        
+        // This should not be reached if the request is AJAX
+        return redirect()->route('store.products', ['storeId' => $storeId]);
+    } catch (\Exception $e) {
+        if ($request->ajax()) {
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+        \Log::error('Store products error: ' . $e->getMessage());
+        return back()->with('error', 'Unable to load store products. Please try again.');
+    }
+}
+
+public function cart()
     {
         $cartItems = Cart::with(['product.productImages', 'variant', 'package'])
             ->where('user_id', auth()->id())
@@ -87,11 +231,11 @@ class ShopController extends Controller
                         $item->product->price;
                 
                 if ($item->variant) {
-                    $price += $item->variant->price_adjustment;
+                    $price += $item->variant->price;
                 }
                 
                 if ($item->package) {
-                    $price += $item->package->price_adjustment;
+                    $price += $item->package->price;
                 }
 
                 // Update image handling
@@ -191,7 +335,6 @@ class ShopController extends Controller
         ], 500);
     }
 }
-
     public function updateCartQuantity(Request $request, $cartItemId)
     {
         try {
@@ -327,6 +470,32 @@ class ShopController extends Controller
         ], 500);
     }
 }
+
+    public function getProductDetail($id) 
+    {
+        try {
+            $product = Product::with(['variants', 'packages', 'productImages'])->findOrFail($id);
+
+            // Ambil rekomendasi produk, misalnya produk lain dari kategori yang sama
+            $recommended = Product::where('category_id', $product->category_id)
+                                ->where('id', '!=', $product->id)
+                                ->take(4)
+                                ->get();
+
+            return view('ecom.product_details', [
+                'product'       => $product,
+                'variants'      => $product->variants,
+                'packages'      => $product->packages,
+                'productImages' => $product->productImages,
+                'recommended'   => $recommended // pastikan variabel ini dikirim ke view
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Get product details error: ' . $e->getMessage());
+            return redirect()->route('shop.index')->with('error', 'Product not found or an error occurred.');
+        }
+    }
+
+    
     public function getProductDetails($id)
     {
         $product = Product::with(['variants', 'packages', 'productImages'])
@@ -339,12 +508,22 @@ class ShopController extends Controller
             'productImages' => $product->productImages
         ]);
     }
-    public function checkout()
+
+    public function checkout(Request $request)
     {
         try {
-            // Ambil item cart dari user yang sedang login
+            // Ambil parameter 'items' dari URL, misalnya ?items=1,3
+            $selectedItemIds = $request->query('items') ? explode(',', $request->query('items')) : [];
+
+            if (empty($selectedItemIds)) {
+                return redirect()->route('cart.index')
+                    ->with('error', 'Tidak ada item yang dipilih untuk checkout.');
+            }
+
+            // Ambil item cart dari user yang sedang login hanya untuk item yang dipilih
             $cartItems = Cart::with(['product.productImages', 'variant', 'package'])
                 ->where('user_id', auth()->id())
+                ->whereIn('id', $selectedItemIds)
                 ->get();
 
             $items = [];
@@ -356,54 +535,52 @@ class ShopController extends Controller
                 // Periksa apakah product ada sebelum mengakses propertinya
                 if ($item->product) {
                     $price = $item->product->discount_price > 0 ? 
-                            $item->product->discount_price : 
-                            $item->product->price;
-                    
+                        $item->product->discount_price : 
+                        $item->product->price;
+
                     if ($item->variant) {
-                        $price += $item->variant->price_adjustment;
-                    }
-                    
-                    if ($item->package) {
-                        $price += $item->package->price_adjustment;
+                        $price += $item->variant->price;
                     }
 
-                    // Get main image
+                    if ($item->package) {
+                        $price += $item->package->price;
+                    }
+
+                    // Ambil gambar utama
                     $image = $item->product->productImages()
                         ->where('gambar_utama', true)
                         ->first();
 
                     $items[] = [
-                        'id' => $item->id,
-                        'product_id' => $item->product->id,
-                        'name' => $item->product->name,
-                        'price' => $price,
-                        'quantity' => $item->quantity,
-                        'image' => $image ? $image->path_gambar : null,
-                        'variant_name' => $item->variant?->name,
-                        'package_name' => $item->package?->name,
-                        'subtotal' => $price * $item->quantity
+                        'id'            => $item->id,
+                        'product_id'    => $item->product->id,
+                        'name'          => $item->product->name,
+                        'price'         => $price,
+                        'quantity'      => $item->quantity,
+                        'image'         => $image ? $image->path_gambar : null,
+                        'variant_name'  => $item->variant?->name,
+                        'package_name'  => $item->package?->name,
+                        'subtotal'      => $price * $item->quantity
                     ];
 
                     $subtotal += $price * $item->quantity;
                 } else {
-                    // Log warning untuk item cart yang tidak memiliki produk
                     \Log::warning('Checkout: Cart item #' . $item->id . ' has null product');
-                    
-                    // Optional: Hapus item cart yang tidak valid
-                    // $item->delete();
+                    // Optional: $item->delete();
                 }
             }
 
             return view('ecom.checkout', [
-                'items' => $items,
-                'subtotal' => $subtotal,
+                'items'       => $items,
+                'subtotal'    => $subtotal,
                 'shippingFee' => $shippingFee,
-                'serviceFee' => $serviceFee
+                'serviceFee'  => $serviceFee
             ]);
 
         } catch (\Exception $e) {
             \Log::error('Checkout error: ' . $e->getMessage());
-            return redirect()->route('cart.index')->with('error', 'Unable to process checkout. Please try again.');
+            return redirect()->route('cart.index')
+                ->with('error', 'Unable to process checkout. Please try again.');
         }
     }
     
@@ -413,18 +590,27 @@ class ShopController extends Controller
             // Validate request
             $validated = $request->validate([
                 'address' => 'required_without:selected_address|string|nullable',
-                'selected_address' => 'required_without:address|exists:user_addresses,id|nullable',
+                'selected_address' => 'required_without:address|exists:addresses,id|nullable',
                 'shipping_method' => 'required|in:regular,express',
                 'payment_method' => 'required|in:ludwig_payment,ewallet,cod',
+                'selected_items' => 'required|string', // Change from array to string
             ]);
 
-            // Get cart items
+            // Parse the comma-separated string into an array
+            $selectedItemIds = explode(',', $request->input('selected_items'));
+            
+            if (empty($selectedItemIds)) {
+                return redirect()->route('cart.index')->with('error', 'No items selected for checkout.');
+            }
+
+            // Get only the selected cart items
             $cartItems = Cart::with(['product', 'variant', 'package'])
                 ->where('user_id', auth()->id())
+                ->whereIn('id', $selectedItemIds)
                 ->get();
 
             if ($cartItems->isEmpty()) {
-                return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
+                return redirect()->route('cart.index')->with('error', 'No items selected for checkout.');
             }
 
             // Calculate totals
@@ -438,11 +624,11 @@ class ShopController extends Controller
                         $item->product->price;
                 
                 if ($item->variant) {
-                    $price += $item->variant->price_adjustment;
+                    $price += $item->variant->price;
                 }
                 
                 if ($item->package) {
-                    $price += $item->package->price_adjustment;
+                    $price += $item->package->price;
                 }
 
                 $subtotal += $price * $item->quantity;
@@ -482,11 +668,11 @@ class ShopController extends Controller
                         $item->product->price;
                 
                 if ($item->variant) {
-                    $price += $item->variant->price_adjustment;
+                    $price += $item->variant->price;
                 }
                 
                 if ($item->package) {
-                    $price += $item->package->price_adjustment;
+                    $price += $item->package->price;
                 }
 
                 OrderItem::create([
@@ -499,14 +685,16 @@ class ShopController extends Controller
                 ]);
             }
 
-            // Clear the cart
-            Cart::where('user_id', auth()->id())->delete();
+            // Only clear the selected cart items, not all
+            Cart::where('user_id', auth()->id())
+                ->whereIn('id', $selectedItemIds)
+                ->delete();
 
             // Redirect to order confirmation page
             return redirect()->route('order.confirmation', $order->id);
 
         } catch (\Exception $e) {
-            \Log::error('Place order error: ' . $e->getMessage());
+            Log::error('Place order error: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
             return redirect()->route('checkout')->with('error', 'Failed to place order. Please try again.');
         }
     }
@@ -549,83 +737,140 @@ class ShopController extends Controller
             'order' => $order,
         ]);
     }
-    public function unpaidOrders()
-{
-    // Ambil user yang sedang login
-    $user = auth()->user();
-
-    // Ambil semua orders untuk user tersebut (bukan hanya yang unpaid)
-    $allOrders = Order::where('user_id', $user->id)
-        ->with([
-            'items.product',
-            'items.variant',
-            'items.package'
-        ])
-        ->latest()
-        ->get();
-
-    // Filter untuk pending orders
-    $unpaidOrders = $allOrders->where('status', 'pending');
-
-    // Logging untuk debugging (opsional)
-    \Log::info('Unpaid Orders Debug:', [
-        'user_id' => $user->id,
-        'order_count' => $unpaidOrders->count(),
-        'orders' => $unpaidOrders->map(function ($order) {
-            return [
-                'id'          => $order->id,
-                'total'       => $order->total,
-                'items_count' => $order->items->count(),
-                'items'       => $order->items->map(function ($item) {
-                    return [
-                        'product_id'   => $item->product_id,
-                        'product_name' => $item->product->name ?? 'N/A',
-                        'quantity'     => $item->quantity,
-                        'price'        => $item->price,
-                        'variant_name' => $item->variant->name ?? null,
-                        'package_name' => $item->package->name ?? null,
-                    ];
-                })->toArray(),
-            ];
-        })->toArray(),
-    ]);
-
-    // Kembalikan view dengan data order yang belum dibayar
-    return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders'));
-}
-    public function cancel($id)
-    {
-        // Cari order berdasarkan id
-        $order = Order::findOrFail($id);
-
-        // Pastikan order milik user yang sedang login
-        if ($order->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        // Cek apakah order dalam status pending sehingga dapat dibatalkan
-        if ($order->status !== 'pending') {
-            return redirect()->back()->with('error', 'Order tidak dapat dibatalkan.');
-        }
-
-        // Update status order menjadi cancelled
-        $order->update(['status' => 'cancelled']);
-
-        return redirect()->route('payment.list_order_payment')->with('success', 'Order berhasil dibatalkan.');
-    }
-    public function listOrderPayment()
+    public function unpaidOrders(Request $request)
     {
         $user = auth()->user();
+        $search = $request->input('search');
+        $statusFilter = $request->input('status');
         
-        // Get all orders for the user
-        $allOrders = Order::where('user_id', $user->id)
-                          ->with(['items.product', 'items.variant', 'items.package'])
-                          ->orderBy('created_at', 'desc')
-                          ->get();
+        // Query builder for orders
+        $ordersQuery = Order::where('user_id', $user->id)
+                            ->with(['items.product', 'items.variant', 'items.package']);
         
-        // Get only unpaid orders for notification (assuming 'pending' status means unpaid)
-        $unpaidOrders = $allOrders->where('status', 'pending');
+        // Apply status filter if provided
+        if ($statusFilter) {
+            $ordersQuery->where('status', $statusFilter);
+        }
         
-        return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders'));
+        // Apply search if provided
+        if ($search) {
+            $ordersQuery->where(function($query) use ($search) {
+                $query->where('id', 'like', "%{$search}%")
+                    ->orWhereHas('items.product', function($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+        
+        // Get paginated results
+        $allOrders = $ordersQuery->latest()->paginate(10);
+        
+        // Get unpaid orders count for notification
+        $unpaidOrders = Order::where('user_id', $user->id)
+                            ->where('status', 'pending')
+                            ->get();
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('partials.orders-list', compact('allOrders', 'unpaidOrders', 'search'))->render(),
+                'pagination' => view('partials.pagination', compact('allOrders'))->render(),
+            ]);
+        }
+        
+        return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders', 'search', 'statusFilter'));
     }
+
+    public function cancel(Request $request, $id)
+{
+    // Cari order berdasarkan id
+    $order = Order::findOrFail($id);
+
+    // Pastikan order milik user yang sedang login
+    if ($order->user_id !== auth()->id()) {
+        if ($request->ajax()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+        }
+        abort(403, 'Unauthorized action.');
+    }
+
+    // Cek apakah order dalam status pending sehingga dapat dibatalkan
+    if ($order->status !== 'pending') {
+        if ($request->ajax()) {
+            return response()->json(['success' => false, 'message' => 'Order tidak dapat dibatalkan.']);
+        }
+        return redirect()->back()->with('error', 'Order tidak dapat dibatalkan.');
+    }
+
+    // Update status order menjadi cancelled
+    $order->update(['status' => 'cancelled']);
+
+    if ($request->ajax()) {
+        return response()->json(['success' => true, 'message' => 'Order berhasil dibatalkan.']);
+    }
+    return redirect()->route('ecom.list_order_payment')->with('success', 'Order berhasil dibatalkan.');
+}
+
+    public function listOrderPayment(Request $request)
+{
+    $user = auth()->user();
+    $search = $request->input('search');
+    
+    // Query builder for orders
+    $ordersQuery = Order::where('user_id', $user->id)
+                        ->with(['items.product', 'items.variant', 'items.package'])
+                        ->orderBy('created_at', 'desc');
+    
+    // Apply search if provided
+    if ($search) {
+        $ordersQuery->where(function($query) use ($search) {
+            $query->where('id', 'like', "%{$search}%")
+                  ->orWhereHas('items.product', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+        });
+    }
+    
+    // Get paginated results
+    $allOrders = $ordersQuery->paginate(10);
+    
+    // Get unpaid orders count for notification
+    $unpaidOrders = Order::where('user_id', $user->id)
+                         ->where('status', 'pending')
+                         ->get();
+    
+    return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders', 'search'));
+}
+public function addComment(Request $request, $productId)
+{
+    $request->validate([
+        'content' => 'required',
+        'photo'   => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'video'   => 'nullable|mimes:mp4,mov,avi|max:10000',
+    ]);
+
+    $comment = new Comment();
+    $comment->product_id = $productId;
+    $comment->user_id    = auth()->id();
+    $comment->content    = $request->content;
+
+    if ($request->hasFile('photo')) {
+       $photoPath = $request->file('photo')->store('comments/photos', 'public');
+       $comment->photo = $photoPath;
+    }
+
+    if ($request->hasFile('video')) {
+       $videoPath = $request->file('video')->store('comments/videos', 'public');
+       $comment->video = $videoPath;
+    }
+
+    $comment->save();
+
+    // Misal: Notifikasi ke seller agar dapat melihat komentar yang masuk.
+    $seller = $comment->product->store->seller; // Pastikan relasi sudah didefinisikan di model
+    // Contoh notifikasi (gunakan Notification Laravel atau metode lain)
+    // $seller->notify(new NewCommentNotification($comment));
+
+    return redirect()->back()->with('success', 'Comment added successfully.');
+}
+
 }

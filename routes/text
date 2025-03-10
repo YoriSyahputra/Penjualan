@@ -30,11 +30,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails'])->name('product.details');
-Route::get('/product/{id}', [ShopController::class, 'getProductDetail'])->name('product.details');
 Route::get('/store/{storeId}/products/ajax', [ShopController::class, 'storeProductsAjax'])
     ->name('store.products.ajax');
-Route::post('/product/{id}/addComment', [ShopController::class, 'addComment'])->name('product.addComment');
-
+    
 Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [ShopController::class, 'cart'])->name('index');
     Route::post('/add/{id}', [ShopController::class, 'addToCart'])->name('add');

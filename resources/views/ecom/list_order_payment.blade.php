@@ -11,6 +11,40 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+            <!-- Search and Filter Form -->
+            <div class="mb-6">
+                <div class="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-4">
+                    <div class="relative flex-grow">
+                        <input type="text" 
+                               id="searchInput" 
+                               value="{{ $search ?? '' }}" 
+                               placeholder="Search by Order ID or Product Name" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        @if(!empty($search))
+                            <button id="clearSearch" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                    <div class="flex space-x-2">
+                        <button type="button" data-status="all" class="status-filter px-4 py-2 rounded-md border {{ !isset($statusFilter) || $statusFilter == '' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                            All
+                        </button>
+                        <button type="button" data-status="pending" class="status-filter px-4 py-2 rounded-md border {{ isset($statusFilter) && $statusFilter == 'pending' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                            Pending
+                        </button>
+                        <button type="button" data-status="paid" class="status-filter px-4 py-2 rounded-md border {{ isset($statusFilter) && $statusFilter == 'paid' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                            Paid
+                        </button>
+                        <button type="button" data-status="cancelled" class="status-filter px-4 py-2 rounded-md border {{ isset($statusFilter) && $statusFilter == 'cancelled' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                            Cancelled
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Warning Message - Only show if there are unpaid orders -->
             @if($unpaidOrders->count() > 0)
             <div class="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
@@ -30,124 +64,175 @@
             </div>
             @endif
 
-            <!-- Orders List -->
-            @forelse($allOrders as $order)
-            <div class="border rounded-lg mb-4 overflow-hidden">
-                <div class="bg-gray-50 px-4 py-3 border-b">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <span class="text-sm text-gray-600">Order ID:</span>
-                            <span class="ml-2 font-medium">{{ $order->id }}</span>
-                            <span class="ml-4 text-sm text-gray-600">{{ $order->created_at->format('d M Y, H:i') }}</span>
-                        </div>
-                        <div>
-                            @if($order->status == 'pending')
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Unpaid
-                            </span>
-                            @elseif($order->status == 'paid')
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Paid
-                            </span>
-                            @elseif($order->status == 'cancelled')
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Cancelled
-                            </span>
-                            @elseif($order->status == 'delivered')
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Delivered
-                            </span>
-                            @else
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                {{ ucfirst($order->status) }}
-                            </span>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-4">
-                    <div class="space-y-4">
-                        @foreach($order->items as $item)
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 h-20 w-20">
-                                <img src="{{ asset('storage/' . $item->product->image) }}" 
-                                     alt="{{ $item->product->name }}" 
-                                     class="h-full w-full object-cover rounded-md">
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <div class="flex justify-between">
-                                    <div>
-                                        <h3 class="text-base font-medium text-gray-900">{{ $item->product->name }}</h3>
-                                        <p class="mt-1 text-sm text-gray-500">
-                                        @if($item->variant)
-                                            Variant: {{ $item->variant->name }}
-                                        @endif
-                                        @if($item->package)
-                                            @if($item->variant) · @endif
-                                            Package: {{ $item->package->name }}
-                                        @endif
-                                        </p>
-                                    </div>
-                                    <p class="text-sm font-medium text-gray-900">
-                                        Rp {{ number_format($item->price, 0, ',', '.') }}
-                                    </p>
-                                </div>
-                                <p class="mt-1 text-sm text-gray-500">Quantity: {{ $item->quantity }}</p>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-
-                    <div class="mt-6 border-t border-gray-200 pt-4">
-                        <div class="flex justify-between text-base font-medium text-gray-900">
-                            <p>Total Amount</p>
-                            <p>Rp {{ number_format($order->total, 0, ',', '.') }}</p>
-                        </div>
-                        
-                        <div class="mt-4 flex justify-end space-x-4">
-                            @if($order->status == 'pending')
-                                <form action="{{ route('order.cancel', $order->id) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                        Batalkan Order
-                                    </button>
-                                </form>
-                                <a href="{{ route('order.confirmation', $order->id) }}" 
-                                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Detail Pembayaran
-                                </a>
-                            @else
-                                <a href="{{ route('ecom.list_order_payment') }}" 
-                                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-8.268-2.943" />
-                                    </svg>
-                                    View Details
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+            <!-- Search Results Info -->
+            <div id="searchInfo" class="mb-4 text-sm text-gray-600 {{ empty($search) ? 'hidden' : '' }}">
+                Showing results for "<span id="searchTermDisplay">{{ $search }}</span>" (<span id="resultCount">{{ $allOrders->total() }}</span> found)
+                <button id="clearResults" class="text-indigo-600 hover:text-indigo-800 ml-2">
+                    Clear search
+                </button>
             </div>
-            @empty
-            <div class="text-center py-12">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">No Orders Found</h3>
-                <p class="mt-1 text-sm text-gray-500">You haven't placed any orders yet.</p>
-                <div class="mt-6">
-                    <a href="{{ route('shop.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Start Shopping
-                    </a>
-                </div>
+
+            <!-- Orders List - This will be replaced via AJAX -->
+            <div id="ordersList">
+                @include('partials.orders-list')
             </div>
-            @endforelse
+
+            <!-- Pagination - This will be replaced via AJAX -->
+            <div id="pagination">
+                @include('partials.pagination')
+            </div>
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        const clearResults = document.getElementById('clearResults');
+        const ordersList = document.getElementById('ordersList');
+        const pagination = document.getElementById('pagination');
+        const searchInfo = document.getElementById('searchInfo');
+        const searchTermDisplay = document.getElementById('searchTermDisplay');
+        const resultCount = document.getElementById('resultCount');
+        const statusFilters = document.querySelectorAll('.status-filter');
+        
+        let currentStatus = "{{ $statusFilter ?? '' }}";
+        let timer;
+        
+        // Function to fetch and update orders
+        function fetchOrders(search = '', status = '', page = null) {
+            const url = new URL("{{ route('ecom.list_order_payment') }}");
+            
+            if (search) url.searchParams.append('search', search);
+            if (status) url.searchParams.append('status', status);
+            if (page) url.searchParams.append('page', page);
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                ordersList.innerHTML = data.html;
+                pagination.innerHTML = data.pagination;
+                
+                // Update search info
+                if (search) {
+                    searchInfo.classList.remove('hidden');
+                    searchTermDisplay.textContent = search;
+                    resultCount.textContent = document.querySelectorAll('#ordersList > div').length - 1; // subtract the empty state div
+                } else {
+                    searchInfo.classList.add('hidden');
+                }
+                
+                // Reinitialize the event listeners for pagination
+                initPaginationListeners();
+                
+                // Reinitialize the event listeners for cancel forms
+                initCancelFormListeners();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        
+        // Initialize event listeners for pagination
+        function initPaginationListeners() {
+            document.querySelectorAll('.pagination-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.href.split('page=')[1];
+                    fetchOrders(searchInput.value, currentStatus, page);
+                });
+            });
+        }
+        
+        // Initialize event listeners for cancel forms
+        function initCancelFormListeners() {
+            document.querySelectorAll('.cancel-order-form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    if (confirm('Are you sure you want to cancel this order?')) {
+                        const formData = new FormData(this);
+                        fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Show success message
+                            alert(data.message || 'Order cancelled successfully');
+                            
+                            // Refresh the orders list
+                            fetchOrders(searchInput.value, currentStatus);
+                        })
+                        .catch(error => console.error('Error:', error));
+                    }
+                });
+            });
+        }
+        
+        // Search input event
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                fetchOrders(this.value, currentStatus);
+            }, 500);
+        });
+        
+        // Clear search button
+        if (clearSearch) {
+            clearSearch.addEventListener('click', function() {
+                searchInput.value = '';
+                fetchOrders('', currentStatus);
+            });
+        }
+        
+        // Clear results button
+        clearResults.addEventListener('click', function() {
+            searchInput.value = '';
+            fetchOrders('', currentStatus);
+        });
+        
+        // Status filter buttons
+        statusFilters.forEach(button => {
+            button.addEventListener('click', function() {
+                const status = this.dataset.status === 'all' ? '' : this.dataset.status;
+                
+                // Update visual state
+                statusFilters.forEach(btn => {
+                    btn.classList.remove('bg-indigo-600', 'bg-yellow-500', 'bg-green-600', 'bg-red-600', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                });
+                
+                if (status === 'pending') {
+                    this.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                    this.classList.add('bg-yellow-500', 'text-white');
+                } else if (status === 'paid') {
+                    this.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                    this.classList.add('bg-green-600', 'text-white');
+                } else if (status === 'cancelled') {
+                    this.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                    this.classList.add('bg-red-600', 'text-white');
+                } else {
+                    this.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+                    this.classList.add('bg-indigo-600', 'text-white');
+                }
+                
+                currentStatus = status;
+                fetchOrders(searchInput.value, status);
+            });
+        });
+        
+        // Initialize pagination and cancel form listeners
+        initPaginationListeners();
+        initCancelFormListeners();
+    });
+</script>
+@endpush
 @endsection

@@ -34,7 +34,7 @@
                         <span class="font-semibold">E-Wallet</span>
                     </div>
                     <p class="text-sm text-gray-600">Your Balance:</p>
-                    <p class="text-lg font-bold text-indigo-600">Rp {{ number_format(auth()->user()->wallet->balance ?? 0, 0, ',', '.') }}</p>
+                    <p class="text-lg font-bold text-indigo-600">Rp {{ number_format(auth()->user()->wallet->balance ?? 0, decimals: 0, decimal_separator: ',', thousands_separator: '.') }}</p>
                 </div>
 
 
@@ -111,7 +111,7 @@
         <div class="flex space-x-4 md:space-x-6 py-2">
         <!-- Pakaian & Aksesoris -->
         <a href="{{ route('shop.index', ['category' => 1]) }}" class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform">
-            <img src="{{ asset('storage/componen/baju.png') }}" alt="Fashion Category" class="w-full h-40 object-cover">
+            <img src="{{ asset('storage\componen\baju.jpg') }}" alt="Fashion Category" class="w-full h-40 object-cover">
             <div class="p-3 md:p-4">
                 <h4 class="font-semibold text-base md:text-lg mb-1">Pakaian & Aksesoris</h4>
                 <p class="text-gray-600 text-xs md:text-sm">Koleksi lengkap fashion</p>
@@ -120,7 +120,7 @@
 
         <!-- Rumah Tangga -->
         <a href="{{ route('shop.index', ['category' => 2]) }}" class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform">
-            <img src="{{ asset('storage/componen/household.png') }}" alt="Household Category" class="w-full h-40 object-cover">
+            <img src="{{ asset('storage/componen/rumah_tangga.jpg') }}" alt="Household Category" class="w-40 h-40 object-cover">
             <div class="p-3 md:p-4">
                 <h4 class="font-semibold text-base md:text-lg mb-1">Rumah Tangga</h4>
                 <p class="text-gray-600 text-xs md:text-sm">Perlengkapan rumah tangga</p>
@@ -129,7 +129,7 @@
 
         <!-- Dekorasi -->
         <a href="{{ route('shop.index', ['category' => 3]) }}" class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform">
-            <img src="{{ asset('storage/componen/decoration.png') }}" alt="Decoration Category" class="w-full h-40 object-cover">
+            <img src="{{ asset('storage/componen/plant.jpg') }}" alt="Decoration Category" class="w-40 h-40 object-cover">
             <div class="p-3 md:p-4">
                 <h4 class="font-semibold text-base md:text-lg mb-1">Dekorasi</h4>
                 <p class="text-gray-600 text-xs md:text-sm">Hiasan rumah & dekorasi</p>
@@ -138,7 +138,7 @@
 
         <!-- Kamar Mandi -->
         <a href="{{ route('shop.index', ['category' => 4]) }}" class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform">
-            <img src="{{ asset('storage/componen/bathroom.png') }}" alt="Bathroom Category" class="w-full h-40 object-cover">
+            <img src="{{ asset('storage/componen/bathub.jpg') }}" alt="Bathroom Category" class="w-40 h-40 object-cover">
             <div class="p-3 md:p-4">
                 <h4 class="font-semibold text-base md:text-lg mb-1">Kamar Mandi</h4>
                 <p class="text-gray-600 text-xs md:text-sm">Peralatan kamar mandi</p>
@@ -147,7 +147,7 @@
 
         <!-- Kebutuhan Rumah -->
         <a href="{{ route('shop.index', ['category' => 5]) }}" class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform">
-            <img src="{{ asset('storage/componen/home-needs.png') }}" alt="Home Needs Category" class="w-full h-40 object-cover">
+            <img src="{{ asset('storage/componen/vacum.jpg') }}" alt="Home Needs Category" class="w-40 h-40 object-cover">
             <div class="p-3 md:p-4">
                 <h4 class="font-semibold text-base md:text-lg mb-1">Kebutuhan Rumah</h4>
                 <p class="text-gray-600 text-xs md:text-sm">Kebutuhan rumah sehari-hari</p>
@@ -156,7 +156,7 @@
 
         <!-- Tempat Penyimpanan -->
         <a href="{{ route('shop.index', ['category' => 6]) }}" class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform">
-            <img src="{{ asset('storage/componen/storage.png') }}" alt="Storage Category" class="w-full h-40 object-cover">
+            <img src="{{ asset('storage/componen/lemari.jpg') }}" alt="Storage Category" class="w-40 h-40 object-cover">
             <div class="p-3 md:p-4">
                 <h4 class="font-semibold text-base md:text-lg mb-1">Tempat Penyimpanan</h4>
                 <p class="text-gray-600 text-xs md:text-sm">Solusi penyimpanan</p>
@@ -165,7 +165,7 @@
 
         <!-- Elektronik -->
         <a href="{{ route('shop.index', ['category' => 7]) }}" class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform">
-            <img src="{{ asset('storage/componen/electronics.png') }}" alt="Electronics Category" class="w-full h-40 object-cover">
+            <img src="{{ asset('storage/componen/rog.jpg') }}" alt="Electronics Category" class="w-40 h-40 object-cover">
             <div class="p-3 md:p-4">
                 <h4 class="font-semibold text-base md:text-lg mb-1">Elektronik</h4>
                 <p class="text-gray-600 text-xs md:text-sm">Peralatan elektronik</p>
@@ -174,7 +174,7 @@
 
         <!-- Action Figure -->
         <a href="{{ route('shop.index', ['category' => 8]) }}" class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform">
-            <img src="{{ asset('storage/componen/action-figures.png') }}" alt="Action Figures Category" class="w-full h-40 object-cover">
+            <img src="{{ asset('storage/componen/spawn.jpg') }}" alt="Action Figures Category" class="w-40 h-40 object-cover">
             <div class="p-3 md:p-4">
                 <h4 class="font-semibold text-base md:text-lg mb-1">Action Figure</h4>
                 <p class="text-gray-600 text-xs md:text-sm">Koleksi action figure</p>
@@ -183,7 +183,7 @@
 
         <!-- Alat Olahraga -->
         <a href="{{ route('shop.index', ['category' => 9]) }}" class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform">
-            <img src="{{ asset('storage/componen/sports.png') }}" alt="Sports Category" class="w-full h-40 object-cover">
+            <img src="{{ asset('storage/componen/run.jpg') }}" alt="Sports Category" class="w-40 h-40 object-cover">
             <div class="p-3 md:p-4">
                 <h4 class="font-semibold text-base md:text-lg mb-1">Alat Olahraga</h4>
                 <p class="text-gray-600 text-xs md:text-sm">Peralatan olahraga</p>
@@ -201,6 +201,7 @@
             @foreach($products as $product)
             <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <!-- Product Image -->
+                <a href="{{ route('product.details', ['id' => $product->id]) }}">
                 <div class="relative overflow-hidden" style="height: 280px;"> 
                     @if($product->productImages->isNotEmpty())
                         <img src="{{ asset('storage/' . $product->productImages->first()->path_gambar) }}"
@@ -269,6 +270,7 @@
                         {{ $product->stock > 0 ? 'Add to Cart' : 'Out of Stock' }}
                     </button>
                 </div>
+                </a>
             </div>
             @endforeach
         </div>

@@ -1,0 +1,14 @@
+
+
+public function getProductDetails($id)
+{
+    $product = Product::with(['variants', 'packages', 'productImages'])
+        ->findOrFail($id);
+    
+    return response()->json([
+        'product' => $product,
+        'variants' => $product->variants,
+        'packages' => $product->packages,
+        'productImages' => $product->productImages
+    ]);
+}

@@ -7,7 +7,8 @@ class ProductPackage extends Model
 {
     protected $fillable = [
         'product_id',
-        'name'
+        'name',
+        'price',
     ];
 
     public function product()

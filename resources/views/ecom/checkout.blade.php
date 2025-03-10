@@ -10,8 +10,10 @@
             </div>
         </div>
 
-        <form action="{{ route('checkout.process') }}" method="POST" class="checkout-form">
+        <form method="POST" class="checkout-form" action="{{ route('checkout.process') }}" >
             @csrf
+        
+        <input type="hidden" name="selected_items" value="{{ implode(',', array_column($items, 'id')) }}"></div>
             <div class="flex flex-col lg:flex-row gap-8">
                 <!-- Left Column -->
                 <div class="lg:w-2/3 space-y-6">
@@ -167,7 +169,7 @@
                                         </div>
                                         <div class="flex items-center space-x-2">
                                             <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">Recommended</span>
-                                            <img src="/images/ludwig-payment-logo.png" alt="Ludwig Payment" class="h-8 w-auto" onerror="this.src='/images/payment-default.png'">
+                                            <div class="text-sm text-gray-600">Rp {{ number_format(auth()->user()->wallet?->balance ?? 0, 0, ',', '.') }}</div>
                                         </div>
                                     </div>
                                     <div class="mt-2 text-sm text-gray-500">
@@ -284,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
     shippingInputs.forEach(input => {
         input.addEventListener('change', function() {
             const selectedMethod = this.value;
-            // Update shipping fee and total (you'll need to implement this)
+            // Update shipping fee and total (anda perlu mengimplementasikan logika ini)
         });
     });
 
@@ -293,122 +295,73 @@ document.addEventListener('DOMContentLoaded', function() {
     voucherButton?.addEventListener('click', function() {
         const voucherCode = document.querySelector('input[name="store_voucher"]').value;
         if (voucherCode) {
-            // Validate and apply voucher (you'll need to implement this)
+            // Validasi dan terapkan voucher (anda perlu mengimplementasikan logika ini)
         }
     });
 });
 
 function toggleAddressList() {
     const addressList = document.getElementById('addressList');
-    addressList.classList.toggle('hidden');
+    if (addressList) {
+        addressList.classList.toggle('hidden');
+    }
 }
 
 function fillAddressForm(address) {
-    // Split full name into first and last name (assuming space separation)
+    // Pisahkan nama lengkap menjadi first name dan last name (asumsi dipisahkan dengan spasi)
     const names = address.recipient_name.split(' ');
-    document.getElementById('first_name').value = names[0] || '';
-    document.getElementById('last_name').value = names.slice(1).join(' ') || '';
+
+    // Cek dan set first_name jika elemen ada
+    const firstNameEl = document.getElementById('first_name');
+    if (firstNameEl) {
+        firstNameEl.value = names[0] || '';
+    }
+
+    // Cek dan set last_name jika elemen ada
+    const lastNameEl = document.getElementById('last_name');
+    if (lastNameEl) {
+        lastNameEl.value = names.slice(1).join(' ') || '';
+    }
+
+    // Cek dan set address jika elemen ada
+    const addressEl = document.getElementById('address');
+    if (addressEl) {
+        addressEl.value = address.address;
+    }
+
+    // Cek dan set phone jika elemen ada
+    const phoneEl = document.getElementById('phone');
+    if (phoneEl) {
+        phoneEl.value = address.phone_number;
+    }
+
+    // Cek dan set postal_code jika elemen ada
+    const postalCodeEl = document.getElementById('postal_code');
+    if (postalCodeEl) {
+        postalCodeEl.value = address.postal_code || '';
+    }
     
-    document.getElementById('address').value = address.address;
-    document.getElementById('phone').value = address.phone_number;
-    document.getElementById('postal_code').value = address.postal_code || '';
-    
-    // Hide the address list after selection
-    document.getElementById('addressList').classList.add('hidden');
+    // Sembunyikan daftar alamat setelah pemilihan
+    const addressListEl = document.getElementById('addressList');
+    if (addressListEl) {
+        addressListEl.classList.add('hidden');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const ludwigPaymentRadio = document.querySelector('input[value="ludwig_payment"]');
     const instructionsDiv = document.getElementById('ludwigPaymentInstructions');
 
-    // Show/hide Ludwig Payment instructions based on selection
+    // Tampilkan/sembunyikan instruksi Ludwig Payment berdasarkan pilihan payment_method
     document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.value === 'ludwig_payment') {
-                instructionsDiv.classList.remove('hidden');
+                instructionsDiv?.classList.remove('hidden');
             } else {
-                instructionsDiv.classList.add('hidden');
+                instructionsDiv?.classList.add('hidden');
             }
         });
     });
 });
-
-    // Modify the existing payment processing for Ludwig Payment
-    const checkoutForm = document.querySelector('.checkout-form');
-    checkoutForm?.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-        
-        if (selectedPaymentMethod === 'ludwig_payment') {
-            // Generate a unique payment code for Ludwig Payment
-            const paymentCode = generateLudwigPaymentCode();
-            
-            // Show the Ludwig Payment modal with the code
-            showLudwigPaymentModal(paymentCode);
-        } else {
-            // Handle other payment methods as before
-            // Your existing payment processing code
-        }
-    });
-});
-
-function generateLudwigPaymentCode() {
-    // Generate a random 12-digit payment code
-    return Math.random().toString().slice(2, 14);
-}
-
-function showLudwigPaymentModal(paymentCode) {
-    const modalHTML = `
-        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 z-40 flex items-center justify-center ludwig-payment-modal">
-            <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4">
-                <h3 class="text-xl font-semibold mb-4">Ludwig Payment</h3>
-                
-                <div class="text-center mb-6">
-                    <div class="text-sm text-gray-600 mb-2">Your Payment Code:</div>
-                    <div class="text-3xl font-bold tracking-wide text-gray-900 mb-2">${paymentCode}</div>
-                    <div class="text-xs text-gray-500">Code valid for 15 minutes</div>
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-lg mb-6">
-                    <h4 class="font-medium text-blue-900 mb-2">Next Steps:</h4>
-                    <ol class="list-decimal list-inside space-y-2 text-sm text-blue-800">
-                        <li>Open your Ludwig Payment app</li>
-                        <li>Enter this payment code</li>
-                        <li>Confirm payment with your PIN</li>
-                    </ol>
-                </div>
-
-                <div class="flex gap-3">
-                    <button type="button" 
-                            onclick="copyPaymentCode('${paymentCode}')"
-                            class="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Copy Code
-                    </button>
-                    <button type="button" 
-                            onclick="closeLudwigPaymentModal()"
-                            class="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
-
-function copyPaymentCode(code) {
-    navigator.clipboard.writeText(code).then(() => {
-        alert('Payment code copied to clipboard!');
-    });
-}
-
-function closeLudwigPaymentModal() {
-    const modal = document.querySelector('.ludwig-payment-modal');
-    modal.remove();
-}
-
 </script>
 @endpush
 @endsection

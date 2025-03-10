@@ -1,415 +1,164 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <link rel="stylesheet" src="https://cdn.tailwindcss.com">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Header Interaktif</title>
+  <!-- Import Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .header-section {
+      position: relative;
+      overflow: hidden;
+      padding: 3rem 0;
+      background: linear-gradient(45deg, #4338ca, #ab7aff);
+      background-size: 400% 400%;
+      animation: gradientBG 3s ease infinite;
+    }
+    
+    @keyframes gradientBG {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .text-white {
+      color: white;
+    }
+    
+    .heading {
+      font-size: 3rem;
+      font-weight: bold;
+      display: inline-flex;
+      flex-wrap: wrap;
+    }
+    
+    .word {
+      display: inline-block;
+      margin-right: 0.5rem; /* Mengatur jarak antar kata */
+    }
+    
+    .letter {
+      display: inline-block;
+      transition: transform 0.3s ease;
+      position: relative;
+    }
+    
+    @media (min-width: 768px) {
+      .heading {
+        font-size: 4rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  @extends('layouts.depan')
-
-@section('content')
-<!-- Shop Header/Hero Section -->
-<section class="bg-gradient-to-r from-indigo-500 to-purple-600 py-12">
-    <div class="container mx-auto px-4">
-<div class="text-center text-white">
-    <h1 class="text-4xl md:text-5xl font-bold mb-4">
-    @if($selectedCategory && $selectedCategory instanceof \App\Models\Category)
-        {{ $selectedCategory->name }}
-    @else
-        All Products
-    @endif
-    </h1>
-</div>
+  <section class="header-section">
+    <div class="container">
+      <div class="text-center text-white">
+        <h1 class="heading">
+          <span class="word">
+            <span class="letter">C</span>
+            <span class="letter">A</span>
+            <span class="letter">R</span>
+            <span class="letter">I</span>
+          </span>
+          <span class="word">
+            <span class="letter">B</span>
+            <span class="letter">a</span>
+            <span class="letter">r</span>
+            <span class="letter">a</span>
+            <span class="letter">n</span>
+            <span class="letter">g</span>
+          </span>
+          <span class="word">
+            <span class="letter">Y</span>
+            <span class="letter">a</span>
+            <span class="letter">n</span>
+            <span class="letter">g</span>
+          </span>
+          <span class="word">
+            <span class="letter">K</span>
+            <span class="letter">a</span>
+            <span class="letter">m</span>
+            <span class="letter">u</span>
+          </span>
+          <span class="word">
+            <span class="letter">S</span>
+            <span class="letter">u</span>
+            <span class="letter">k</span>
+            <span class="letter">a</span>
+          </span>
+          <span class="word">
+            <span class="letter">d</span>
+            <span class="letter">i</span>
+          </span>
+          <span class="word">
+            <span class="letter">s</span>
+            <span class="letter">i</span>
+            <span class="letter">n</span>
+            <span class="letter">i</span>
+          </span>
+        </h1>
+      </div>
     </div>
-</section>
+  </section>
 
-<!-- Main Content -->
-<section class="py-12 bg-gray-50">
-    <div class="container mx-auto px-4">
-        <!-- Product Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-    @foreach($products as $product)
-    <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
-        <!-- Product Image -->
-        <div class="relative overflow-hidden" style="height: 280px;"> 
-            @if($product->productImages->isNotEmpty())
-                <img src="{{ asset('storage/' . $product->productImages->first()->path_gambar) }}"
-                     alt="{{ $product->name }}"
-                     class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
-            @else
-                <img src="/api/placeholder/300/300" 
-                     alt="No image"
-                     class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
-            @endif
-            
-            <!-- Category Badge -->
-            <div class="absolute top-2 right-2">
-                <span class="bg-black bg-opacity-50 text-white text-xs font-medium px-2.5 py-1 rounded">
-                    {{ $product->category->name }}
-                </span>
-            </div>
-        </div>
-
-        <!-- Product Info -->
-        <div class="p-4">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-lg font-semibold text-gray-900 truncate">{{ $product->name }}</h3>
-            </div>
-            
-            <!-- Price -->
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    @if($product->discount_price)
-                        <span class="text-gray-500 line-through text-sm">Rp.{{ number_format($product->price, 0, ',', '.') }}</span>
-                        <span class="text-lg font-bold text-gray-900 ml-2">Rp.{{ number_format($product->discount_price, 0, ',', '.') }}</span>
-                        <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded ml-2">
-                            {{ round((($product->price - $product->discount_price) / $product->price) * 100) }}% OFF
-                        </span>
-                    @else
-                        <span class="text-lg font-bold text-gray-900">Rp.{{ number_format($product->price, 0, ',', '.') }}</span>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Stock Status -->
-            @if($product->stock > 0)
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span class="text-sm text-green-600">In Stock ({{ $product->stock }})</span>
-                </div>
-            @else
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-                    <span class="text-sm text-red-600">Out of Stock</span>
-                </div>
-            @endif
-
-            <!-- Add to Cart Button -->
-            <button 
-                @auth
-                    onclick="openCartModal({{ $product->id }})"
-                @else
-                    onclick="redirectToLogin()"
-                @endauth
-                @if($product->stock <= 0) disabled @endif
-                class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                {{ $product->stock > 0 ? 'Add to Cart' : 'Out of Stock' }}
-            </button>
-        </div>
-    </div>
-    @endforeach
-</div>
-
-        <!-- Empty State -->
-        @if($products->isEmpty())
-        <div class="text-center py-12">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No products found</h3>
-            <p class="mt-1 text-sm text-gray-500">Try adjusting your search or filter to find what you're looking for.</p>
-        </div>
-        @endif
-
-        <!-- Pagination -->
-        @if ($products->hasPages())
-    <div class="mt-8">
-        <div class="flex justify-center">
-            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                {{-- Previous Page Link --}}
-                @if ($products->onFirstPage())
-                    <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500">
-                        <span class="sr-only">Previous</span>
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </span>
-                @else
-                    <a href="{{ $products->previousPageUrl() }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span class="sr-only">Previous</span>
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </a>
-                @endif
-
-                @php
-                    $start = max(1, $products->currentPage() - 3);
-                    $end = min($start + 7, $products->lastPage());
-                @endphp
-
-                @if($start > 1)
-                    <a href="{{ $products->url(1) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">1</a>
-                    @if($start > 2)
-                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
-                    @endif
-                @endif
-
-                @for ($i = $start; $i <= $end; $i++)
-                    @if ($i == $products->currentPage())
-                        <span class="relative inline-flex items-center px-4 py-2 border border-indigo-500 bg-indigo-50 text-sm font-medium text-indigo-600">{{ $i }}</span>
-                    @else
-                        <a href="{{ $products->url($i) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">{{ $i }}</a>
-                    @endif
-                @endfor
-
-                @if($end < $products->lastPage())
-                    @if($end < $products->lastPage() - 1)
-                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
-                    @endif
-                    <a href="{{ $products->url($products->lastPage()) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">{{ $products->lastPage() }}</a>
-                @endif
-
-                {{-- Next Page Link --}}
-                @if ($products->hasMorePages())
-                    <a href="{{ $products->nextPageUrl() }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span class="sr-only">Next</span>
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>@extends('layouts.depan')
-
-@section('content')
-@include('partials.cart-modal')
-<!-- Hero Section with Parallax Effect -->
-<section class="relative h-64 md:h-80 overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-700 transform -skew-y-3 origin-top-right"></div>
-    <div class="absolute inset-0 bg-opacity-60 bg-black flex items-center justify-center">
-        <div class="text-center text-white space-y-4 px-4">
-            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight">
-                @if($selectedCategory && $selectedCategory instanceof \App\Models\Category)
-                    {{ $selectedCategory->name }}
-                @else
-                    Discover Our Collection
-                @endif
-            </h1>
-            <p class="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto">
-                Find the perfect items that match your style
-            </p>
-        </div>
-    </div>
-</section>
-
-<!-- Main Content -->
-<section class="py-16 bg-gray-50">
-    <div class="container mx-auto px-4">
-        <!-- Product Grid with Enhanced Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            @foreach($products as $product)
-            <div class="group">
-                <div class="relative bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                    <!-- Product Image with Overlay -->
-                    <div class="relative aspect-square overflow-hidden">
-                        @if($product->productImages->isNotEmpty())
-                            <img src="{{ asset('storage/' . $product->productImages->first()->path_gambar) }}"
-                                 alt="{{ $product->name }}"
-                                 class="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-110">
-                        @else
-                            <img src="/api/placeholder/300/300" 
-                                 alt="No image"
-                                 class="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-110">
-                        @endif
-                        
-                        <!-- Category Badge with Glass Effect -->
-                        <div class="absolute top-3 right-3">
-                            <span class="backdrop-blur-md bg-white/30 text-white text-sm font-medium px-3 py-1.5 rounded-full border border-white/30">
-                                {{ $product->category->name }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Product Info with Enhanced Layout -->
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2 truncate">{{ $product->name }}</h3>
-                        
-                        <!-- Pricing Section with Modern Design -->
-                        <div class="space-y-3 mb-4">
-                            @if($product->discount_price)
-                                <div class="flex items-center gap-2">
-                                    <span class="text-2xl font-bold text-indigo-600">Rp.{{ number_format($product->discount_price, 0, ',', '.') }}</span>
-                                    <span class="text-sm text-gray-500 line-through">Rp.{{ number_format($product->price, 0, ',', '.') }}</span>
-                                </div>
-                                <span class="inline-flex items-center bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                    </svg>
-                                    {{ round((($product->price - $product->discount_price) / $product->price) * 100) }}% OFF
-                                </span>
-                            @else
-                                <span class="text-2xl font-bold text-indigo-600">Rp.{{ number_format($product->price, 0, ',', '.') }}</span>
-                            @endif
-                        </div>
-
-                        <!-- Stock Status with Enhanced Indicators -->
-                        @if($product->stock > 0)
-                            <div class="flex items-center gap-2 mb-6">
-                                <div class="relative">
-                                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                                    <div class="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
-                                </div>
-                                <span class="text-sm font-medium text-green-600">In Stock ({{ $product->stock }})</span>
-                            </div>
-                        @else
-                            <div class="flex items-center gap-2 mb-6">
-                                <span class="w-3 h-3 bg-red-500 rounded-full"></span>
-                                <span class="text-sm font-medium text-red-600">Out of Stock</span>
-                            </div>
-                        @endif
-
-                        <!-- Add to Cart Button with Animation -->
-                        <button 
-                            @auth
-                                onclick="openCartModal({{ $product->id }})"
-                            @else
-                                onclick="redirectToLogin()"
-                            @endauth
-                            @if($product->stock <= 0) disabled @endif
-                            class="w-full bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 transform transition-all duration-300 hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <span class="font-medium">{{ $product->stock > 0 ? 'Add to Cart' : 'Out of Stock' }}</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-
-        <!-- Empty State with Enhanced Design -->
-        @if($products->isEmpty())
-        <div class="text-center py-16 bg-white rounded-2xl shadow-lg">
-            <div class="relative mx-auto w-24 h-24 mb-4">
-                <svg class="w-full h-full text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <div class="absolute inset-0 bg-gray-400 opacity-20 animate-pulse rounded-full"></div>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-            <p class="text-gray-500">Try adjusting your search or filter to find what you're looking for.</p>
-        </div>
-        @endif
-
-        <!-- Enhanced Pagination -->
-@if ($products->hasPages())
-    <div class="mt-12">
-        <div class="flex justify-center">
-            <nav class="relative z-0 inline-flex rounded-xl shadow-lg overflow-hidden" aria-label="Pagination">
-                {{-- Previous Page Link --}}
-                @if ($products->onFirstPage())
-                    <span class="relative inline-flex items-center px-4 py-3 bg-gray-100 text-gray-400 text-sm font-medium border-r border-gray-200">
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </span>
-                @else
-                    <a href="{{ $products->previousPageUrl() }}" class="relative inline-flex items-center px-4 py-3 bg-white hover:bg-gray-50 text-indigo-600 text-sm font-medium border-r border-gray-200 transition-colors">
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </a>
-                @endif
-
-                {{-- Pagination Elements --}}
-                @php
-                    $start = max(1, $products->currentPage() - 2);
-                    $end   = min($start + 4, $products->lastPage());
-                @endphp
-
-                @if ($start > 1)
-                    <a href="{{ $products->url(1) }}" class="relative inline-flex items-center px-4 py-3 bg-white hover:bg-gray-50 text-sm font-medium border-r border-gray-200 transition-colors">1</a>
-                    @if ($start > 2)
-                        <span class="relative inline-flex items-center px-4 py-3 bg-white text-sm font-medium border-r border-gray-200">...</span>
-                    @endif
-                @endif
-
-                @for ($i = $start; $i <= $end; $i++)
-                    @if ($i == $products->currentPage())
-                        <span class="relative inline-flex items-center px-4 py-3 bg-indigo-600 text-white text-sm font-medium border-r border-indigo-700">{{ $i }}</span>
-                    @else
-                        <a href="{{ $products->url($i) }}" class="relative inline-flex items-center px-4 py-3 bg-white hover:bg-gray-50 text-sm font-medium border-r border-gray-200 transition-colors">{{ $i }}</a>
-                    @endif
-                @endfor
-
-                @if ($end < $products->lastPage())
-                    @if ($end < $products->lastPage() - 1)
-                        <span class="relative inline-flex items-center px-4 py-3 bg-white text-sm font-medium border-r border-gray-200">...</span>
-                    @endif
-                    <a href="{{ $products->url($products->lastPage()) }}" class="relative inline-flex items-center px-4 py-3 bg-white hover:bg-gray-50 text-sm font-medium border-r border-gray-200 transition-colors">{{ $products->lastPage() }}</a>
-                @endif
-
-                {{-- Next Page Link --}}
-                @if ($products->hasMorePages())
-                    <a href="{{ $products->nextPageUrl() }}" class="relative inline-flex items-center px-4 py-3 bg-white hover:bg-gray-50 text-indigo-600 text-sm font-medium transition-colors">
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </a>
-                @else
-                    <span class="relative inline-flex items-center px-4 py-3 bg-gray-100 text-gray-400 text-sm font-medium">
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </span>
-                @endif
-            </nav>
-        </div>
-    </div>
-@endif
-
-@include('partials.cart-modal')
-</div>
-</section>
-
-<!-- Toast Notification -->
-<div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full opacity-0 transition-all duration-300">
-    Item added to cart successfully!
-</div>
-
-@push('scripts')
-<script>
-    function redirectToLogin() {
-        window.location.href = '{{ route('login') }}';
-    }
-
-    window.showToast = function(message) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.classList.remove('translate-y-full', 'opacity-0');
-
-        setTimeout(() => {
-            toast.classList.add('translate-y-full', 'opacity-0');
-        }, 3000);
-    }
-
-    function addToCart(productId) {
-        fetch(`/cart/add/${productId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Update cart count
-            const cartCount = document.getElementById('cartCount');
-            cartCount.textContent = parseInt(cartCount.textContent) + 1;
-            
-            // Show success message
-            showToast(data.message);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error adding product to cart');
+  <script>
+    // Efek hover hanya untuk huruf di dalam masing-masing kata
+    const letters = document.querySelectorAll('.letter');
+    
+    letters.forEach(letter => {
+      letter.addEventListener('mouseover', () => {
+        // Skala huruf yang dihover
+        letter.style.transform = 'scale(1.8)';
+        
+        // Skala huruf sebelumnya (jika ada) dalam kata yang sama
+        const prev = letter.previousElementSibling;
+        if (prev && prev.classList.contains('letter')) {
+          prev.style.transform = 'scale(1.3)';
+        }
+        
+        // Skala huruf berikutnya (jika ada) dalam kata yang sama
+        const next = letter.nextElementSibling;
+        if (next && next.classList.contains('letter')) {
+          next.style.transform = 'scale(1.3)';
+        }
+      });
+      
+      letter.addEventListener('mouseout', () => {
+        // Reset skala semua huruf dalam kata yang sama
+        const parent = letter.parentElement;
+        parent.querySelectorAll('.letter').forEach(l => {
+          l.style.transform = 'scale(1)';
         });
-    }
-</script>
-@endpush
-@endsection
+      });
+    });
+  </script>
 </body>
 </html>

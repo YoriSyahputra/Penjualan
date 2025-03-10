@@ -22,12 +22,11 @@
                     <div class="border-b border-gray-200 py-4">
                     <div class="flex items-center">
                     <input type="checkbox" 
-                        name="selected_items[]" 
-                        value="{{ $item['id'] }}" 
-                        data-price="{{ $item['price'] }}"
-                        data-quantity="{{ $item['quantity'] }}"a
-                        class="cart-item-checkbox form-checkbox h-5 w-5 text-indigo-600">
-                    
+                            name="selected_items[]" 
+                            value="{{ $item['id'] }}" 
+                            data-price="{{ $item['price'] }}"
+                            data-quantity="{{ $item['quantity'] }}"
+                            class="cart-item-checkbox form-checkbox h-5 w-5 text-indigo-600">
                     <div class="flex-shrink-0 ml-4">
                         @if(isset($item['image']) && Storage::disk('public')->exists($item['image']))
                             <img src="{{ Storage::url($item['image']) }}" 
@@ -318,6 +317,18 @@ document.getElementById('selectAll').addEventListener('change', function(e) {
     updateSummary();
 });
 
+function checkout() {
+    if (selectedItems.size === 0) {
+        showSweetAlert('Error', 'Please select items to checkout', 'error');
+        return;
+    }
+
+    const selectedItemsArray = Array.from(selectedItems);
+    console.log('Selected items for checkout:', selectedItemsArray);
+    
+    window.location.href = '/checkout?items=' + selectedItemsArray.join(',');
+}   
+// Make sure the selectedItems Set is properly updated when checkboxes change
 document.querySelectorAll('.cart-item-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', function(e) {
         if (e.target.checked) {
@@ -327,23 +338,22 @@ document.querySelectorAll('.cart-item-checkbox').forEach(checkbox => {
         }
         
         const allCheckboxes = document.querySelectorAll('.cart-item-checkbox');
+        const checkedCheckboxes = document.querySelectorAll('.cart-item-checkbox:checked');
         const selectAllCheckbox = document.getElementById('selectAll');
-        selectAllCheckbox.checked = selectedItems.size === allCheckboxes.length;
+        selectAllCheckbox.checked = checkedCheckboxes.length === allCheckboxes.length;
         
         updateSummary();
     });
 });
 
-function checkout() {
-    if (selectedItems.size === 0) {
-        showSweetAlert('Error', 'Please select items to checkout', 'error');
-        return;
-    }
-
-    window.location.href = '/checkout?items=' + Array.from(selectedItems).join(',');
-}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.cart-item-checkbox:checked').forEach(checkbox => {
+        selectedItems.add(checkbox.value);
+    });
 
 updateSummary();
+});
+
 </script>
 @endpush
 @endsection
