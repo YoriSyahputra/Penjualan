@@ -137,93 +137,93 @@
             </div>
         </div>
         <!-- Comment Section -->
-<div class="mt-12 bg-white rounded-lg shadow-sm overflow-hidden">
-    <div class="border-b border-gray-200 px-6 py-4">
-        <h2 class="text-xl font-bold text-gray-900">Comments ({{ $product->comments->count() }})</h2>
-    </div>
-    
-    <!-- Comments List -->
-    <div class="divide-y divide-gray-200">
-        @foreach($product->comments as $comment)
-            <div class="p-6">
-                <div class="flex items-start space-x-3">
-                    <!-- User Avatar -->
-                    <div class="flex-shrink-0">
-                        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                            <span class="text-indigo-700 font-semibold text-lg">{{ substr($comment->user->name, 0, 1) }}</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Comment Content -->
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-sm font-medium text-gray-900">
-                                {{ $comment->user->name }}
-                            </h3>
-                            <p class="text-xs text-gray-500">
-                                {{ $comment->created_at->diffForHumans() }}
-                            </p>
-                        </div>
-                        
-                        <p class="mt-2 text-sm text-gray-600">
-                            {{ $comment->content }}
-                        </p>
-                        
-                        <!-- Comment Media -->
-                        <div class="mt-3 space-y-3">
-                            @if($comment->photo)
-                                <div class="overflow-hidden rounded-lg">
-                                    <img src="{{ asset('storage/' . $comment->photo) }}" 
-                                         alt="Comment Photo" 
-                                         class="w-35 h-35 object-cover">
-                                </div>
-                            @endif
-                            
-                            @if($comment->video)
-                                <div class="overflow-hidden rounded-lg">
-                                    <video class="w-full" controls>
-                                        <source src="{{ asset('storage/' . $comment->video) }}" type="video/mp4">
-                                        Your browser does not support the video tag.
-                                    </video>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+        <div class="mt-12 bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="border-b border-gray-200 px-6 py-4">
+                <h2 class="text-xl font-bold text-gray-900">Comments ({{ $product->comments->count() }})</h2>
             </div>
-        @endforeach
-    </div>
-    
-    <!-- No Comments Message -->
-    @if($product->comments->count() == 0)
-        <div class="p-6 text-center">
-            <p class="text-gray-500">No comments yet. Be the first to share your thoughts!</p>
+            
+            <!-- Comments List -->
+            <div class="divide-y divide-gray-200">
+                @foreach($product->comments as $comment)
+                    <div class="p-6">
+                        <div class="flex items-start space-x-3">
+                            <!-- User Avatar -->
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                    <span class="text-indigo-700 font-semibold text-lg">{{ substr($comment->user->name, 0, 1) }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Comment Content -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-sm font-medium text-gray-900">
+                                        {{ $comment->user->name }}
+                                    </h3>
+                                    <p class="text-xs text-gray-500">
+                                        {{ $comment->created_at->diffForHumans() }}
+                                    </p>
+                                </div>
+                                
+                                <p class="mt-2 text-sm text-gray-600">
+                                    {{ $comment->content }}
+                                </p>
+                                
+                                <!-- Comment Media -->
+                                <div class="mt-3 space-y-3">
+                                    @if($comment->photo)
+                                        <div class="overflow-hidden rounded-lg cursor-pointer comment-photo">
+                                            <img src="{{ asset('storage/' . $comment->photo) }}" 
+                                                alt="Comment Photo" 
+                                                class="w-20 h-20 object-cover">
+                                        </div>
+                                    @endif
+                                                                    
+                                    @if($comment->video)
+                                        <div class="overflow-hidden rounded-lg cursor-pointer comment-video">
+                                            <video class="w-20 h-20 object-cover" muted>
+                                                <source src="{{ asset('storage/' . $comment->video) }}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            
+            <!-- No Comments Message -->
+            @if($product->comments->count() == 0)
+                <div class="p-6 text-center">
+                    <p class="text-gray-500">No comments yet. Be the first to share your thoughts!</p>
+                </div>
+            @endif
+            
+            <!-- Add Comment Button -->
+            <div class="px-6 py-4 bg-gray-50">
+                @auth
+                    <button type="button" 
+                            data-toggle="modal" 
+                            data-target="#addCommentModal" 
+                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Comment
+                    </button>
+                @else
+                    <a href="{{ route('login') }}" 
+                       class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        Login to Comment
+                    </a>
+                @endauth
+            </div>
         </div>
-    @endif
-    
-    <!-- Add Comment Button -->
-    <div class="px-6 py-4 bg-gray-50">
-        @auth
-            <button type="button" 
-                    data-toggle="modal" 
-                    data-target="#addCommentModal" 
-                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Comment
-            </button>
-        @else
-            <a href="{{ route('login') }}" 
-               class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-                Login to Comment
-            </a>
-        @endauth
-    </div>
-</div>
 
         <!-- Redesigned Add Comment Modal -->
         <div class="modal fade" id="addCommentModal" tabindex="-1" role="dialog" aria-labelledby="addCommentModalLabel" aria-hidden="true">
@@ -300,7 +300,6 @@
         </div>
     </div>
     
-
 @include('partials.cart-modal')
 
 <!-- Improved toast notification -->
@@ -309,6 +308,20 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
     </svg>
     <span>Item added to cart successfully!</span>
+</div>
+
+<!-- Media Preview Modal -->
+<div id="mediaModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 hidden z-50">
+    <div class="relative bg-white rounded-lg shadow-lg max-w-3xl w-full mx-4">
+        <button id="closeMediaModal" class="absolute top-2 right-2 text-gray-700 hover:text-gray-900 p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <div id="mediaContent" class="p-4">
+            <!-- Konten media (gambar/video) akan dimuat secara dinamis -->
+        </div>
+    </div>
 </div>
 
 @endsection
@@ -330,9 +343,8 @@
 
 @push('scripts')
 <script>
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Photo preview functionality
+    // Preview untuk upload di modal add comment
     const photoInput = document.getElementById('photo');
     const videoInput = document.getElementById('video');
     
@@ -343,30 +355,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const reader = new FileReader();
                 
                 reader.onload = function(e) {
-                    // Remove any existing preview
                     removeExistingPreview(photoInput);
-                    
-                    // Create preview container
                     const previewContainer = document.createElement('div');
                     previewContainer.className = 'mt-3 photo-preview';
-                    
-                    // Create image element
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.className = 'h-32 rounded-md object-cover';
-                    
-                    // Create remove button
                     const removeBtn = createRemoveButton(photoInput);
-                    
-                    // Append elements
                     previewContainer.appendChild(img);
                     previewContainer.appendChild(removeBtn);
-                    
-                    // Add preview after the upload container
                     const uploadContainer = photoInput.closest('.border-dashed');
                     uploadContainer.parentNode.appendChild(previewContainer);
                 };
-                
                 reader.readAsDataURL(file);
             }
         });
@@ -377,70 +377,46 @@ document.addEventListener('DOMContentLoaded', function() {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                
                 reader.onload = function(e) {
-                    // Remove any existing preview
                     removeExistingPreview(videoInput);
-                    
-                    // Create preview container
                     const previewContainer = document.createElement('div');
                     previewContainer.className = 'mt-3 video-preview';
-                    
-                    // Create video element
                     const video = document.createElement('video');
                     video.src = e.target.result;
                     video.className = 'h-32 w-full rounded-md';
                     video.controls = true;
-                    
-                    // Create remove button
                     const removeBtn = createRemoveButton(videoInput);
-                    
-                    // Append elements
                     previewContainer.appendChild(video);
                     previewContainer.appendChild(removeBtn);
-                    
-                    // Add preview after the upload container
                     const uploadContainer = videoInput.closest('.border-dashed');
                     uploadContainer.parentNode.appendChild(previewContainer);
                 };
-                
                 reader.readAsDataURL(file);
             }
         });
     }
     
-    // Helper function to create remove button
     function createRemoveButton(inputElement) {
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 transition-colors';
         removeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>';
-        
         removeBtn.addEventListener('click', function() {
-            // Clear the file input
             inputElement.value = '';
-            // Remove the preview
             removeExistingPreview(inputElement);
         });
-        
         return removeBtn;
     }
     
-    // Helper function to remove existing preview
     function removeExistingPreview(inputElement) {
         const type = inputElement.id === 'photo' ? 'photo' : 'video';
         const previewClass = type + '-preview';
         const existingPreview = inputElement.closest('div').parentNode.querySelector('.' + previewClass);
-        
         if (existingPreview) {
             existingPreview.remove();
         }
     }
-});
-    //beda section js
-    let selectedVariantId = null;
-    let selectedPackageId = null;
-
+    
     // Image Gallery Functionality
     document.querySelectorAll('.product-thumbnail img').forEach(img => {
         img.addEventListener('click', function() {
@@ -448,21 +424,20 @@ document.addEventListener('DOMContentLoaded', function() {
             mainImage.src = this.src;
         });
     });
-
+    
     function redirectToLogin() {
         window.location.href = '{{ route('login') }}';
     }
-
+    
     window.showToast = function(message) {
         const toast = document.getElementById('toast');
         toast.textContent = message;
         toast.classList.remove('translate-y-full', 'opacity-0');
-
         setTimeout(() => {
             toast.classList.add('translate-y-full', 'opacity-0');
         }, 3000);
     }
-
+    
     function addToCart(productId) {
         fetch(`/cart/add/${productId}`, {
             method: 'POST',
@@ -473,11 +448,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            // Update cart count
             const cartCount = document.getElementById('cartCount');
             cartCount.textContent = parseInt(cartCount.textContent) + 1;
-            
-            // Show success message
             showToast(data.message);
         })
         .catch(error => {
@@ -485,5 +457,58 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('Error adding product to cart');
         });
     }
+    
+    // Media Modal Functionality untuk komentar
+    const mediaModal = document.getElementById('mediaModal');
+    const mediaContent = document.getElementById('mediaContent');
+    const closeMediaModal = document.getElementById('closeMediaModal');
+    
+    // Event listener untuk foto di komentar
+    document.querySelectorAll('.comment-photo').forEach(elem => {
+        elem.addEventListener('click', function() {
+            const imgSrc = this.querySelector('img').src;
+            openMediaModal('image', imgSrc);
+        });
+    });
+    
+    // Event listener untuk video di komentar
+    document.querySelectorAll('.comment-video').forEach(elem => {
+        elem.addEventListener('click', function() {
+            const videoSrc = this.querySelector('video source').src;
+            openMediaModal('video', videoSrc);
+        });
+    });
+    
+    function openMediaModal(type, src) {
+        mediaContent.innerHTML = ''; // Bersihkan konten sebelumnya
+        if (type === 'image') {
+            const img = document.createElement('img');
+            img.src = src;
+            img.className = 'w-full h-auto object-contain';
+            mediaContent.appendChild(img);
+        } else if (type === 'video') {
+            const video = document.createElement('video');
+            video.src = src;
+            video.controls = true;
+            video.autoplay = true;
+            video.className = 'w-full h-auto';
+            mediaContent.appendChild(video);
+        }
+        mediaModal.classList.remove('hidden');
+    }
+    
+    closeMediaModal.addEventListener('click', function() {
+        mediaModal.classList.add('hidden');
+        mediaContent.innerHTML = '';
+    });
+    
+    // Klik di luar konten modal untuk menutup modal
+    mediaModal.addEventListener('click', function(e) {
+        if (e.target === mediaModal) {
+            mediaModal.classList.add('hidden');
+            mediaContent.innerHTML = '';
+        }
+    });
+});
 </script>
 @endpush
