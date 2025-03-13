@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\EWalletController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShopController;
@@ -141,6 +142,11 @@ Route::prefix('dashboard')
         Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('delete_product');
         Route::delete('/product-images/{image}', [ProductController::class, 'deleteImage'])->name('delete_product_image');
         Route::patch('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle_status');
+
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+
     });
 /*
 |--------------------------------------------------------------------------

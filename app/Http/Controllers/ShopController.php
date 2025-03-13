@@ -472,30 +472,28 @@ public function cart()
 }
 
     public function getProductDetail($id) 
-    {
-        try {
-            $product = Product::with(['variants', 'packages', 'productImages'])->findOrFail($id);
+{
+    try {
+        $product = Product::with(['variants', 'packages', 'productImages'])->findOrFail($id);
 
-            // Ambil rekomendasi produk, misalnya produk lain dari kategori yang sama
-            $recommended = Product::where('category_id', $product->category_id)
-                                ->where('id', '!=', $product->id)
-                                ->take(4)
-                                ->get();
+        // Ambil rekomendasi produk, misalnya produk lain dari kategori yang sama
+        $recommended = Product::where('category_id', $product->category_id)
+                              ->where('id', '!=', $product->id)
+                              ->take(4)
+                              ->get();
 
-            return view('ecom.product_details', [
-                'product'       => $product,
-                'variants'      => $product->variants,
-                'packages'      => $product->packages,
-                'productImages' => $product->productImages,
-                'recommended'   => $recommended // pastikan variabel ini dikirim ke view
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Get product details error: ' . $e->getMessage());
-            return redirect()->route('shop.index')->with('error', 'Product not found or an error occurred.');
-        }
+        return view('ecom.product_details', [
+            'product'       => $product,
+            'variants'      => $product->variants,
+            'packages'      => $product->packages,
+            'productImages' => $product->productImages,
+            'recommended'   => $recommended // pastikan variabel ini dikirim ke view
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Get product details error: ' . $e->getMessage());
+        return redirect()->route('shop.index')->with('error', 'Product not found or an error occurred.');
     }
-
-    
+}
     public function getProductDetails($id)
     {
         $product = Product::with(['variants', 'packages', 'productImages'])
@@ -560,6 +558,8 @@ public function cart()
                         'image'         => $image ? $image->path_gambar : null,
                         'variant_name'  => $item->variant?->name,
                         'package_name'  => $item->package?->name,
+                        'store_id'      => $item->product->store_id,  
+                        'store_name'    => $item->product->store->name ?? 'Unknown Store',  
                         'subtotal'      => $price * $item->quantity
                     ];
 
@@ -585,40 +585,56 @@ public function cart()
     }
     
     public function placeOrder(Request $request)
-    {
-        try {
-            // Validate request
-            $validated = $request->validate([
-                'address' => 'required_without:selected_address|string|nullable',
-                'selected_address' => 'required_without:address|exists:addresses,id|nullable',
-                'shipping_method' => 'required|in:regular,express',
-                'payment_method' => 'required|in:ludwig_payment,ewallet,cod',
-                'selected_items' => 'required|string', // Change from array to string
-            ]);
+{
+    try {
+        // Validate request
+        $validated = $request->validate([
+            'address' => 'required_without:selected_address|string|nullable',
+            'selected_address' => 'required_without:address|exists:addresses,id|nullable',
+            'shipping_method' => 'required|in:regular,express',
+            'payment_method' => 'required|in:ludwig_payment,ewallet,cod',
+            'selected_items' => 'required|string',
+        ]);
 
-            // Parse the comma-separated string into an array
-            $selectedItemIds = explode(',', $request->input('selected_items'));
-            
-            if (empty($selectedItemIds)) {
-                return redirect()->route('cart.index')->with('error', 'No items selected for checkout.');
-            }
+        // Parse the comma-separated string into an array
+        $selectedItemIds = explode(',', $request->input('selected_items'));
+        
+        if (empty($selectedItemIds)) {
+            return redirect()->route('cart.index')->with('error', 'No items selected for checkout.');
+        }
 
-            // Get only the selected cart items
-            $cartItems = Cart::with(['product', 'variant', 'package'])
-                ->where('user_id', auth()->id())
-                ->whereIn('id', $selectedItemIds)
-                ->get();
+        // Get only the selected cart items
+        $cartItems = Cart::with(['product', 'variant', 'package'])
+            ->where('user_id', auth()->id())
+            ->whereIn('id', $selectedItemIds)
+            ->get();
 
-            if ($cartItems->isEmpty()) {
-                return redirect()->route('cart.index')->with('error', 'No items selected for checkout.');
-            }
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'No items selected for checkout.');
+        }
 
-            // Calculate totals
+        // Generate payment code for Ludwig Payment (same for all orders)
+        $paymentCode = null;
+        if ($request->payment_method === 'ludwig_payment') {
+            $paymentCode = 'LWP-' . strtoupper(substr(md5(time()), 0, 10));
+        } elseif ($request->payment_method === 'ewallet') {
+            $paymentCode = 'EWL-' . strtoupper(substr(md5(time()), 0, 10));
+        }
+
+        // Group cart items by store
+        $itemsByStore = $cartItems->groupBy(function($item) {
+            return $item->product->store_id;
+        });
+
+        $shippingFee = $request->shipping_method === 'regular' ? 15000 : 30000;
+        $serviceFee = 1000;
+        $orders = [];
+
+        // Create separate orders for each store
+        foreach ($itemsByStore as $storeId => $storeItems) {
+            // Calculate subtotal for this store's items
             $subtotal = 0;
-            $shippingFee = $request->shipping_method === 'regular' ? 15000 : 30000;
-            $serviceFee = 1000;
-
-            foreach ($cartItems as $item) {
+            foreach ($storeItems as $item) {
                 $price = $item->product->discount_price > 0 ? 
                         $item->product->discount_price : 
                         $item->product->price;
@@ -636,21 +652,15 @@ public function cart()
 
             $total = $subtotal + $shippingFee + $serviceFee;
 
-            // Generate unique order number
-            $orderNumber = 'ORD-' . time() . '-' . auth()->id();
+            // Generate unique order number (different for each store)
+            $orderNumber = 'ORD-' . time() . '-' . auth()->id() . '-' . $storeId;
 
-            // Generate payment code for Ludwig Payment
-            $paymentCode = null;
-            if ($request->payment_method === 'ludwig_payment') {
-                $paymentCode = 'LWP-' . strtoupper(substr(md5(time()), 0, 10));
-            }
-
-            // Create the order
+            // Create the order for this store
             $order = Order::create([
                 'user_id' => auth()->id(),
                 'order_number' => $orderNumber,
                 'payment_method' => $request->payment_method,
-                'payment_code' => $paymentCode,
+                'payment_code' => $paymentCode, // Same payment code for all orders
                 'shipping_method' => $request->shipping_method,
                 'subtotal' => $subtotal,
                 'shipping_fee' => $shippingFee,
@@ -659,10 +669,13 @@ public function cart()
                 'address' => $request->address ?? auth()->user()->addresses()->find($request->selected_address)->address,
                 'address_id' => $request->selected_address,
                 'status' => 'pending',
+                'store_id' => $storeId, // Save the store ID in the order
             ]);
 
-            // Create order items
-            foreach ($cartItems as $item) {
+            $orders[] = $order;
+
+            // Create order items for this store
+            foreach ($storeItems as $item) {
                 $price = $item->product->discount_price > 0 ? 
                         $item->product->discount_price : 
                         $item->product->price;
@@ -682,61 +695,148 @@ public function cart()
                     'price' => $price,
                     'variant_id' => $item->variant_id,
                     'package_id' => $item->package_id,
+                    'store_id' => $storeId, // Save the store ID in the order item
                 ]);
             }
 
-            // Only clear the selected cart items, not all
-            Cart::where('user_id', auth()->id())
-                ->whereIn('id', $selectedItemIds)
-                ->delete();
-
-            // Redirect to order confirmation page
-            return redirect()->route('order.confirmation', $order->id);
-
-        } catch (\Exception $e) {
-            Log::error('Place order error: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
-            return redirect()->route('checkout')->with('error', 'Failed to place order. Please try again.');
+            // Delete cart items for this store
+            $storeItemIds = $storeItems->pluck('id')->toArray();
+            Cart::whereIn('id', $storeItemIds)->delete();
         }
+
+        // Redirect to confirmation page for the first order
+        // You may want to modify your confirmation page to show all related orders
+        return redirect()->route('order.confirmation', $orders[0]->id)
+            ->with('all_order_ids', collect($orders)->pluck('id')->toArray());
+
+    } catch (\Exception $e) {
+        Log::error('Place order error: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
+        return redirect()->route('checkout')->with('error', 'Failed to place order. Please try again.');
     }
-    public function orderConfirmation(Order $order)
-    {
-        // Make sure the order belongs to the authenticated user
-        if ($order->user_id !== auth()->id()) {
-            abort(403);
-        }
+}
 
-        $items = [];
-        foreach ($order->items as $item) {
-            $image = $item->product->productImages()
-                ->where('gambar_utama', true)
-                ->first();
+public function orderConfirmation(Order $order)
+{
+    // Make sure the order belongs to the authenticated user
+    if ($order->user_id !== auth()->id()) {
+        abort(403);
+    }
 
-            $items[] = [
-                'id' => $item->id,
-                'product_id' => $item->product_id,
-                'name' => $item->product->name,
-                'price' => $item->price,
-                'quantity' => $item->quantity,
-                'image' => $image ? $image->path_gambar : null,
-                'variant_name' => $item->variant?->name,
-                'package_name' => $item->package?->name,
-                'subtotal' => $item->price * $item->quantity
+    // Check if we have related orders (same payment code)
+    $relatedOrders = [];
+    if ($order->payment_code) {
+        $relatedOrders = Order::where('payment_code', $order->payment_code)
+            ->where('user_id', auth()->id())
+            ->where('id', '!=', $order->id)
+            ->get();
+    }
+
+    $items = [];
+    foreach ($order->items as $item) {
+        $image = $item->product->productImages()
+            ->where('gambar_utama', true)
+            ->first();
+
+        $items[] = [
+            'id' => $item->id,
+            'product_id' => $item->product_id,
+            'name' => $item->product->name,
+            'price' => $item->price,
+            'quantity' => $item->quantity,
+            'image' => $image ? $image->path_gambar : null,
+            'variant_name' => $item->variant?->name,
+            'package_name' => $item->package?->name,
+            'subtotal' => $item->price * $item->quantity,
+            'store_name' => $item->product->store->name ?? 'Unknown Store'
+        ];
+    }
+
+    // Prepare related orders data if any exist
+    $relatedOrdersData = [];
+    $totalAmount = $order->total;
+
+    if (!$relatedOrders->isEmpty()) {
+        foreach ($relatedOrders as $relOrder) {
+            $relItems = [];
+            
+            foreach ($relOrder->items as $item) {
+                $image = $item->product->productImages()
+                    ->where('gambar_utama', true)
+                    ->first();
+                    
+                $relItems[] = [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'name' => $item->product->name,
+                    'price' => $item->price,
+                    'quantity' => $item->quantity,
+                    'image' => $image ? $image->path_gambar : null,
+                    'variant_name' => $item->variant?->name,
+                    'package_name' => $item->package?->name,
+                    'subtotal' => $item->price * $item->quantity,
+                    'store_name' => $item->product->store->name ?? 'Unknown Store'
+                ];
+            }
+            
+            $relatedOrdersData[] = [
+                'order' => $relOrder,
+                'items' => $relItems
             ];
+            
+            $totalAmount += $relOrder->total;
         }
-
-        return view('ecom.process_checkout', [
-            'items' => $items,
-            'subtotal' => $order->subtotal,
-            'shippingFee' => $order->shipping_fee,
-            'serviceFee' => $order->service_fee,
-            'paymentCode' => $order->payment_code,
-            'paymentMethod' => $order->payment_method,
-            'shippingMethod' => $order->shipping_method,
-            'address' => $order->address,
-            'selected_address_id' => $order->address_id,
-            'order' => $order,
-        ]);
     }
+
+    return view('ecom.process_checkout', [
+        'items' => $items,
+        'subtotal' => $order->subtotal,
+        'shippingFee' => $order->shipping_fee,
+        'serviceFee' => $order->service_fee,
+        'paymentCode' => $order->payment_code,
+        'paymentMethod' => $order->payment_method,
+        'shippingMethod' => $order->shipping_method,
+        'address' => $order->address,
+        'selected_address_id' => $order->address_id,
+        'order' => $order,
+        'relatedOrders' => $relatedOrdersData,
+        'totalAmount' => $totalAmount
+    ]);
+}
+
+public function verifyPayment(Request $request)
+{
+    try {
+        // Validate request
+        $validated = $request->validate([
+            'payment_code' => 'required|string',
+            // Add any other verification fields you might need
+        ]);
+
+        $paymentCode = $request->payment_code;
+        
+        // Find all orders with this payment code that belong to the authenticated user
+        $orders = Order::where('payment_code', $paymentCode)
+            ->where('user_id', auth()->id())
+            ->where('status', 'pending')
+            ->get();
+            
+        if ($orders->isEmpty()) {
+            return redirect()->back()->with('error', 'No pending orders found with this payment code.');
+        }
+        
+        // Update the status of all related orders
+        foreach ($orders as $order) {
+            $order->status = 'paid';  // or whatever status you use for paid orders
+            $order->save();
+        }
+        
+        return redirect()->route('orders.index')->with('success', 'Payment verified successfully! All orders have been updated.');
+        
+    } catch (\Exception $e) {
+        Log::error('Payment verification error: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
+        return redirect()->back()->with('error', 'Failed to verify payment. Please try again.');
+    }
+}
     public function unpaidOrders(Request $request)
     {
         $user = auth()->user();

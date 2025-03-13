@@ -63,9 +63,19 @@
             </div>
             @endif
 
-            <!-- Order Summary -->
+            <!-- Main Order -->
             <div class="border-t border-gray-200 pt-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Order #{{ $order->order_number }}</h2>
+                    <span class="px-3 py-1 text-xs font-medium rounded-full 
+                        @if($order->status == 'pending') bg-yellow-100 text-yellow-800
+                        @elseif($order->status == 'processing') bg-blue-100 text-blue-800
+                        @elseif($order->status == 'completed') bg-green-100 text-green-800
+                        @elseif($order->status == 'cancelled') bg-red-100 text-red-800
+                        @else bg-gray-100 text-gray-800 @endif">
+                        {{ ucfirst($order->status) }}
+                    </span>
+                </div>
                 
                 <div class="flex flex-col divide-y divide-gray-200">
                     @foreach($items as $item)
@@ -78,12 +88,17 @@
                                 <div>
                                     <h3 class="text-base font-medium text-gray-900">{{ $item['name'] }}</h3>
                                     <p class="mt-1 text-sm text-gray-500">
+                                        @if(isset($item['store_name']))
+                                        Store: {{ $item['store_name'] }}
+                                        @endif
+                                        
                                         @if($item['variant_name'])
+                                        @if(isset($item['store_name'])) · @endif
                                         Variant: {{ $item['variant_name'] }}
                                         @endif
                                         
                                         @if($item['package_name'])
-                                        @if($item['variant_name']) · @endif
+                                        @if($item['variant_name'] || isset($item['store_name'])) · @endif
                                         Package: {{ $item['package_name'] }}
                                         @endif
                                     </p>
@@ -111,11 +126,93 @@
                         <span>Rp {{ number_format($serviceFee, 0, ',', '.') }}</span>
                     </div>
                     <div class="border-t border-gray-200 pt-2 flex justify-between font-medium text-base">
-                        <span>Total</span>
+                        <span>Order Total</span>
                         <span>Rp {{ number_format($subtotal + $shippingFee + $serviceFee, 0, ',', '.') }}</span>
                     </div>
                 </div>
             </div>
+            
+            <!-- Related Orders (if any) -->
+            @if(isset($relatedOrders) && !empty($relatedOrders))
+                @foreach($relatedOrders as $relOrder)
+                <div class="mt-8 border-t border-gray-200 pt-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-900">Order #{{ $relOrder['order']->order_number }}</h2>
+                        <span class="px-3 py-1 text-xs font-medium rounded-full 
+                            @if($relOrder['order']->status == 'pending') bg-yellow-100 text-yellow-800
+                            @elseif($relOrder['order']->status == 'processing') bg-blue-100 text-blue-800
+                            @elseif($relOrder['order']->status == 'completed') bg-green-100 text-green-800
+                            @elseif($relOrder['order']->status == 'cancelled') bg-red-100 text-red-800
+                            @else bg-gray-100 text-gray-800 @endif">
+                            {{ ucfirst($relOrder['order']->status) }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex flex-col divide-y divide-gray-200">
+                        @foreach($relOrder['items'] as $item)
+                        <div class="py-4 flex items-start">
+                            <div class="flex-shrink-0 h-20 w-20">
+                                <img src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}" class="h-full w-full object-cover rounded-md">
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <h3 class="text-base font-medium text-gray-900">{{ $item['name'] }}</h3>
+                                        <p class="mt-1 text-sm text-gray-500">
+                                            @if(isset($item['store_name']))
+                                            Store: {{ $item['store_name'] }}
+                                            @endif
+                                            
+                                            @if($item['variant_name'])
+                                            @if(isset($item['store_name'])) · @endif
+                                            Variant: {{ $item['variant_name'] }}
+                                            @endif
+                                            
+                                            @if($item['package_name'])
+                                            @if($item['variant_name'] || isset($item['store_name'])) · @endif
+                                            Package: {{ $item['package_name'] }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <p class="text-base font-medium text-gray-900">Rp {{ number_format($item['price'], 0, ',', '.') }}</p>
+                                </div>
+                                <p class="mt-1 text-sm text-gray-500">Quantity: {{ $item['quantity'] }}</p>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    
+                    <!-- Price Details for Related Order -->
+                    <div class="mt-6 border-t border-gray-200 pt-4 space-y-2">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Subtotal</span>
+                            <span>Rp {{ number_format($relOrder['order']->subtotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Shipping Fee ({{ ucfirst($relOrder['order']->shipping_method) }})</span>
+                            <span>Rp {{ number_format($relOrder['order']->shipping_fee, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Service Fee</span>
+                            <span>Rp {{ number_format($relOrder['order']->service_fee, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="border-t border-gray-200 pt-2 flex justify-between font-medium text-base">
+                            <span>Order Total</span>
+                            <span>Rp {{ number_format($relOrder['order']->total, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+
+                <!-- Total for All Orders -->
+                <div class="mt-6 bg-indigo-50 p-4 rounded-lg">
+                    <div class="flex justify-between font-bold text-lg">
+                        <span>Total Payment</span>
+                        <span>Rp {{ number_format($totalAmount, 0, ',', '.') }}</span>
+                    </div>
+                    <p class="text-xs text-indigo-600 mt-1">This is the total amount for all orders with the same payment code</p>
+                </div>
+            @endif
             
             <!-- Shipping & Payment Info -->
             <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">

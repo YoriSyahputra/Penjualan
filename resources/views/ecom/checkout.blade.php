@@ -112,7 +112,8 @@
                                         </span>
                                     </div>
                                     <div class="flex-1">
-                                        <h3 class="font-medium text-lg text-gray-900">{{ $item['name'] }}</h3>
+                                    <h3 class="font-medium text-lg text-gray-900">{{ $item['name'] }}</h3>
+                                    <h3 class="font-medium text-lg text-gray-900">{{ $item['store_name'] }}</h3>
                                         @if(isset($item['variant_name']))
                                             <p class="text-sm text-gray-600">Variant: {{ $item['variant_name'] }}</p>
                                         @endif

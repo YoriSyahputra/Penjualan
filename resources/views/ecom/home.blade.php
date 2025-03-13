@@ -254,7 +254,7 @@
                             <span class="text-sm text-red-600">Out of Stock</span>
                         </div>
                     @endif
-
+                    </a>
                     <!-- Add to Cart Button -->
                     <button 
                         @auth
@@ -270,7 +270,7 @@
                         {{ $product->stock > 0 ? 'Add to Cart' : 'Out of Stock' }}
                     </button>
                 </div>
-                </a>
+                
             </div>
             @endforeach
         </div>

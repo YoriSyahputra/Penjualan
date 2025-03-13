@@ -24,51 +24,57 @@ class ProductPaymentController extends Controller
     {
         // Validate payment code format
         if (!preg_match('/^LWP-[A-Z0-9]{10,15}$/', $code)) {
-
             return response()->json([
                 'success' => false,
                 'message' => 'Format kode pembayaran tidak valid'
             ], 400);
         }
 
-        // Find order by payment code
-        $order = Order::where('payment_code', $code)
+        // Find all orders by payment code
+        $orders = Order::where('payment_code', $code)
+            ->where('status', 'pending')
             ->with(['items.product'])
-            ->first();
+            ->get();
 
-        if (!$order) {
+        if ($orders->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Kode pembayaran tidak ditemukan'
+                'message' => 'Kode pembayaran tidak ditemukan atau pesanan sudah dibayar'
             ], 404);
         }
 
-        // Check if order is still valid for payment
-        if ($order->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Pesanan ini sudah tidak valid untuk pembayaran'
-            ], 400);
+        // Calculate total amount for all orders
+        $totalAmount = $orders->sum('total');
+        
+        // Get first order to display (we'll process all orders during payment)
+        $firstOrder = $orders->first();
+        
+        // Collect all items from all orders
+        $allItems = collect();
+        foreach ($orders as $order) {
+            $allItems = $allItems->merge($order->items->map(function($item) {
+                return [
+                    'product_name' => $item->product->name,
+                    'quantity' => $item->quantity,
+                    'price' => $item->price
+                ];
+            }));
         }
 
         return response()->json([
             'success' => true,
             'order' => [
-                'id' => $order->id,
-                'order_number' => $order->order_number,
-                'total' => $order->total,
-                'status' => $order->status,
-                'items' => $order->items->map(function($item) {
-                    return [
-                        'product_name' => $item->product->name,
-                        'quantity' => $item->quantity,
-                        'price' => $item->price
-                    ];
-                })
-            ]
+                'id' => $firstOrder->id,
+                'order_number' => $firstOrder->order_number,
+                'total' => $totalAmount, // Total of all related orders
+                'status' => $firstOrder->status,
+                'payment_code' => $code,
+                'related_order_count' => $orders->count(),
+                'items' => $allItems
+            ],
+            'related_order_ids' => $orders->pluck('id')->toArray()
         ]);
     }
-
     public function searchProducts(Request $request)
     {
         $query = $request->get('q');
@@ -274,194 +280,232 @@ class ProductPaymentController extends Controller
     }
 
     public function processOrderPayment(Request $request)
-{
-    $request->validate([
-        'order_id' => 'required|exists:orders,id',
-        'pin' => 'required|digits:6'
-    ]);
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'pin' => 'required|digits:6'
+        ]);
 
-    $user = auth()->user();
-    
-    // Improved eager loading to ensure all relationships are loaded
-    $order = Order::with([
-        'items', 
-        'items.product', 
-        'items.product.store'
-    ])->findOrFail($request->order_id);    
+        $user = auth()->user();
+        
+        // Get the initial order
+        $order = Order::with([
+            'items', 
+            'items.product', 
+            'items.product.store'
+        ])->findOrFail($request->order_id);
 
-    // Validate order ownership and status
-    if ($order->user_id !== $user->id) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Unauthorized access to this order'
-        ], 403);
-    }
-
-    if ($order->status !== 'pending') {
-        return response()->json([
-            'success' => false,
-            'message' => 'Order is not eligible for payment'
-        ], 400);
-    }
-
-    // PIN verification
-    $pinRecord = Pin::where('user_id', $user->id)->first();
-    if (!$pinRecord) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Please set up your PIN first'
-        ], 400);
-    }
-    
-    // Check if PIN is locked
-    if ($pinRecord->is_locked && now()->lessThan($pinRecord->locked_until)) {
-        return response()->json([
-            'success' => false,
-            'message' => 'PIN has been locked due to too many attempts. Please try again later.'
-        ], 400);
-    }
-    
-    // Verify PIN
-    if (!Hash::check($request->pin, $pinRecord->pin)) {
-        $pinRecord->increment('attempts');
-
-        if ($pinRecord->attempts >= 3) {
-            $pinRecord->update([
-                'is_locked' => true,
-                'locked_until' => now()->addMinutes(30)
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'PIN has been locked due to too many attempts. Please try again in 30 minutes.'
-            ], 400);
+        // Find all related orders with the same payment code
+        $relatedOrders = collect([$order]);
+        if ($order->payment_code) {
+            $additionalOrders = Order::where('payment_code', $order->payment_code)
+                ->where('id', '!=', $order->id)
+                ->where('status', 'pending')
+                ->with(['items', 'items.product', 'items.product.store'])
+                ->get();
+            
+            $relatedOrders = $relatedOrders->merge($additionalOrders);
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Invalid PIN. Please try again.'
-        ], 400);
-    }
-    
-    // Reset PIN attempts on successful verification
-    $pinRecord->update(['attempts' => 0]);
+        // Calculate the total amount across all orders
+        $totalAmount = $relatedOrders->sum('total');
+        
+        Log::info('Processing payment for multiple orders', [
+            'primary_order_id' => $order->id,
+            'payment_code' => $order->payment_code,
+            'order_count' => $relatedOrders->count(),
+            'total_amount' => $totalAmount
+        ]);
 
-    // Check user balance
-    if ($user->wallet->balance < $order->total) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Insufficient wallet balance'
-        ], 400);
-    }
+        // Validate ownership and status for all orders
+        foreach ($relatedOrders as $relOrder) {
+            if ($relOrder->user_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access to one or more orders'
+                ], 403);
+            }
 
-    // Check if order has items before proceeding
-    if ($order->items->isEmpty()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'No items found in your order'
-        ], 400);
-    }
+            if ($relOrder->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'One or more orders are not eligible for payment'
+                ], 400);
+            }
+        }
 
-    // Verify each item's product and store before processing
-    foreach ($order->items as $item) {
-        if (!$item->product) {
-            Log::warning('Product not found for item', ['item_id' => $item->id, 'product_id' => $item->product_id]);
+        // PIN verification
+        $pinRecord = Pin::where('user_id', $user->id)->first();
+        if (!$pinRecord) {
             return response()->json([
                 'success' => false,
-                'message' => 'One or more products in your order are no longer available'
+                'message' => 'Please set up your PIN first'
             ], 400);
         }
         
-        if (!$item->product->store_id) {
-            Log::warning('Product has no store', ['product_id' => $item->product_id]);
+        // Check if PIN is locked
+        if ($pinRecord->is_locked && now()->lessThan($pinRecord->locked_until)) {
             return response()->json([
                 'success' => false,
-                'message' => 'One or more products in your order have invalid store information'
+                'message' => 'PIN has been locked due to too many attempts. Please try again later.'
             ], 400);
         }
-    }
+        
+        // Verify PIN
+        if (!Hash::check($request->pin, $pinRecord->pin)) {
+            $pinRecord->increment('attempts');
 
-    // Group items by store for processing payments
-    $itemsByStore = $order->items->groupBy(function($item) {
-        return $item->product->store_id;
-    });
-    
-    try {
-        DB::beginTransaction();
+            if ($pinRecord->attempts >= 3) {
+                $pinRecord->update([
+                    'is_locked' => true,
+                    'locked_until' => now()->addMinutes(30)
+                ]);
 
-        // Deduct from buyer's wallet
-        $user->wallet()->decrement('balance', $order->total);
-
-        // Process seller payments
-        foreach ($itemsByStore as $storeId => $items) {
-            // Get store object by ID instead of relying on the relationship
-            $store = \App\Models\Store::find($storeId);
-            
-            if (!$store) {
-                Log::warning('Store not found', ['store_id' => $storeId]);
-                DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => 'One or more stores in your order are not available'
+                    'message' => 'PIN has been locked due to too many attempts. Please try again in 30 minutes.'
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid PIN. Please try again.'
+            ], 400);
+        }
+        
+        // Reset PIN attempts on successful verification
+        $pinRecord->update(['attempts' => 0]);
+
+        // Check user balance against total amount
+        if ($user->wallet->balance < $totalAmount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Insufficient wallet balance'
+            ], 400);
+        }
+
+        // Verify all orders have items before proceeding
+        foreach ($relatedOrders as $relOrder) {
+            if ($relOrder->items->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No items found in one or more orders'
                 ], 400);
             }
             
-            // Calculate store's share
-            $storeSubtotal = $items->sum(function($item) {
-                return $item->price * $item->quantity;
-            });
-            
-            $storeShipping = $order->shipping_fee ?? 0;
-            
-            // If there are multiple stores, distribute shipping fee proportionally
-            if (count($itemsByStore) > 1 && $order->subtotal > 0) {
-                $storeShipping = ($order->shipping_fee * ($storeSubtotal / $order->subtotal));
+            // Verify each item's product and store
+            foreach ($relOrder->items as $item) {
+                if (!$item->product) {
+                    Log::warning('Product not found for item', ['item_id' => $item->id, 'product_id' => $item->product_id]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'One or more products in your orders are no longer available'
+                    ], 400);
+                }
+                
+                if (!$item->product->store_id) {
+                    Log::warning('Product has no store', ['product_id' => $item->product_id]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'One or more products in your orders have invalid store information'
+                    ], 400);
+                }
             }
-
-            $totalToAdd = round($storeSubtotal + $storeShipping, 2);
-            
-            // Get or create seller wallet
-            $sellerWallet = SellerWallet::firstOrCreate(
-                ['store_id' => $storeId],
-                ['user_id' => $store->user_id, 'balance' => 0]
-            );
-            
-            // Update seller wallet balance
-            $sellerWallet->increment('balance', $totalToAdd);
-            
-            Log::info('Processed payment for store', [
-                'store_id' => $storeId,
-                'amount' => $totalToAdd
-            ]);
         }
 
-        // Update order status
-        $order->update([
-            'status' => 'paid',
-            'payment_method' => 'wallet',
-            'paid_at' => now()
-        ]);
+        // Process the payment for all orders
+        try {
+            DB::beginTransaction();
 
-        DB::commit();
+            // Deduct total amount from buyer's wallet
+            $user->wallet()->decrement('balance', $totalAmount);
+            
+            Log::info('Deducted from user wallet', [
+                'user_id' => $user->id, 
+                'amount' => $totalAmount
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Payment processed successfully',
-            'redirect' => route('order.confirmation', $order->id)
-        ]);
+            // Process each order
+            foreach ($relatedOrders as $relOrder) {
+                // Group items by store for this order
+                $itemsByStore = $relOrder->items->groupBy(function($item) {
+                    return $item->product->store_id;
+                });
+                
+                // Process seller payments for each store
+                foreach ($itemsByStore as $storeId => $items) {
+                    // Get store object by ID
+                    $store = \App\Models\Store::find($storeId);
+                    
+                    if (!$store) {
+                        Log::warning('Store not found', ['store_id' => $storeId]);
+                        DB::rollBack();
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'One or more stores in your orders are not available'
+                        ], 400);
+                    }
+                    
+                    // Calculate store's share
+                    $storeSubtotal = $items->sum(function($item) {
+                        return $item->price * $item->quantity;
+                    });
+                    
+                    $storeShipping = $relOrder->shipping_fee ?? 0;
+                    
+                    // If there are multiple stores, distribute shipping fee proportionally
+                    if (count($itemsByStore) > 1 && $relOrder->subtotal > 0) {
+                        $storeShipping = ($relOrder->shipping_fee * ($storeSubtotal / $relOrder->subtotal));
+                    }
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Payment processing failed: '.$e->getMessage(), [
-            'order_id' => $order->id,
-            'user_id' => $user->id,
-            'error' => $e->getTraceAsString()
-        ]);
+                    $totalToAdd = round($storeSubtotal + $storeShipping, 2);
+                    
+                    // Get or create seller wallet
+                    $sellerWallet = SellerWallet::firstOrCreate(
+                        ['store_id' => $storeId],
+                        ['user_id' => $store->user_id, 'balance' => 0]
+                    );
+                    
+                    // Update seller wallet balance
+                    $sellerWallet->increment('balance', $totalToAdd);
+                    
+                    Log::info('Processed payment for store', [
+                        'order_id' => $relOrder->id,
+                        'store_id' => $storeId,
+                        'amount' => $totalToAdd
+                    ]);
+                }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Payment processing failed: ' . $e->getMessage()
-        ], 500);
+                // Update order status
+                $relOrder->update([
+                    'status' => 'paid',
+                    'payment_method' => 'wallet',
+                    'paid_at' => now()
+                ]);
+                
+                Log::info('Order marked as paid', ['order_id' => $relOrder->id]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment processed successfully',
+                'redirect' => route('order.confirmation', $order->id)
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Payment processing failed: '.$e->getMessage(), [
+                'primary_order_id' => $order->id,
+                'user_id' => $user->id,
+                'error' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment processing failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}   
 }

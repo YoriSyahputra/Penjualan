@@ -39,8 +39,8 @@
                                 </svg>
                                 Products
                         </a>
-                            <a href="#" 
-                               class="flex items-center px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors {{ request()->routeIs('admin.orders') ? 'bg-indigo-50 text-indigo-600' : '' }}">
+                        <a href="{{ route('dashboard.orders.index') }}" 
+                            class="flex items-center px-4 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors {{ request()->routeIs('dashboard.orders.*') ? 'bg-indigo-50 text-indigo-600' : '' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                 </svg>

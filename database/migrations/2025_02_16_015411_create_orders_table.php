@@ -19,7 +19,7 @@ return new class extends Migration
         $table->string('payment_code')->nullable();
         $table->string('shipping_method');
         $table->decimal('subtotal', 12, 2);
-        $table->decimal('shipping_fee', 8, 2);
+        $table->decimal('shipping_fee', 8, places: 2);
         $table->decimal('service_fee', 8, 2);
         $table->decimal('total', 12, 2);
         $table->string('address');

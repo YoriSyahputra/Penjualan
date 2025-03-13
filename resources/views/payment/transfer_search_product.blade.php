@@ -173,32 +173,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function fetchOrderDetails(code) {
-        console.log("Searching for code:", code);
-        fetch(`/api/orders/payment-code/${code}`)
-            .then(response => {
-                console.log("Response status:", response.status);
-                return response.json().then(data => {
-                    if (!response.ok) {
-                        // Pass along the error message from the API
-                        throw new Error(data.message || 'Network response was not ok');
-                    }
-                    return data;
-                });
-            })
-            .then(data => {
-                console.log("API response:", data);
-                if (data.success) {
-                    displayOrderDetails(data.order);
-                } else {
-                    showAlert('error', 'Error', data.message || 'Kode pembayaran tidak valid');
+    let relatedOrderIds = [];
+
+function fetchOrderDetails(code) {
+    console.log("Searching for code:", code);
+    fetch(`/api/orders/payment-code/${code}`)
+        .then(response => {
+            console.log("Response status:", response.status);
+            return response.json().then(data => {
+                if (!response.ok) {
+                    throw new Error(data.message || 'Network response was not ok');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('error', 'Error', error.message || 'Gagal memuat detail pesanan');
+                return data;
             });
-    }
+        })
+        .then(data => {
+            console.log("API response:", data);
+            if (data.success) {
+                // Store related order IDs
+                relatedOrderIds = data.related_order_ids || [data.order.id];
+                displayOrderDetails(data.order);
+                
+                // Display number of orders if there are multiple
+                if (data.order.related_order_count > 1) {
+                    document.getElementById('orderNumber').textContent = 
+                        `${data.order.order_number} (+ ${data.order.related_order_count - 1} pesanan terkait)`;
+                }
+            } else {
+                showAlert('error', 'Error', data.message || 'Kode pembayaran tidak valid');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('error', 'Error', error.message || 'Gagal memuat detail pesanan');
+        });
+}
+
     // Display order details on the page
     function displayOrderDetails(order) {
         document.getElementById('orderNumber').textContent = order.order_number;
@@ -277,47 +287,46 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // PIN confirmation and payment processing
-    window.confirmProductPin = function() {
-        if (productPin.length !== 6) {
-            showAlert('warning', 'PIN tidak valid', 'Masukkan PIN 6 digit.');
-            return;
-        }
-
-        // Get order_id from form
-        const orderId = document.getElementById('orderId').value;
-        
-        // Create FormData object
-        const formData = new FormData();
-        formData.append('order_id', orderId);
-        formData.append('pin', productPin.pin);
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-        
-        // Submit to the correct endpoint
-        fetch('/order/payment/process', {
-            method: 'POST',
-            body: formData,
-            headers: { 
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                productPinModal.classList.add('hidden');
-                productPin.clear();
-                showAlert('success', 'Berhasil', 'Pembayaran berhasil diproses.');
-                setTimeout(() => window.location.href = data.redirect || '/dashboard', 1500);
-            } else {
-                throw new Error(data.message || 'Pembayaran gagal');
-            }
-        })
-        .catch(error => {
-            console.error('Payment error:', error);
-            showAlert('error', 'Error', error.message);
-            productPin.clear();
-        });
+    windwindow.confirmProductPin = function() {
+    if (productPin.length !== 6) {
+        showAlert('warning', 'PIN tidak valid', 'Masukkan PIN 6 digit.');
+        return;
     }
 
+    // Get primary order_id from form
+    const orderId = document.getElementById('orderId').value;
+    
+    // Create FormData object
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('pin', productPin.pin);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    
+    // Submit to the correct endpoint
+    fetch('/order/payment/process', {
+        method: 'POST',
+        body: formData,
+        headers: { 
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            productPinModal.classList.add('hidden');
+            productPin.clear();
+            showAlert('success', 'Berhasil', 'Pembayaran berhasil diproses.');
+            setTimeout(() => window.location.href = data.redirect || '/dashboard', 1500);
+        } else {
+            throw new Error(data.message || 'Pembayaran gagal');
+        }
+    })
+    .catch(error => {
+        console.error('Payment error:', error);
+        showAlert('error', 'Error', error.message);
+        productPin.clear();
+    });
+}
     // Set up PIN buttons
     document.querySelectorAll('.product-pin-btn').forEach(btn => {
         btn.addEventListener('click', () => {

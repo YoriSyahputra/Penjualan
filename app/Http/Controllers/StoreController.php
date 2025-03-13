@@ -29,7 +29,7 @@ class StoreController extends Controller
             'description' => 'required|string',
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:16384'
         ]);
     
         $store = new Store($validated);
