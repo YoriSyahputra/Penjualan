@@ -296,6 +296,8 @@
                         </div>
                     </div>
                 </form>
+
+                
             </div>
         </div>
     </div>
@@ -319,7 +321,6 @@
             </svg>
         </button>
         <div id="mediaContent" class="p-4">
-            <!-- Konten media (gambar/video) akan dimuat secara dinamis -->
         </div>
     </div>
 </div>
