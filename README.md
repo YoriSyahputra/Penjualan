@@ -1,26 +1,46 @@
+<!-- Logo Section -->
+<div class="flex justify-center">
+    <div class="animate-bounce">
+        <svg class="w-12 h-12 sm:w-16 sm:h-16 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+    </div>
+</div>
+
 # LudWIg
 
-LudWig adalah aplikasi ECommerce berbasis web Meggunakan Framework Laravel 10 MIX
+LudWig adalah aplikasi ECommerce berbasis web yang dibangun menggunakan **Laravel 10 MIX**. Aplikasi ini menyediakan pengalaman belanja online yang mudah, cepat, dan aman bagi pengguna, serta dilengkapi dengan berbagai fitur unggulan untuk admin.
 
-# Fitur
+## Fitur
 
-1. USER
-- role biasa user dapat memesan barang yang di pesan.
-- role biasa dapat memasukan barang nya ke dalma keranjang.
-- dapat melihat status barang ang di beli.
-- dapat melihat list barang yang status nya, paid, pending, dan juga cancel.
-- dapat transfer uang ke sesama user lain,
-- dapat membayar barang melalui kode pembayaran setelah place order barng
+### Untuk Pengguna (USER)
+- **Order Barang**  
+  Pengguna dapat memesan barang dengan mudah sesuai kebutuhan.
+- **Keranjang Belanja**  
+  Tambahkan barang favorit ke dalam keranjang untuk pembelian yang lebih terencana.
+- **Monitoring Status Pesanan**  
+  Cek status pesanan seperti *paid*, *pending*, dan *cancel* dengan cepat.
+- **Transfer Uang Antar Pengguna**  
+  Fitur aman untuk mentransfer uang ke sesama pengguna.
+- **Pembayaran dengan Kode**  
+  Bayar pesanan melalui kode pembayaran setelah melakukan place order.
 
-2. ADMIN
+### Untuk Administrator (ADMIN)
+- **Manajemen Produk dan Kategori**  
+  Kelola data produk, stok, dan kategori untuk memastikan ketersediaan barang.
+- **Pengelolaan Transaksi**  
+  Monitor dan validasi semua transaksi pengguna dengan sistem yang terintegrasi.
+- **Kontrol Hak Akses**  
+  Atur peran dan hak akses untuk memastikan keamanan dan efisiensi operasional.
+- **Laporan & Statistik**  
+  Dapatkan insight mendalam tentang performa penjualan melalui laporan terperinci.
 
-# Instalasi
+## Instalasi
 
-1. Clone Repository ini Menggunakan git clone "https://github.com/YoriSyahputra/Penjualan.git"
-2. jalankan 'composer install' untuk menginstall package
-3. jalankan 'npm install' untuk install front-end
-4. jalankan perintah 'php artisan migrate' untuk migrasi data ke database
-5. jalankan perintah 'php artisan db:seed --class=CategoriesTableSeeder' untuk mengsi tabel category
-6. jalankna perintah 'npm run build' untuk load styling dari tailwind, boostrap, DLL
-7. jalankan perintah 'php artisan serve' untuk menjalankan web nya
-8. WEB LudWig Sudah anda bisa gunakan
+Ikuti langkah-langkah berikut untuk menginstall dan menjalankan aplikasi:
+
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/YoriSyahputra/Penjualan.git
+2. **Install Package PHP**
+    composer install
