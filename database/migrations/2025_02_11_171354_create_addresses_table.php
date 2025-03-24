@@ -12,7 +12,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('label');
-            $table->text('address');
+            $table->text('alamat_lengkap');
+            $table->text('provinsi');
+            $table->text('kota');
+            $table->text('kecamatan');
+            $table->string('kode_pos');
             $table->boolean('is_primary')->default(false);
             $table->string('recipient_name');
             $table->string('phone_number');

@@ -13,7 +13,7 @@
         <form method="POST" class="checkout-form" action="{{ route('checkout.process') }}" >
             @csrf
         
-        <input type="hidden" name="selected_items" value="{{ implode(',', array_column($items, 'id')) }}"></div>
+            <input type="hidden" name="selected_items" value="{{ implode(',', array_column($items, 'id')) }}">
             <div class="flex flex-col lg:flex-row gap-8">
                 <!-- Left Column -->
                 <div class="lg:w-2/3 space-y-6">
@@ -27,77 +27,106 @@
                         <div class="mt-3 space-y-2 mb-6">
                             <p class="text-gray-600">Nama: <span class="font-medium text-gray-800">{{ auth()->user()->name }}</span></p>
                             <p class="text-gray-600">Nomor Telepon: <span class="font-medium text-gray-800">{{ auth()->user()->phone_number }}</span></p>
-                            <p class="text-gray-600">Alamat: <span class="font-medium text-gray-800">{{ auth()->user()->address }}</span></p>
+                            <p class="text-gray-600">Alamat: <span class="font-medium text-gray-800">{{ auth()->user()->alamat_lengkap}},{{ auth()->user()->provinsi}},{{ auth()->user()->kota}},{{ auth()->user()->kecamatan}}.{{ auth()->user()->kode_pos}}</span></p>
                         </div>
+                        <!-- Tambahkan section ini di dalam "Shipping Address" di checkout.blade.php -->
+<div class="mt-4">
+    <div class="flex items-center justify-between">
+        <h3 class="text-lg font-medium text-gray-900">Pilih Alamat Tersimpan</h3>
+        <button type="button" onclick="toggleAddressList()" class="text-indigo-600 hover:text-indigo-800 text-sm">
+            {{ count(auth()->user()->addresses) > 0 ? 'Lihat Alamat' : 'Tambah Alamat' }}
+        </button>
+    </div>
 
-                        @if(auth()->user()->addresses()->count() > 0)
-                            <button type="button" 
-                                    onclick="toggleAddressList()"
-                                    class="w-full mb-4 py-3 px-6 bg-gray-100 text-gray-800 rounded-lg text-lg font-medium hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors">
-                                Choose saved address
-                            </button>
+    @if(count(auth()->user()->addresses) > 0)
+    <div id="addressList" class="hidden mt-4 space-y-2">
+        @foreach(auth()->user()->addresses as $address)
+        <label class="block border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+            <div class="flex items-center justify-between">
+                <div>
+                    <input 
+                        type="radio" 
+                        name="selected_address" 
+                        value="{{ $address->id }}" 
+                        class="mr-3"
+                        @if($address->is_primary) checked @endif
+                        onchange="fillAddressForm({{ json_encode($address) }})">
+                    <span class="font-medium">
+                        {{ $address->label ?? 'Alamat' }} 
+                        @if($address->is_primary)
+                        <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Utama</span>
                         @endif
+                    </span>
+                </div>
+            </div>
+            <div class="text-sm text-gray-600 mt-2">
+                {{ $address->recipient_name }} | {{ $address->phone_number }}<br>
+                {{ $address->alamat_lengkap }}, 
+                {{ $address->kecamatan }}, 
+                {{ $address->kota }}, 
+                {{ $address->provinsi }} 
+                {{ $address->kode_pos }}
+            </div>
+        </label>
+        @endforeach
+    </div>
+    @endif
+</div>
 
-                        <!-- Saved Addresses List (Initially Hidden) -->
-                        <div id="addressList" class="hidden space-y-4">
-                            @forelse(auth()->user()->addresses as $address)
-                                <label class="block">
-                                    <div class="bg-white border-l-4 {{ $address->is_primary ? 'border-indigo-500' : 'border-gray-300' }} p-4 rounded-lg shadow-md transform transition-all duration-300 hover:scale-[1.02]">
-                                        <div class="flex items-start">
-                                            <input type="radio" 
-                                                name="selected_address" 
-                                                value="{{ $address->id }}"
-                                                {{ $address->is_primary ? 'checked' : '' }}
-                                                class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                                onchange="fillAddressForm({{ json_encode($address) }})">
-                                            <div class="ml-3 flex-1">
-                                                <div class="flex items-center gap-2">
-                                                    <h4 class="font-bold text-gray-800">Default Address</h4>
-                                                    @if($address->is_primary)
-                                                        <span class="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-semibold">
-                                                            Primary
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                                <p class="text-gray-600 mt-1">{{ $address->recipient_name }}</p>
-                                                <p class="text-gray-600">{{ $address->phone_number }}</p>
-                                                <p class="text-gray-600 mt-2">{{ $address->address }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </label>
+<!-- Tambahkan section untuk input manual alamat -->
+<div class="mt-4 space-y-4" id="manualAddressSection">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="alamat_lengkap" class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
+            <input 
+                type="text" 
+                name="alamat_lengkap" 
+                id="alamat_lengkap" 
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                value="{{ old('alamat_lengkap', auth()->user()->alamat_lengkap) }}">
+        </div>
+        <div>
+            <label for="provinsi" class="block text-sm font-medium text-gray-700">Provinsi</label>
+            <input 
+                type="text" 
+                name="provinsi" 
+                id="provinsi" 
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                value="{{ old('provinsi', auth()->user()->provinsi) }}">
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="kota" class="block text-sm font-medium text-gray-700">Kota</label>
+            <input 
+                type="text" 
+                name="kota" 
+                id="kota" 
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                value="{{ old('kota', auth()->user()->kota) }}">
+        </div>
+        <div>
+            <label for="kecamatan" class="block text-sm font-medium text-gray-700">Kecamatan</label>
+            <input 
+                type="text" 
+                name="kecamatan" 
+                id="kecamatan" 
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                value="{{ old('kecamatan', auth()->user()->kecamatan) }}">
+        </div>
+    </div>
+    <div>
+        <label for="kode_pos" class="block text-sm font-medium text-gray-700">Kode Pos</label>
+        <input 
+            type="text" 
+            name="kode_pos" 
+            id="kode_pos" 
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            value="{{ old('kode_pos', auth()->user()->kode_pos) }}">
+    </div>
+</div>
 
-                                @if($loop->last)
-                                    <!-- New Address Form inside addressList -->
-                                    <div class="mt-6 space-y-4 border-t pt-6">
-                                        <h3 class="font-semibold text-gray-900">Or enter a new address:</h3>
-                                        <textarea 
-                                            name="address" 
-                                            id="address"
-                                            rows="3" 
-                                            placeholder="Enter your complete address"
-                                            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                            required
-                                        >{{ auth()->user()->address ?? '' }}</textarea>
-                                    </div>
-                                @endif
-                            @empty
-                                <p class="text-gray-500 text-center py-4">No saved addresses found</p>
-                                <!-- New Address Form when no saved addresses -->
-                                <div class="mt-6 space-y-4">
-                                    <textarea 
-                                        name="address" 
-                                        id="address"
-                                        rows="3" 
-                                        placeholder="Enter your complete address"
-                                        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                        required
-                                    >{{ auth()->user()->address ?? '' }}</textarea>
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                    <!-- Order Items -->
+                    <!-- Order Items Section (unchanged) -->
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Items</h2>
                         <div class="divide-y divide-gray-200">
@@ -126,14 +155,13 @@
                                             <p class="text-sm text-gray-600">Harga: Rp {{ number_format($item['price'], 0, ',', '.') }}</p>
                                             <p class="text-sm text-gray-600">Total: {{ $item['quantity'] }}</p>
                                         </div>
-
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     </div>
 
-                    <!-- Shipping Method -->
+                    <!-- Shipping Method Section (unchanged) -->
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4">Shipping Method</h2>
                         <div class="space-y-3">
@@ -155,7 +183,8 @@
                             </label>
                         </div>
                     </div>
-                    <!-- Payment Method Section -->
+                    
+                    <!-- Payment Method Section (unchanged) -->
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4">Payment Method</h2>
                         <div class="space-y-3">
@@ -196,7 +225,6 @@
                                     <div class="text-sm text-gray-600">Bayar Di Rumah</div>
                                 </div>
                             </label>
-
                         </div>
                         <div id="ludwigPaymentInstructions" class="mt-4 p-4 bg-gray-50 rounded-lg hidden">
                             <h3 class="font-medium text-gray-900 mb-2">How to pay with Ludwig Payment:</h3>
@@ -211,7 +239,7 @@
                     </div>
                 </div>
 
-                <!-- Right Column - Order Summary -->
+                <!-- Right Column - Order Summary (unchanged) -->
                 <div class="lg:w-1/3">
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-8">
                         <h2 class="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
@@ -309,50 +337,55 @@ function toggleAddressList() {
 }
 
 function fillAddressForm(address) {
-    // Pisahkan nama lengkap menjadi first name dan last name (asumsi dipisahkan dengan spasi)
-    const names = address.recipient_name.split(' ');
-
-    // Cek dan set first_name jika elemen ada
-    const firstNameEl = document.getElementById('first_name');
-    if (firstNameEl) {
-        firstNameEl.value = names[0] || '';
-    }
-
-    // Cek dan set last_name jika elemen ada
-    const lastNameEl = document.getElementById('last_name');
-    if (lastNameEl) {
-        lastNameEl.value = names.slice(1).join(' ') || '';
-    }
-
-    // Cek dan set address jika elemen ada
-    const addressEl = document.getElementById('address');
-    if (addressEl) {
-        addressEl.value = address.address;
-    }
-
-    // Cek dan set phone jika elemen ada
-    const phoneEl = document.getElementById('phone');
-    if (phoneEl) {
-        phoneEl.value = address.phone_number;
-    }
-
-    // Cek dan set postal_code jika elemen ada
-    const postalCodeEl = document.getElementById('postal_code');
-    if (postalCodeEl) {
-        postalCodeEl.value = address.postal_code || '';
+    // Fill alamat_lengkap
+    const alamatLengkapEl = document.getElementById('alamat_lengkap');
+    if (alamatLengkapEl) {
+        alamatLengkapEl.value = address.alamat_lengkap || '';
     }
     
-    // Sembunyikan daftar alamat setelah pemilihan
+    // Fill provinsi
+    const provinsiEl = document.getElementById('provinsi');
+    if (provinsiEl) {
+        provinsiEl.value = address.provinsi || '';
+    }
+    
+    // Fill kota
+    const kotaEl = document.getElementById('kota');
+    if (kotaEl) {
+        kotaEl.value = address.kota || '';
+    }
+    
+    // Fill kecamatan
+    const kecamatanEl = document.getElementById('kecamatan');
+    if (kecamatanEl) {
+        kecamatanEl.value = address.kecamatan || '';
+    }
+    
+    // Fill kode_pos
+    const kodePosEl = document.getElementById('kode_pos');
+    if (kodePosEl) {
+        kodePosEl.value = address.kode_pos || '';
+    }
+    
+    // Hide address list after selection
     const addressListEl = document.getElementById('addressList');
     if (addressListEl) {
         addressListEl.classList.add('hidden');
     }
 }
+document.addEventListener('DOMContentLoaded', function() {
+    // Jika ada alamat tersimpan dengan status primary, pilih otomatis
+    const primaryAddressRadio = document.querySelector('input[name="selected_address"][data-is-primary="true"]');
+    if (primaryAddressRadio) {
+        primaryAddressRadio.checked = true;
+    }
+});
+
 
 document.addEventListener('DOMContentLoaded', function() {
     const instructionsDiv = document.getElementById('ludwigPaymentInstructions');
 
-    // Tampilkan/sembunyikan instruksi Ludwig Payment berdasarkan pilihan payment_method
+    // Show/hide Ludwig Payment instructions based on payment_method selection
     document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.value === 'ludwig_payment') {

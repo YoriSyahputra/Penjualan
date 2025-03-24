@@ -264,7 +264,7 @@ class ProductPaymentController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Pembayaran berhasil diproses',
-                'redirect' => route('order.confirmation', ['order' => $order->id])
+                'redirect' => route('order.receipt', ['order' => $order->id])
             ]);
         } catch (\Exception $e) {
             Log::error('Proses pembayaran gagal', [
@@ -479,7 +479,7 @@ class ProductPaymentController extends Controller
                 // Update order status
                 $relOrder->update([
                     'status' => 'paid',
-                    'payment_method' => 'wallet',
+                    'payment_method' => 'LudwigPayment',
                     'paid_at' => now()
                 ]);
                 
@@ -491,7 +491,7 @@ class ProductPaymentController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Payment processed successfully',
-                'redirect' => route('order.confirmation', $order->id)
+                'redirect' => route('order.receipt', $order->id)
             ]);
 
         } catch (\Exception $e) {

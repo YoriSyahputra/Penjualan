@@ -15,7 +15,6 @@ return new class extends Migration
             $table->string('category');
             $table->text('description');
             $table->string('phone_number');
-            $table->text('address');
             $table->string('logo')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();

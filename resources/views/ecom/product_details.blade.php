@@ -295,13 +295,88 @@
                             </button>
                         </div>
                     </div>
-                </form>
-
-                
+                </form>   
             </div>
         </div>
     </div>
-    
+<div class="mt-12 bg-gray-50 p-6 border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">You May Also Like</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        @foreach(\App\Models\Product::with(['category', 'productImages'])->inRandomOrder()->where('id', '!=', $product->id)->take(4)->get() as $randomProduct)
+            <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <a href="{{ route('product.details', $randomProduct->id) }}" class="block">
+                    <div class="relative overflow-hidden" style="height: 200px;">
+                        @if($randomProduct->productImages->isNotEmpty())
+                            <img src="{{ asset('storage/' . $randomProduct->productImages->first()->path_gambar) }}"
+                                 alt="{{ $randomProduct->name }}"
+                                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
+                        @else
+                            <img src="/api/placeholder/300/300" 
+                                 alt="No image"
+                                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
+                        @endif
+                        
+                        <!-- Category Badge -->
+                        <div class="absolute top-2 right-2">
+                            <span class="bg-black bg-opacity-50 text-white text-xs font-medium px-2.5 py-1 rounded">
+                                {{ $randomProduct->category->name }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-semibold text-gray-900 truncate">{{ $randomProduct->name }}</h3>
+                        </div>
+                        
+                        <!-- Price -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                @if($randomProduct->discount_price)
+                                    <span class="text-gray-500 line-through text-sm">Rp.{{ number_format($randomProduct->price, 0, ',', '.') }}</span>
+                                    <span class="text-lg font-bold text-gray-900 ml-2">Rp.{{ number_format($randomProduct->discount_price, 0, ',', '.') }}</span>
+                                    <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded ml-2">
+                                        {{ round((($randomProduct->price - $randomProduct->discount_price) / $randomProduct->price) * 100) }}% OFF
+                                    </span>
+                                @else
+                                    <span class="text-lg font-bold text-gray-900">Rp.{{ number_format($randomProduct->price, 0, ',', '.') }}</span>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        <!-- Stock Status -->
+                        @if($randomProduct->stock > 0)
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span class="text-sm text-green-600">In Stock ({{ $randomProduct->stock }})</span>
+                            </div>
+                        @else
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                <span class="text-sm text-red-600">Out of Stock</span>
+                            </div>
+                        @endif
+                    </div>
+                </a>
+                <div class="px-4 pb-4">
+                    <button 
+                        @auth
+                            onclick="openCartModal({{ $randomProduct->id }})"
+                        @else
+                            onclick="redirectToLogin()"
+                        @endauth
+                        @if($randomProduct->stock <= 0) disabled @endif
+                        class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        {{ $randomProduct->stock > 0 ? 'Add to Cart' : 'Out of Stock' }}
+                    </button>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
 @include('partials.cart-modal')
 
 <!-- Improved toast notification -->

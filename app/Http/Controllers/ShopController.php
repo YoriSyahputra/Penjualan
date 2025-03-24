@@ -589,8 +589,12 @@ public function cart()
     try {
         // Validate request
         $validated = $request->validate([
-            'address' => 'required_without:selected_address|string|nullable',
-            'selected_address' => 'required_without:address|exists:addresses,id|nullable',
+            'alamat_lengkap' => 'required_without:selected_address|string',
+            'provinsi'       => 'required_without:selected_address|string',
+            'kota'           => 'required_without:selected_address|string',
+            'kecamatan'      => 'required_without:selected_address|string',
+            'kode_pos'       => 'required_without:selected_address|string',
+            'selected_address' => 'required_without:alamat_lengkap|exists:addresses,id',
             'shipping_method' => 'required|in:regular,express',
             'payment_method' => 'required|in:ludwig_payment,ewallet,cod',
             'selected_items' => 'required|string',
@@ -630,6 +634,12 @@ public function cart()
         $serviceFee = 1000;
         $orders = [];
 
+        // Get address details if using a saved address
+        $addressDetails = null;
+        if ($request->selected_address) {
+            $addressDetails = auth()->user()->addresses()->find($request->selected_address);
+        }
+
         // Create separate orders for each store
         foreach ($itemsByStore as $storeId => $storeItems) {
             // Calculate subtotal for this store's items
@@ -655,7 +665,7 @@ public function cart()
             // Generate unique order number (different for each store)
             $orderNumber = 'ORD-' . time() . '-' . auth()->id() . '-' . $storeId;
 
-            // Create the order for this store
+            // Create the order for this store with the new address fields
             $order = Order::create([
                 'user_id' => auth()->id(),
                 'order_number' => $orderNumber,
@@ -666,7 +676,11 @@ public function cart()
                 'shipping_fee' => $shippingFee,
                 'service_fee' => $serviceFee,
                 'total' => $total,
-                'address' => $request->address ?? auth()->user()->addresses()->find($request->selected_address)->address,
+                'alamat_lengkap' => $addressDetails ? $addressDetails->alamat_lengkap : $request->alamat_lengkap,
+                'provinsi' => $addressDetails ? $addressDetails->provinsi : $request->provinsi,
+                'kota' => $addressDetails ? $addressDetails->kota : $request->kota,
+                'kecamatan' => $addressDetails ? $addressDetails->kecamatan : $request->kecamatan,
+                'kode_pos' => $addressDetails ? $addressDetails->kode_pos : $request->kode_pos,
                 'address_id' => $request->selected_address,
                 'status' => 'pending',
                 'store_id' => $storeId, // Save the store ID in the order
@@ -717,90 +731,207 @@ public function cart()
 
 public function orderConfirmation(Order $order)
 {
+    \Log::info('Order status: ' . $order->status);
+
     // Make sure the order belongs to the authenticated user
     if ($order->user_id !== auth()->id()) {
         abort(403);
     }
 
-    // Check if we have related orders (same payment code)
-    $relatedOrders = [];
-    if ($order->payment_code) {
-        $relatedOrders = Order::where('payment_code', $order->payment_code)
-            ->where('user_id', auth()->id())
-            ->where('id', '!=', $order->id)
-            ->get();
-    }
-
-    $items = [];
-    foreach ($order->items as $item) {
-        $image = $item->product->productImages()
-            ->where('gambar_utama', true)
-            ->first();
-
-        $items[] = [
-            'id' => $item->id,
-            'product_id' => $item->product_id,
-            'name' => $item->product->name,
-            'price' => $item->price,
-            'quantity' => $item->quantity,
-            'image' => $image ? $image->path_gambar : null,
-            'variant_name' => $item->variant?->name,
-            'package_name' => $item->package?->name,
-            'subtotal' => $item->price * $item->quantity,
-            'store_name' => $item->product->store->name ?? 'Unknown Store'
-        ];
-    }
-
-    // Prepare related orders data if any exist
-    $relatedOrdersData = [];
-    $totalAmount = $order->total;
-
-    if (!$relatedOrders->isEmpty()) {
-        foreach ($relatedOrders as $relOrder) {
-            $relItems = [];
-            
-            foreach ($relOrder->items as $item) {
-                $image = $item->product->productImages()
-                    ->where('gambar_utama', true)
-                    ->first();
-                    
-                $relItems[] = [
-                    'id' => $item->id,
-                    'product_id' => $item->product_id,
-                    'name' => $item->product->name,
-                    'price' => $item->price,
-                    'quantity' => $item->quantity,
-                    'image' => $image ? $image->path_gambar : null,
-                    'variant_name' => $item->variant?->name,
-                    'package_name' => $item->package?->name,
-                    'subtotal' => $item->price * $item->quantity,
-                    'store_name' => $item->product->store->name ?? 'Unknown Store'
-                ];
-            }
-            
-            $relatedOrdersData[] = [
-                'order' => $relOrder,
-                'items' => $relItems
-            ];
-            
-            $totalAmount += $relOrder->total;
+    // Redirect based on order status
+    if ($order->status === 'pending') {
+        // Existing code for showing checkout process
+        
+        // Check if we have related orders (same payment code)
+        $relatedOrders = [];
+        if ($order->payment_code) {
+            $relatedOrders = Order::where('payment_code', $order->payment_code)
+                ->where('user_id', auth()->id())
+                ->where('id', '!=', $order->id)
+                ->get();
         }
-    }
 
-    return view('ecom.process_checkout', [
-        'items' => $items,
-        'subtotal' => $order->subtotal,
-        'shippingFee' => $order->shipping_fee,
-        'serviceFee' => $order->service_fee,
-        'paymentCode' => $order->payment_code,
-        'paymentMethod' => $order->payment_method,
-        'shippingMethod' => $order->shipping_method,
-        'address' => $order->address,
-        'selected_address_id' => $order->address_id,
-        'order' => $order,
-        'relatedOrders' => $relatedOrdersData,
-        'totalAmount' => $totalAmount
-    ]);
+        $items = [];
+        foreach ($order->items as $item) {
+            $image = $item->product->productImages()
+                ->where('gambar_utama', true)
+                ->first();
+
+            $items[] = [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'name' => $item->product->name,
+                'price' => $item->price,
+                'quantity' => $item->quantity,
+                'image' => $image ? $image->path_gambar : null,
+                'variant_name' => $item->variant?->name,
+                'package_name' => $item->package?->name,
+                'subtotal' => $item->price * $item->quantity,
+                'store_name' => $item->product->store->name ?? 'Unknown Store'
+            ];
+        }
+
+        // Prepare related orders data if any exist
+        $relatedOrdersData = [];
+        $totalAmount = $order->total;
+
+        if (!$relatedOrders->isEmpty()) {
+            foreach ($relatedOrders as $relOrder) {
+                $relItems = [];
+                
+                foreach ($relOrder->items as $item) {
+                    $image = $item->product->productImages()
+                        ->where('gambar_utama', true)
+                        ->first();
+                        
+                    $relItems[] = [
+                        'id' => $item->id,
+                        'product_id' => $item->product_id,
+                        'name' => $item->product->name,
+                        'price' => $item->price,
+                        'quantity' => $item->quantity,
+                        'image' => $image ? $image->path_gambar : null,
+                        'variant_name' => $item->variant?->name,
+                        'package_name' => $item->package?->name,
+                        'subtotal' => $item->price * $item->quantity,
+                        'store_name' => $item->product->store->name ?? 'Unknown Store'
+                    ];
+                }
+                
+                $relatedOrdersData[] = [
+                    'order' => $relOrder,
+                    'items' => $relItems
+                ];
+                
+                $totalAmount += $relOrder->total;
+            }
+        }
+
+        // Prepare full address for display
+        $fullAddress = $this->formatFullAddress($order);
+
+        return view('ecom.process_checkout', [
+            'items' => $items,
+            'subtotal' => $order->subtotal,
+            'shippingFee' => $order->shipping_fee,
+            'serviceFee' => $order->service_fee,
+            'paymentCode' => $order->payment_code,
+            'paymentMethod' => $order->payment_method,
+            'shippingMethod' => $order->shipping_method,
+            'fullAddress' => $fullAddress,
+            'alamat_lengkap' => $order->alamat_lengkap,
+            'provinsi' => $order->provinsi,
+            'kota' => $order->kota,
+            'kecamatan' => $order->kecamatan,
+            'kode_pos' => $order->kode_pos,
+            'selected_address_id' => $order->address_id,
+            'order' => $order,
+            'relatedOrders' => $relatedOrdersData,
+            'totalAmount' => $totalAmount
+        ]);
+    } 
+    else if ($order->status === 'paid') {
+        // For paid orders, display the receipt
+        // Prepare order items
+        $items = [];
+        foreach ($order->items as $item) {
+            $image = $item->product->productImages()
+                ->where('gambar_utama', true)
+                ->first();
+
+            $items[] = [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'name' => $item->product->name,
+                'price' => $item->price,
+                'quantity' => $item->quantity,
+                'image' => $image ? $image->path_gambar : null,
+                'variant_name' => $item->variant?->name,
+                'package_name' => $item->package?->name,
+                'subtotal' => $item->price * $item->quantity,
+                'store_name' => $item->product->store->name ?? 'Unknown Store'
+            ];
+        }
+
+        // Check for related orders (same payment code)
+        $relatedOrders = [];
+        $relatedOrdersData = [];
+        $totalAmount = $order->total;
+
+        if ($order->payment_code) {
+            $relatedOrders = Order::where('payment_code', $order->payment_code)
+                ->where('user_id', auth()->id())
+                ->where('id', '!=', $order->id)
+                ->get();
+                
+            if (!$relatedOrders->isEmpty()) {
+                foreach ($relatedOrders as $relOrder) {
+                    $relItems = [];
+                    
+                    foreach ($relOrder->items as $item) {
+                        $image = $item->product->productImages()
+                            ->where('gambar_utama', true)
+                            ->first();
+                            
+                        $relItems[] = [
+                            'id' => $item->id,
+                            'product_id' => $item->product_id,
+                            'name' => $item->product->name,
+                            'price' => $item->price,
+                            'quantity' => $item->quantity,
+                            'image' => $image ? $image->path_gambar : null,
+                            'variant_name' => $item->variant?->name,
+                            'package_name' => $item->package?->name,
+                            'subtotal' => $item->price * $item->quantity,
+                            'store_name' => $item->product->store->name ?? 'Unknown Store'
+                        ];
+                    }
+                    
+                    $relatedOrdersData[] = [
+                        'order' => $relOrder,
+                        'items' => $relItems
+                    ];
+                    
+                    $totalAmount += $relOrder->total;
+                }
+            }
+        }
+
+        // Prepare full address for display
+        $fullAddress = $this->formatFullAddress($order);
+
+        return view('ecom.order_receipt', [
+            'order' => $order,
+            'items' => $items,
+            'subtotal' => $order->subtotal,
+            'shippingFee' => $order->shipping_fee,
+            'serviceFee' => $order->service_fee,
+            'shippingMethod' => $order->shipping_method,
+            'fullAddress' => $fullAddress,
+            'alamat_lengkap' => $order->alamat_lengkap,
+            'provinsi' => $order->provinsi,
+            'kota' => $order->kota,
+            'kecamatan' => $order->kecamatan,
+            'kode_pos' => $order->kode_pos,
+            'relatedOrders' => $relatedOrdersData,
+            'totalAmount' => $totalAmount
+        ]);
+    }
+    else {
+        // For any other status, redirect to orders list with a message
+        return redirect()->route('ecom.list_order_payment')
+            ->with('message', 'Order status: ' . ucfirst($order->status));
+    }
+}
+
+// Helper function to format full address from components
+private function formatFullAddress(Order $order)
+{
+    return $order->alamat_lengkap . ', ' . 
+           $order->kecamatan . ', ' . 
+           $order->kota . ', ' . 
+           $order->provinsi . ' ' . 
+           $order->kode_pos;
 }
 
 public function verifyPayment(Request $request)

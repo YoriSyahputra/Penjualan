@@ -12,7 +12,11 @@ class Address extends Model
     protected $fillable = [
         'user_id',
         'label',
-        'address',
+        'alamat_lengkap',
+        'provinsi',
+        'kota',
+        'kecamatan',
+        'kode_pos',
         'is_primary',
         'recipient_name',
         'phone_number'

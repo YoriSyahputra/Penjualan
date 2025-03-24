@@ -33,24 +33,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="mb-8 flex space-x-2 justify-center">
-                <a href={{ route('ewallet.payment') }}
-                    class="tab-btn w-20 h-20 flex items-center justify-center text-lg font-medium {{ request()->routeIs('ewallet.payment') ? 'bg-[#4f46e5] text-white' : 'bg-gray-100 text-gray-600' }} rounded-md shadow-md hover:bg-gray-200 focus:outline-none transition-all duration-200"
-                    id="payment-tab">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
-                </a>
-                <a href={{ route('ewallet.search') }}
-                    class="tab-btn w-20 h-20 flex items-center justify-center text-lg font-medium {{ request()->routeIs('ewallet.search') ? 'bg-[#4f46e5] text-white' : 'bg-gray-100 text-gray-600' }} rounded-md shadow-md hover:bg-gray-200 focus:outline-none transition-all duration-200"
-                    id="transfer-tab">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                    </svg>
-                </a>
-            </div>
-
             <div class="p-8">
                 <!-- Search Section -->
                 <div class="mb-8">

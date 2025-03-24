@@ -21,9 +21,17 @@
                     </div>
                     <div class="ml-3">
                         <h3 class="text-sm font-medium text-green-800">Your order has been received!</h3>
-                        <div class="mt-2 text-sm text-green-700">
-                            <p>Thank you for your purchase. Your order is being processed.</p>
-                        </div>
+    
+                        @if($order->payment_method == 'ludwig_payment')
+                            <div class="mt-2 text-sm text-green-700">
+                                <p>Thank you for your purchase. Your order is being processed.</p>
+                            </div>
+                        @endif
+                        @if($order->payment_method == 'wallet')
+                            <div class="mt-2 text-sm text-green-700">
+                                <p>Thank you for your purchase. Your order is being processed.</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -222,11 +230,11 @@
                         <p class="font-medium">{{ auth()->user()->name }}</p>
                         <p class="mt-1">{{ auth()->user()->phone_number }}</p>
                         <p class="mt-2">
-                            @if($selected_address_id)
-                                {{ auth()->user()->addresses()->find($selected_address_id)->address }}
-                            @else
-                                {{ $address }}
-                            @endif
+                        @if($selected_address_id)
+                            {{ auth()->user()->addresses()->find($selected_address_id)->alamat_lengkap }}
+                        @else
+                            {{ $fullAddress }}
+                        @endif
                         </p>
                         <p class="mt-2">Shipping Method: {{ ucfirst($shippingMethod) }}</p>
                     </div>
@@ -271,12 +279,19 @@
             <div class="mt-8 flex flex-col sm:flex-row justify-between gap-4">
                 <a href="{{ route('home') }}" 
                    class="inline-flex justify-center items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Continue Shopping
+                    Bayar Nanti
                 </a>
-                <a href="#" 
-                   class="inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Track My Order
-                </a>
+
+                @if($order->status == 'pending')
+                    @if($paymentMethod === 'ludwig_payment')
+                        <a href="{{ route('payment.search') }}" 
+                        class="inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Bayar Disini Mengguanakan LudwigPay
+                        </a>
+                    @endif
+
+                @endif
+
             </div>
         </div>
     </div>

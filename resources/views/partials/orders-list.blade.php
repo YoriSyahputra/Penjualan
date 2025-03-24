@@ -16,6 +16,15 @@
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     Paid
                 </span>
+                @if($order->status_order == 'pending')
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    Pending
+                </span>
+                @elseif($order->status_order == 'processed')
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Processed
+                </span>
+                @endif
                 @elseif($order->status == 'cancelled')
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                     Cancelled
@@ -38,9 +47,13 @@
             @foreach($order->items as $item)
             <div class="flex items-start">
                 <div class="flex-shrink-0 h-20 w-20">
-                    <img src="{{ asset('storage/' . $item['image']) }}" 
-                         alt="{{ $item['name'] }}" 
-                         class="h-full w-full object-cover rounded-md">
+                @if($item->product->productImages->isNotEmpty())
+                    <img src="{{ asset('storage/' . $item->product->productImages->first()->path_gambar) }}"
+                        alt="{{ $item->product->name }}"
+                        class="h-full w-full object-cover rounded-md">
+                @else
+                    <img src="/api/placeholder/300/300" alt="No image" class="h-full w-full object-cover rounded-md">
+                @endif
                 </div>
                 <div class="ml-4 flex-1">
                     <div class="flex justify-between">
@@ -73,7 +86,7 @@
             </div>
             
             <div class="mt-4 flex justify-end space-x-4">
-                @if($order->status == 'pending')
+                @if($order->status == 'pending') 
                     <form action="{{ route('order.cancel', $order->id) }}" method="POST" class="cancel-order-form">
                         @csrf
                         @method('DELETE')
@@ -86,8 +99,10 @@
                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Detail Pembayaran
                     </a>
-                @else
-                    <a href="{{ route('ecom.list_order_payment') }}" 
+                @endif
+
+                @if($order->status == 'paid')
+                    <a href="{{ route('order.receipt', $order->id) }}" 
                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -96,6 +111,7 @@
                         View Details
                     </a>
                 @endif
+                
             </div>
         </div>
     </div>

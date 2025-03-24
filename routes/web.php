@@ -65,7 +65,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/process-checkout', [ShopController::class, 'placeOrder'])->name('checkout.process');
 
     Route::get('/order/confirmation/{order}', [ShopController::class, 'orderConfirmation'])->name('order.confirmation');
-
+    Route::get('/order/paid/{order}', [ShopController::class, 'orderConfirmation'])->name('order.receipt');
+    
     Route::delete('/order/cancel/{order}', [ShopController::class, 'cancel'])->name('order.cancel');
     Route::get('/store/{storeId}/products', [ShopController::class, 'storeProducts'])->name('store.products');
     
@@ -80,7 +81,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/order/payment/process', [App\Http\Controllers\ProductPaymentController::class, 'processOrderPayment'])->name('order.payment.process');
 
     Route::get('/unpaid-orders', [ShopController::class, 'unpaidOrders'])->name('ecom.list_order_payment');
-
+    
     Route::get('/payment', [EWalletController::class, 'showPayment'])->name('ewallet.payment');
     Route::post('/payment', [EWalletController::class, 'processPayment'])->name('ewallet.process');
     

@@ -25,8 +25,21 @@
         
         <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <!-- E-Wallet -->
-                <div onclick="window.location.href='{{ route('ewallet.payment') }}'" class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer transition-colors">
+                
+
+
+                <!-- Bank Transfer -->
+                <a href="{{ route('ewallet.search') }}" class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer transition-colors">
+                    <div class="flex items-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        <span class="font-semibold">Transfer Money</span>
+                    </div>
+                    <p class="text-sm text-gray-600">Transfer uang pada sesama Pengguna LudWig </p>
+                </a>
+
+                <div  class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer transition-colors">
                     <div class="flex items-center mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -37,28 +50,15 @@
                     <p class="text-lg font-bold text-indigo-600">Rp {{ number_format(auth()->user()->wallet->balance ?? 0, decimals: 0, decimal_separator: ',', thousands_separator: '.') }}</p>
                 </div>
 
-
-                <!-- Bank Transfer -->
-                <div class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer transition-colors">
+                <a href="{{ route('payment.search') }}" class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer transition-colors">
                     <div class="flex items-center mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
-                        <span class="font-semibold">Bank Transfer</span>
+                        <span class="font-semibold">Bayar Belanjaan</span>
                     </div>
-                    <p class="text-sm text-gray-600">Direct transfer from your bank</p>
-                </div>
-
-                <!-- Credit Card -->
-                <div class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer transition-colors">
-                    <div class="flex items-center mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                        <span class="font-semibold">Credit Card</span>
-                    </div>
-                    <p class="text-sm text-gray-600">Pay with credit or debit card</p>
-                </div>
+                    <p class="text-sm text-gray-600">Bayar Belanjaan menggunakan LudwigPay</p>
+                </a>
             </div>
 
             <!-- Payment Security -->
@@ -197,12 +197,12 @@
 <section class="py-16">
     <div class="container mx-auto px-4">
         <h3 class="text-2xl font-bold text-center mb-8">Featured Products</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             @foreach($products as $product)
             <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <!-- Product Image -->
                 <a href="{{ route('product.details', ['id' => $product->id]) }}">
-                <div class="relative overflow-hidden" style="height: 280px;"> 
+                <div class="relative overflow-hidden" style="height: 200px;"> 
                     @if($product->productImages->isNotEmpty())
                         <img src="{{ asset('storage/' . $product->productImages->first()->path_gambar) }}"
                              alt="{{ $product->name }}"
@@ -270,13 +270,11 @@
                         {{ $product->stock > 0 ? 'Add to Cart' : 'Out of Stock' }}
                     </button>
                 </div>
-                
             </div>
             @endforeach
         </div>
     </div>
 </section>
-
 <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full opacity-0 transition-all duration-300">
     Item added to cart successfully!
 </div>

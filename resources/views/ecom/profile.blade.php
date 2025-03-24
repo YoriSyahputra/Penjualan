@@ -52,7 +52,7 @@
                                     @endif
                                 </span></p>
                                 <p class="text-gray-600">Nomor Telepon: <span class="font-medium text-gray-800">{{ auth()->user()->phone_number }}</span></p>
-                                <p class="text-gray-600">Alamat: <span class="font-medium text-gray-800">{{ auth()->user()->address }}</span></p>
+                                <p class="text-gray-600">Alamat: <span class="font-medium text-gray-800">{{ auth()->user()->alamat_lengkap}},{{ auth()->user()->provinsi}},{{ auth()->user()->kota}},{{ auth()->user()->kecamatan}}.{{ auth()->user()->kode_pos}}</span></p>
                             </div>
                         </div>
                         <button onclick="openEditProfileModal()" 
@@ -117,11 +117,49 @@
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
                                     </div>
+
                                     <div>
-                                        <label for="address" class="block text-sm font-medium text-gray-700">Alamat</label>
-                                        <textarea name="address" id="address" rows="3" required
-                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('address', auth()->user()->address) }}</textarea>
-                                        @error('address')
+                                        <label for="alamat_lengkap" class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
+                                        <input type="text" name="alamat_lengkap" id="alamat_lengkap" required
+                                            value="{{ old('alamat_lengkap', auth()->user()->alamat_lengkap) }}"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('alamat_lengkap')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="provinsi" class="block text-sm font-medium text-gray-700">Provinsi</label>
+                                        <input type="text" name="provinsi" id="provinsi" required
+                                            value="{{ old('provinsi', auth()->user()->provinsi) }}"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('provinsi')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="kota" class="block text-sm font-medium text-gray-700">Kota</label>
+                                        <input type="text" name="kota" id="kota" required
+                                            value="{{ old('kota', auth()->user()->kota) }}"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('kota')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="kecamatan" class="block text-sm font-medium text-gray-700">Kecamatan</label>
+                                        <input type="text" name="kecamatan" id="kecamatan" required
+                                            value="{{ old('kecamatan', auth()->user()->kecamatan) }}"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('kecamatan')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="kode_pos" class="block text-sm font-medium text-gray-700">Kode Pos</label>
+                                        <input type="number" name="kode_pos" id="kode_pos" required
+                                            value="{{ old('kode_pos', auth()->user()->kode_pos) }}"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        @error('kode_pos')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
                                     </div>

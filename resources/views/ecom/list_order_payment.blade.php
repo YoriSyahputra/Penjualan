@@ -33,7 +33,7 @@
                             All
                         </button>
                         <button type="button" data-status="pending" class="status-filter px-4 py-2 rounded-md border {{ isset($statusFilter) && $statusFilter == 'pending' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
-                            Pending
+                            Unpaid
                         </button>
                         <button type="button" data-status="paid" class="status-filter px-4 py-2 rounded-md border {{ isset($statusFilter) && $statusFilter == 'paid' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
                             Paid

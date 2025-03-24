@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\Address;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -37,7 +38,11 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'address' => ['required', 'string'],
+            'alamat_lengkap' => ['required', 'string'],
+            'provinsi' => ['required', 'string'],
+            'kota' => ['required', 'string'],
+            'kecamatan' => ['required', 'string'],
+            'kode_pos' => ['required', 'string'],
             'gender' => ['required', 'in:male,female,prefer_not_to_say'],
             'phone_number' => ['required', 'string'],
         ]);
@@ -46,7 +51,11 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'address' => $request->address,
+            'alamat_lengkap' => $request->alamat_lengkap,
+            'provinsi' => $request->provinsi,
+            'kota' => $request->kota,
+            'kecamatan' => $request->kecamatan,
+            'kode_pos' => $request->kode_pos,
             'phone_number' => $request->phone_number,
             'gender' => $request->gender,
         ]);
