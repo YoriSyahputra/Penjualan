@@ -470,7 +470,6 @@ public function cart()
         ], 500);
     }
 }
-
     public function getProductDetail($id) 
 {
     try {
@@ -494,18 +493,18 @@ public function cart()
         return redirect()->route('shop.index')->with('error', 'Product not found or an error occurred.');
     }
 }
-    public function getProductDetails($id)
-    {
-        $product = Product::with(['variants', 'packages', 'productImages'])
-            ->findOrFail($id);
+    // public function getProductDetails($id)
+    // {
+    //     $product = Product::with(['variants', 'packages', 'productImages'])
+    //         ->findOrFail($id);
         
-        return response()->json([
-            'product' => $product,
-            'variants' => $product->variants,
-            'packages' => $product->packages,
-            'productImages' => $product->productImages
-        ]);
-    }
+    //     return response()->json([
+    //         'product' => $product,
+    //         'variants' => $product->variants,
+    //         'packages' => $product->packages,
+    //         'productImages' => $product->productImages
+    //     ]);
+    // }
 
     public function checkout(Request $request)
     {
@@ -596,6 +595,7 @@ public function cart()
             'kode_pos'       => 'required_without:selected_address|string',
             'selected_address' => 'required_without:alamat_lengkap|exists:addresses,id',
             'shipping_method' => 'required|in:regular,express',
+            'shipping_kurir' => 'required|in:jne,sicepat,j&t,lwexpress',
             'payment_method' => 'required|in:ludwig_payment,ewallet,cod',
             'selected_items' => 'required|string',
         ]);
@@ -672,6 +672,7 @@ public function cart()
                 'payment_method' => $request->payment_method,
                 'payment_code' => $paymentCode, // Same payment code for all orders
                 'shipping_method' => $request->shipping_method,
+                'shipping_kurir' => $request->shipping_kurir,
                 'subtotal' => $subtotal,
                 'shipping_fee' => $shippingFee,
                 'service_fee' => $serviceFee,
@@ -818,6 +819,7 @@ public function orderConfirmation(Order $order)
             'paymentCode' => $order->payment_code,
             'paymentMethod' => $order->payment_method,
             'shippingMethod' => $order->shipping_method,
+            'shipping_kurir' => $order->shipping_kurir,
             'fullAddress' => $fullAddress,
             'alamat_lengkap' => $order->alamat_lengkap,
             'provinsi' => $order->provinsi,
@@ -907,6 +909,7 @@ public function orderConfirmation(Order $order)
             'shippingFee' => $order->shipping_fee,
             'serviceFee' => $order->service_fee,
             'shippingMethod' => $order->shipping_method,
+            'shippingKurir' => $order->shipping_kurir,
             'fullAddress' => $fullAddress,
             'alamat_lengkap' => $order->alamat_lengkap,
             'provinsi' => $order->provinsi,
@@ -1042,35 +1045,36 @@ public function verifyPayment(Request $request)
 }
 
     public function listOrderPayment(Request $request)
-{
-    $user = auth()->user();
-    $search = $request->input('search');
-    
-    // Query builder for orders
-    $ordersQuery = Order::where('user_id', $user->id)
-                        ->with(['items.product', 'items.variant', 'items.package'])
-                        ->orderBy('created_at', 'desc');
-    
-    // Apply search if provided
-    if ($search) {
-        $ordersQuery->where(function($query) use ($search) {
-            $query->where('id', 'like', "%{$search}%")
-                  ->orWhereHas('items.product', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
-        });
+    {
+        $user = auth()->user();
+        $search = $request->input('search');
+        
+        // Query builder for orders
+        $ordersQuery = Order::where('user_id', $user->id)
+                            ->with(['items.product', 'items.variant', 'items.package'])
+                            ->orderBy('created_at', 'desc');
+        
+        // Apply search if provided
+        if ($search) {
+            $ordersQuery->where(function($query) use ($search) {
+                $query->where('id', 'like', "%{$search}%") // Ubah ke order_number
+                    ->orWhereHas('items.product', function($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+        
+        // Get paginated results
+        $allOrders = $ordersQuery->paginate(10);
+        
+        // Get unpaid orders count for notification
+        $unpaidOrders = Order::where('user_id', $user->id)
+                            ->where('status', 'pending')
+                            ->get();
+        
+        return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders', 'search'));
     }
-    
-    // Get paginated results
-    $allOrders = $ordersQuery->paginate(10);
-    
-    // Get unpaid orders count for notification
-    $unpaidOrders = Order::where('user_id', $user->id)
-                         ->where('status', 'pending')
-                         ->get();
-    
-    return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders', 'search'));
-}
+
 public function addComment(Request $request, $productId)
 {
     $request->validate([

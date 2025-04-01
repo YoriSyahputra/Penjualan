@@ -227,16 +227,24 @@
                 <div>
                     <h3 class="text-base font-medium text-gray-900 mb-2">Shipping Information</h3>
                     <div class="bg-gray-50 rounded-md p-3 text-sm text-gray-700">
-                        <p class="font-medium">{{ auth()->user()->name }}</p>
-                        <p class="mt-1">{{ auth()->user()->phone_number }}</p>
-                        <p class="mt-2">
-                        @if($selected_address_id)
-                            {{ auth()->user()->addresses()->find($selected_address_id)->alamat_lengkap }}
-                        @else
-                            {{ $fullAddress }}
-                        @endif
+                        <p class="font-medium">Nama Penerima: {{ auth()->user()->name }}</p>
+                        <p class="mt-1">No Telepon: {{ auth()->user()->phone_number }}</p>
+                        <p class="mt-2">Alamat: @if($selected_address_id)
+                                                    @php
+                                                        $address = auth()->user()->addresses()->find($selected_address_id);
+                                                    @endphp
+                                                    {{ $address->alamat_lengkap }} , 
+                                                    {{ $address->provinsi }} , 
+                                                    {{ $address->kota }} , 
+                                                    {{ $address->kecamatan }} , 
+                                                    {{ $address->kode_pos }} 
+                                                @else
+                                                    {{ $fullAddress }}
+                                                @endif
+
                         </p>
                         <p class="mt-2">Shipping Method: {{ ucfirst($shippingMethod) }}</p>
+                        <p class="mt-2">Shipping Method: {{ $order-> shipping_kurir}}</p>
                     </div>
                 </div>
                 
@@ -294,16 +302,170 @@
 
             </div>
         </div>
+        <div id="popup" class="popup hidden">
+            <div class="popup-content">
+                <div class="checkmark-container">
+                <!-- SVG centang dengan animasi smooth -->
+                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle class="checkmark-circle" cx="26" cy="26" r="24" fill="none" />
+                    <path class="checkmark-check" fill="none" d="M16 26l7 7 14-14" />
+                </svg>
+                </div>
+                <p>Kode pembayaran berhasil disalin!</p>
+            </div>
+        </div>
     </div>
 </div>
+    <style>
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .popup.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .popup-content {
+    background: #fff;
+    padding: 30px 40px; /* tambahkan padding agar animasi tidak terpotong */
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    overflow: visible; /* pastikan tidak memotong animasi */
+  }
+
+  .checkmark-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    overflow: visible; /* jika masih terpotong, tambah ini juga */
+  }
+
+  .checkmark {
+    width: 60px;
+    height: 60px;
+    stroke: green;
+    stroke-width: 3;
+    /* pastikan transform-origin di tengah */
+    transform-origin: center;
+  }
+
+  /* Animasi Lingkaran */
+  .checkmark-circle {
+    stroke: green;
+    stroke-width: 3;
+    stroke-dasharray: 151;
+    stroke-dashoffset: 150;
+    animation: drawCircle 0.6s ease-out forwards, bounceIn 0.5s ease-out;
+    transform-origin: center; /* atur origin di tengah */
+  }
+
+  /* Animasi Ceklis */
+  .checkmark-check {
+    stroke: green;
+    stroke-width: 3;
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    animation: drawCheck 0.4s ease-out 0.4s forwards;
+    transform-origin: center; /* atur origin di tengah */
+  }
+
+  @keyframes drawCircle {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes drawCheck {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes bounceIn {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .hidden { display: none; }
+</style>
 
 @push('scripts')
 <script>
-function copyPaymentCode(code) {
-    navigator.clipboard.writeText(code).then(() => {
-        alert('Payment code copied to clipboard!');
-    });
-}
-</script>
+function copyPaymentCode() {
+            // Ganti dengan kode pembayaran dinamis jika diperlukan
+            const paymentCode = "{{ $paymentCode }}"; 
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(paymentCode)
+                    .then(() => {
+                        console.log("Kode berhasil disalin.");
+                        showPopup();
+                    })
+                    .catch((err) => {
+                        console.error("Gagal menyalin:", err);
+                        // Jika terjadi error, coba fallback
+                        fallbackCopy(paymentCode);
+                    });
+            } else {
+                fallbackCopy(paymentCode);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.top = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                console.log("Fallback: Kode berhasil disalin.");
+                showPopup();
+            } catch (err) {
+                console.error("Fallback: Gagal menyalin:", err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showPopup() {
+            const popup = document.getElementById('popup');
+            popup.classList.remove('hidden');
+            popup.classList.add('show');
+
+            // Sembunyikan pop-up setelah 3 detik
+            setTimeout(() => {
+                popup.classList.remove('show');
+                popup.classList.add('hidden');
+            }, 1500);
+        }
+
+        document.getElementById('copyButton').addEventListener('click', copyPaymentCode);
+    </script>
 @endpush
 @endsection

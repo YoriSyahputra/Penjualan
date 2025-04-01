@@ -27,11 +27,6 @@ class User extends Authenticatable
         'is_super_admin',
         'admin_status',
         'phone_number',
-        'alamat_lengkap',
-        'provinsi',
-        'kota',
-        'kecamatan',
-        'kode_pos',
         'gender',
         'profile_photo',
     ];

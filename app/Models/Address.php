@@ -17,9 +17,7 @@ class Address extends Model
         'kota',
         'kecamatan',
         'kode_pos',
-        'is_primary',
-        'recipient_name',
-        'phone_number'
+        'is_primary'
     ];
     protected $casts = [
         'is_primary' => 'boolean'

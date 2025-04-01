@@ -27,12 +27,11 @@
                             <p class="text-gray-600">Nama: <span class="font-medium text-gray-800">{{ auth()->user()->name }}</span></p>
                             <p class="text-gray-600">Nomor Telepon: <span class="font-medium text-gray-800">{{ auth()->user()->phone_number }}</span></p>
                         </div>
-                        
-                        <!-- Address Section -->
+                        <!-- Tambahkan section ini di dalam "Shipping Address" di checkout.blade.php -->
                         <div class="mt-4">
                             <div class="flex items-center justify-between">
                                 <h3 class="text-lg font-medium text-gray-900">Pilih Alamat Barang Untuk Diantar</h3>
-                                <button type="button" id="toggleAddressListBtn" class="text-indigo-600 hover:text-indigo-800 text-sm">
+                                <button type="button" onclick="toggleAddressList()" class="text-indigo-600 hover:text-indigo-800 text-sm">
                                     {{ count(auth()->user()->addresses) > 0 ? 'Lihat Alamat' : 'Tambah Alamat' }}
                                 </button>
                             </div>
@@ -70,9 +69,8 @@
                             </div>
                             @endif
                         </div>                       
-                    </div>
 
-                    <!-- Order Items Section -->
+                    <!-- Order Items Section (unchanged) -->
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Items</h2>
                         <div class="divide-y divide-gray-200">
@@ -87,8 +85,8 @@
                                         </span>
                                     </div>
                                     <div class="flex-1">
-                                        <h3 class="font-medium text-lg text-gray-900">{{ $item['name'] }}</h3>
-                                        <h3 class="font-medium text-lg text-gray-900">{{ $item['store_name'] }}</h3>
+                                    <h3 class="font-medium text-lg text-gray-900">{{ $item['name'] }}</h3>
+                                    <h3 class="font-medium text-lg text-gray-900">{{ $item['store_name'] }}</h3>
                                         @if(isset($item['variant_name']))
                                             <p class="text-sm text-gray-600">Variant: {{ $item['variant_name'] }}</p>
                                         @endif
@@ -107,7 +105,7 @@
                         </div>
                     </div>
 
-                    <!-- Shipping Method Section -->
+                    <!-- Shipping Method Section (unchanged) -->
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4">Shipping Method</h2>
                         <div class="space-y-3">
@@ -130,7 +128,6 @@
                         </div>
                     </div>
 
-                    <!-- Shipping Kurir Section -->
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4">Shipping Kurir</h2>
                         <div class="space-y-3">
@@ -161,7 +158,7 @@
                         </div>
                     </div>
                     
-                    <!-- Payment Method Section -->
+                    <!-- Payment Method Section (unchanged) -->
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4">Payment Method</h2>
                         <div class="space-y-3">
@@ -216,7 +213,7 @@
                     </div>
                 </div>
 
-                <!-- Right Column - Order Summary (STICKY POSITION) -->
+                <!-- Right Column - Order Summary (unchanged) -->
                 <div class="lg:w-1/3">
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-8">
                         <h2 class="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
@@ -284,30 +281,9 @@
         </form>
     </div>
 </div>
-
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const toggleAddressListBtn = document.querySelector('#toggleAddressListBtn');
-    const addressList = document.querySelector('#addressList');
-
-    // Kalo emang ada tombol sama listnya
-    if (toggleAddressListBtn && addressList) {
-        toggleAddressListBtn.addEventListener('click', function() {
-            addressList.classList.toggle('hidden');
-        });
-    } else {
-        console.error('Waduh! Tombol atau list alamat ngga ketemu nih 😅');
-        
-        // Kalo ngga ada, bikin alert
-        if (!toggleAddressListBtn) {
-            console.error('Tombol "Tambah Alamat" ilang!');
-        }
-        if (!addressList) {
-            console.error('List alamat ngga ada!');
-        }
-    }
-});
     // Handle shipping method selection
     const shippingInputs = document.querySelectorAll('input[name="shipping_method"]');
     shippingInputs.forEach(input => {
@@ -325,9 +301,28 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validasi dan terapkan voucher (anda perlu mengimplementasikan logika ini)
         }
     });
+});
+
+function toggleAddressList() {
+    const addressList = document.getElementById('addressList');
+    if (addressList) {
+        addressList.classList.toggle('hidden');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Jika ada alamat tersimpan dengan status primary, pilih otomatis
+    const primaryAddressRadio = document.querySelector('input[name="selected_address"][data-is-primary="true"]');
+    if (primaryAddressRadio) {
+        primaryAddressRadio.checked = true;
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const instructionsDiv = document.getElementById('ludwigPaymentInstructions');
 
     // Show/hide Ludwig Payment instructions based on payment_method selection
-    const instructionsDiv = document.getElementById('ludwigPaymentInstructions');
     document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.value === 'ludwig_payment') {
@@ -337,6 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+});
 </script>
 @endpush
 @endsection

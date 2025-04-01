@@ -47,18 +47,25 @@ class RegisteredUserController extends Controller
             'phone_number' => ['required', 'string'],
         ]);
 
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'phone_number' => $request->phone_number,
+            'gender' => $request->gender,
+        ]);
+        
+        $user->addresses()->create([
+            'label' => $request->label,
             'alamat_lengkap' => $request->alamat_lengkap,
             'provinsi' => $request->provinsi,
             'kota' => $request->kota,
             'kecamatan' => $request->kecamatan,
             'kode_pos' => $request->kode_pos,
-            'phone_number' => $request->phone_number,
-            'gender' => $request->gender,
+            'is_primary' => true, 
         ]);
+        
 
         $user->wallet()->create([
             'balance' => 0,

@@ -30,7 +30,7 @@ Route::post('/logout', function (Request $request) {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
-Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails'])->name('product.details');
+// Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails'])->name('product.details');
 Route::get('/product/{id}', [ShopController::class, 'getProductDetail'])->name('product.details');
 Route::get('/store/{storeId}/products/ajax', [ShopController::class, 'storeProductsAjax'])
     ->name('store.products.ajax');
@@ -102,11 +102,12 @@ Route::post('/transfer', [EWalletController::class, 'transfer'])->name('ewallet.
         Route::post('/photo', [ProfileController::class, 'updatePhoto'])->name('photo');
 
     Route::prefix('address')->name('address.')->group(function () {
-        Route::post('/', [ProfileController::class, 'addAddress'])->name('add');
-        Route::post('/{address}/primary', [ProfileController::class, 'setPrimaryAddress'])->name('primary');
-        Route::delete('/{address}', [ProfileController::class, 'deleteAddress'])->name('delete');
-        Route::put('/{address}', [ProfileController::class, 'updateAddress'])->name('update');
+        Route::post('/', [ProfileController::class, 'addAddress'])->name('addup');
+        Route::post('/{address}/primary', [ProfileController::class, 'setPrimaryAddress'])->name('priup');
+        Route::delete('/{address}', [ProfileController::class, 'deleteAddress'])->name('delup');
+        Route::put('/{address}', [ProfileController::class, 'updateAddress'])->name('upadd');
     });
+        
 });
 
     // Store Management
@@ -125,7 +126,6 @@ Route::post('/transfer', [EWalletController::class, 'transfer'])->name('ewallet.
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-
 Route::prefix('dashboard')
     ->middleware(['auth', 'admin'])
     ->name('dashboard.')
@@ -147,8 +147,19 @@ Route::prefix('dashboard')
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+        Route::post('/orders/generate-tracking', [OrderController::class, 'generateMultipleTrackingNumbers'])
+            ->name('generate.tracking');
+        Route::get('/orders/{order}/resi-sticker', [OrderController::class, 'generateResiSticker'])
+            ->name('orders.resi-sticker');
 
-    });
+            Route::get('/orders/multiple/resi-sticker', [OrderController::class, 'generateBulkResiSticker'])
+            ->name('orders.bulk-resi-sticker');
+
+        Route::get('/orders/{order}/resi-sticker', [OrderController::class, 'generateResiSticker'])
+            ->where('order', '[0-9]+')
+            ->name('orders.resi-sticker');
+
+});
 /*
 |--------------------------------------------------------------------------
 | Super Admin Routes

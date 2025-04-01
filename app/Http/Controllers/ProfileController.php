@@ -16,19 +16,54 @@ class ProfileController extends Controller
     }
 
     public function update(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . Auth::id()],
-            'phone_number' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:500'],
-            'gender' => ['required', 'in:male,female,prefer_not_to_say'],
-        ]);
+{
+    $validated = $request->validate([
+        'name'          => ['required', 'string', 'max:255'],
+        'email'         => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . Auth::id()],
+        'phone_number'  => ['nullable', 'string', 'max:20'],
+        'gender'        => ['required', 'in:male,female,prefer_not_to_say'],
+        // Validasi data alamat
+        'alamat_lengkap'=> ['required', 'string'],
+        'provinsi'      => ['required', 'string'],
+        'kota'          => ['required', 'string'],
+        'kecamatan'     => ['required', 'string'],
+        'kode_pos'      => ['required', 'string'],
+    ]);
 
-        Auth::user()->update($validated);
+    $user = Auth::user();
 
-        return back()->with('success', 'Profile updated successfully!');
+    // Update data user (nama, email, phone, gender)
+    $user->update([
+        'name'         => $validated['name'],
+        'email'        => $validated['email'],
+        'phone_number' => $validated['phone_number'],
+        'gender'       => $validated['gender'],
+    ]);
+
+    // Update atau buat alamat utama di tabel addresses
+    $addressData = [
+        'alamat_lengkap' => $validated['alamat_lengkap'],
+        'provinsi'       => $validated['provinsi'],
+        'kota'           => $validated['kota'],
+        'kecamatan'      => $validated['kecamatan'],
+        'kode_pos'       => $validated['kode_pos'],
+        'is_primary'     => true,
+    ];
+
+    // Cek apakah sudah ada alamat utama
+    $primaryAddress = $user->addresses()->where('is_primary', true)->first();
+
+    if ($primaryAddress) {
+        // Update alamat utama
+        $primaryAddress->update($addressData);
+    } else {
+        // Jika belum ada, buat alamat baru sebagai alamat utama
+        $user->addresses()->create($addressData);
     }
+
+    return back()->with('success', 'Profile updated successfully!');
+}
+
 
     public function updatePhoto(Request $request)
     {
@@ -50,9 +85,11 @@ class ProfileController extends Controller
     {
         $validated = $request->validate([
             'label' => 'required|string|max:255',
-            'address' => 'required|string',
-            'recipient_name' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:20',
+            'alamat_lengkap' => 'required|string',
+            'provinsi' => 'required|string',
+            'kota' => 'required|string',
+            'kecamatan' => 'required|string',
+            'kode_pos' => 'required|digits:5',
         ]);
     
         if (Auth::user()->addresses()->count() >= 5) {

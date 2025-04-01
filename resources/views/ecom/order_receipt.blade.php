@@ -59,17 +59,22 @@
             </div>
 
             <!-- Item List -->
-            <div class="mb-8">
-                <h3 class="font-semibold text-gray-800 mb-3">Items Purchased</h3>
-                <h4 class="text-gray-600">Status Order :
-                    @if($order->status_order == 'pending')
-                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                        <svg class="mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                            <circle cx="4" cy="4" r="3" />
-                        </svg>
-                            Pending
-                    </span>
-                    @endif
+                <div class="mb-8">
+                    <h3 class="font-semibold text-gray-800 mb-3">Items Purchased</h3>
+                    <div class="flex items-center space-x-4 p-4 bg-green-50 border border-green-400 rounded-md">
+                        <div class="flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-green-700">
+                            Status Order: <span class="font-bold text-green-700">{{ $order->status_package }}</span>
+                            </h4>
+                        </div>
+                    </div>
+                </div>
                 </h4>
                 <div class="space-y-4">
                     @foreach($items as $item)

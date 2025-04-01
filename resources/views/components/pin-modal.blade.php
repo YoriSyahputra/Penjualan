@@ -1,4 +1,5 @@
 <!-- Modal Verifikasi PIN -->
+<!-- Modal Verifikasi PIN -->
 <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
   <div class="bg-white rounded p-6 w-96 max-w-[90%]">
     <h2 class="text-xl font-bold text-center mb-2">Masukkan PIN Anda</h2>
@@ -16,16 +17,19 @@
       </div>
     </div>
 
-    <input type="password" id="pinInput" class="w-full text-center text-2xl tracking-widest mb-4" placeholder="******" readonly maxlength="6">
-
+    <input type="password"
+    id="pinInput" 
+    class="w-full text-center text-2xl tracking-widest mb-6 border border-gray-300 rounded py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"  
+    readonly 
+    maxlength="6">
     <!-- Numpad PIN -->
     <div class="grid grid-cols-3 gap-2 mb-4">
       @foreach(range(1, 9) as $num)
       <button type="button" class="pin-btn h-12 bg-gray-50 rounded text-xl font-semibold" data-val="{{ $num }}">{{ $num }}</button>
       @endforeach
-      <button type="button" class="h-12 bg-gray-50 rounded text-xl font-semibold" onclick="clearPin()">C</button>
-      <button type="button" class="pin-btn h-12 bg-gray-50 rounded text-xl font-semibold" data-val="0">0</button>
-      <button type="button" class="h-12 bg-gray-50 rounded text-xl font-semibold" onclick="deletePin()">⌫</button>
+      <button type="button" class="h-14 bg-red-50 rounded-lg text-xl font-bold text-red-600 hover:bg-red-100 transition-colors" onclick="clearPin()">C</button>
+      <button type="button" class="pin-btn h-14 bg-blue-50 rounded-lg text-xl font-bold text-blue-600 hover:bg-blue-100 transition-colors" data-val="0">0</button>
+      <button type="button" class="h-14 bg-yellow-50 rounded-lg text-xl font-bold text-yellow-600 hover:bg-yellow-100 transition-colors" onclick="deletePin()">⌫</button>
     </div>
 
     <div class="flex gap-3">
@@ -41,7 +45,7 @@
   <div class="bg-white rounded p-6 w-96 max-w-[90%]">
     <h2 class="text-xl font-bold text-center mb-2">Buat PIN Anda</h2>
     <p class="text-gray-600 text-center mb-4">Anda harus membuat PIN 6 digit untuk transfer</p>
-    <input type="password" id="newPinInput" class="w-full text-center text-2xl tracking-widest mb-4" placeholder="******" readonly maxlength="6">
+    <input type="password" id="newPinInput" class="w-full text-center text-2xl tracking-widest mb-4 border border-gray-300 rounded py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="******" readonly maxlength="6">
     
     <!-- Numpad Pembuatan PIN -->
     <div class="grid grid-cols-3 gap-2 mb-4">
@@ -56,6 +60,7 @@
   </div>
 </div>
 @endif
+
 
 @push('scripts')
 <script>

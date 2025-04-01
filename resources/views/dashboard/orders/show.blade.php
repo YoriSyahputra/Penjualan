@@ -18,17 +18,35 @@
             <div>
                 <h2 class="text-lg font-semibold mb-2">Order Information</h2>
                 <p><span class="font-medium">Date:</span> {{ $order->created_at->format('Y-m-d H:i') }}</p>
-                <p><span class="font-medium">Status:</span> {{ ucfirst($order->status) }}</p>
+                <p><span class="font-medium">Status Payment:</span> {{ ucfirst($order->status) }}</p>
+                <p><span class="font-medium">Status:</span> {{ ucfirst($order->status_order) }}</p>
                 <p><span class="font-medium">Payment Method:</span> {{ $order->payment_method }}</p>
-                <p><span class="font-medium">Payment Code:</span> {{ $order->payment_code }}</p>
+                <p><span class="font-medium">Shipping Method:</span> {{ $order->shipping_method }}</p>
+                <p><span class="font-medium">Shipping Kurir:</span> {{ $order->shipping_kurir }}</p>
+                <p><span class="font-medium">Order ID:</span> {{ $order->order_number }}</p>
             </div>
             <div>
                 <h2 class="text-lg font-semibold mb-2">Customer Information</h2>
                 <p><span class="font-medium">Name:</span> {{ $order->user->name }}</p>
                 <p><span class="font-medium">Email:</span> {{ $order->user->email }}</p>
-                
+                <p><span class="font-medium">Alamat:</span> {{ $order->alamat_lengkap }}</p>
+                <p><span class="font-medium">Provinsi</span> {{ $order->provinsi }}</p>
+                <p><span class="font-medium">Kota:</span> {{ $order->kota }}</p>
+                <p><span class="font-medium">Kecamatan:</span> {{ $order->kecamatan }}</p>
+                <p><span class="font-medium">Kode POS:</span> {{ $order->kode_pos }}</p>
             </div>
         </div>
+                <!-- New Tracking Number Section -->
+        @if($order->nomor_resi)
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold mb-2">Tracking Information</h2>
+                    <p>
+                        <span class="font-medium">Nomor Resi:</span> 
+                        <span class="text-blue-600">{{ $order->nomor_resi }}</span>
+                    </p>
+                </div>
+        @endif
+
 
         <div class="mb-6">
             <h2 class="text-lg font-semibold mb-2">Order Items</h2>
@@ -105,15 +123,14 @@
         </div>
 
         <div>
-            <h2 class="text-lg font-semibold mb-2">Update Status</h2>
-
-                @csrf
+            <h2 class="text-lg font-semibold mb-2">Update Status Order</h2>
+            <form action="{{ route('dashboard.orders.update-status', $order->id) }}" method="POST">
+            @csrf
                 @method('PUT')
-                <select name="status" class="border-gray-300 rounded-md shadow-sm mr-2">
-                    <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
-                    <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>Completed</option>
-                    <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                <select name="status_order" class="border-gray-300 rounded-md shadow-sm mr-2">
+                    <option value="pending" {{ $order->status_order == 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="processing" {{ $order->status_order == 'processing' ? 'selected' : '' }}>Processing</option>
+                    <option value="cancelled" {{ $order->status_order == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                 </select>
                 <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Update Status</button>
             </form>

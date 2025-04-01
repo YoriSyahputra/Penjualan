@@ -4,23 +4,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name') }} - Admin Dashboard</title>
+    <title>Admin Dashboard</title>
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/bootstrap.js'])
-    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
 </head>
 <body class="antialiased">
     <div x-data="{ sidebarOpen: false }">
-        <!-- Sidebar -->
-         
         <aside class="fixed top-0 left-0 z-40 h-screen w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out"
                :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}">
             <div class="h-full flex flex-col">
-                <!-- Logo -->
                 <div class="flex items-center justify-center h-16 bg-indigo-600">
                     <a href="/" class="text-2xl font-bold text-white">{{ auth()->user()->store->name }}</a>
                 </div>
-
-                <!-- Navigation -->
                 <nav class="flex-1 overflow-y-auto py-4 px-3">
                     <ul class="space-y-2">
                         <li>

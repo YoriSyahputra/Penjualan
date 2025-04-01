@@ -52,7 +52,24 @@
                                     @endif
                                 </span></p>
                                 <p class="text-gray-600">Nomor Telepon: <span class="font-medium text-gray-800">{{ auth()->user()->phone_number }}</span></p>
-                                <p class="text-gray-600">Alamat: <span class="font-medium text-gray-800">{{ auth()->user()->alamat_lengkap}},{{ auth()->user()->provinsi}},{{ auth()->user()->kota}},{{ auth()->user()->kecamatan}}.{{ auth()->user()->kode_pos}}</span></p>
+                                    @php
+                                        $primaryAddress = auth()->user()->addresses()->where('is_primary', true)->first();
+                                    @endphp
+
+                                    @if($primaryAddress)
+                                        <p class="text-gray-600">
+                                            Alamat: 
+                                            <span class="font-medium text-gray-800">
+                                                {{ $primaryAddress->alamat_lengkap }}, 
+                                                {{ $primaryAddress->kecamatan }}, 
+                                                {{ $primaryAddress->kota }}, 
+                                                {{ $primaryAddress->provinsi }}, 
+                                                {{ $primaryAddress->kode_pos }}
+                                            </span>
+                                        </p>
+                                    @else
+                                        <p class="text-gray-600">Alamat belum ditambahkan.</p>
+                                    @endif
                             </div>
                         </div>
                         <button onclick="openEditProfileModal()" 
@@ -74,6 +91,10 @@
                                     </svg>
                                 </button>
                             </div>
+                            @php
+                                $primaryAddress = auth()->user()->addresses()->where('is_primary', true)->first();
+                            @endphp
+
                             <form action="{{ route('profile.update') }}" method="POST">
                                 @csrf
                                 @method('PATCH')
@@ -117,11 +138,12 @@
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
                                     </div>
-
+                                    
+                                    <!-- Bagian alamat, data diambil dari primaryAddress -->
                                     <div>
                                         <label for="alamat_lengkap" class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
                                         <input type="text" name="alamat_lengkap" id="alamat_lengkap" required
-                                            value="{{ old('alamat_lengkap', auth()->user()->alamat_lengkap) }}"
+                                            value="{{ old('alamat_lengkap', $primaryAddress->alamat_lengkap ?? '') }}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                         @error('alamat_lengkap')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -130,7 +152,7 @@
                                     <div>
                                         <label for="provinsi" class="block text-sm font-medium text-gray-700">Provinsi</label>
                                         <input type="text" name="provinsi" id="provinsi" required
-                                            value="{{ old('provinsi', auth()->user()->provinsi) }}"
+                                            value="{{ old('provinsi', $primaryAddress->provinsi ?? '') }}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                         @error('provinsi')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -139,7 +161,7 @@
                                     <div>
                                         <label for="kota" class="block text-sm font-medium text-gray-700">Kota</label>
                                         <input type="text" name="kota" id="kota" required
-                                            value="{{ old('kota', auth()->user()->kota) }}"
+                                            value="{{ old('kota', $primaryAddress->kota ?? '') }}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                         @error('kota')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -148,7 +170,7 @@
                                     <div>
                                         <label for="kecamatan" class="block text-sm font-medium text-gray-700">Kecamatan</label>
                                         <input type="text" name="kecamatan" id="kecamatan" required
-                                            value="{{ old('kecamatan', auth()->user()->kecamatan) }}"
+                                            value="{{ old('kecamatan', $primaryAddress->kecamatan ?? '') }}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                         @error('kecamatan')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -157,7 +179,7 @@
                                     <div>
                                         <label for="kode_pos" class="block text-sm font-medium text-gray-700">Kode Pos</label>
                                         <input type="number" name="kode_pos" id="kode_pos" required
-                                            value="{{ old('kode_pos', auth()->user()->kode_pos) }}"
+                                            value="{{ old('kode_pos', $primaryAddress->kode_pos ?? '') }}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                         @error('kode_pos')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -175,6 +197,7 @@
                                     </button>
                                 </div>
                             </form>
+
                         </div>
                     </div>
                 </div>
@@ -243,7 +266,6 @@
                                             </button>
                                         @endif
                                     </div>
-
                                     <div id="addressList" class="space-y-4">
                                         @forelse(auth()->user()->addresses as $address)
                                             <div class="bg-white border-l-4 {{ $address->is_primary ? 'border-indigo-500' : 'border-gray-300' }} p-4 rounded-lg shadow-md transform transition-all duration-300 hover:scale-[1.02]">
@@ -259,18 +281,22 @@
                                                         </div>
                                                         <p class="text-gray-600 mt-1">{{ $address->recipient_name }}</p>
                                                         <p class="text-gray-600">{{ $address->phone_number }}</p>
-                                                        <p class="text-gray-600 mt-2">{{ $address->address }}</p>
+                                                        <p class="text-gray-600 mt-2">{{ $address->alamat_lengkap }}</p>
+                                                        <p class="text-gray-600 mt-2">{{ $address->provinsi }}</p>
+                                                        <p class="text-gray-600 mt-2">{{ $address->kota }}</p>
+                                                        <p class="text-gray-600 mt-2">{{ $address->kecamatan }}</p>
+                                                        <p class="text-gray-600 mt-2">{{ $address->kode_pos }}</p>
                                                     </div>
                                                     <div class="flex gap-2">
                                                         @if(!$address->is_primary)
-                                                            <form action="{{ route('profile.address.primary', $address) }}" method="POST" class="inline">
+                                                            <form action="{{ route('profile.address.priup', $address) }}" method="POST" class="inline">
                                                                 @csrf
                                                                 <button type="submit" class="text-indigo-600 hover:text-indigo-800 transition-colors">
                                                                     Jadikan Utama
                                                                 </button>
                                                             </form>
                                                         @endif
-                                                        <button onclick="deleteAddress('{{ route('profile.address.delete', $address) }}')" 
+                                                        <button onclick="deleteAddress('{{ route('profile.address.delup', $address) }}')" 
                                                                 class="text-red-600 hover:text-red-800 transition-colors ml-2">
                                                             Hapus
                                                         </button>
@@ -305,7 +331,7 @@
                     </svg>
                 </button>
             </div>
-            <form id="addAddressForm" action="{{ route('profile.address.add') }}" method="POST">
+            <form id="addAddressForm" action="{{ route('profile.address.addup') }}" method="POST">
                 @csrf
                 <div class="space-y-4">
                     <div>
@@ -314,20 +340,31 @@
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
-                        <label for="recipient_name" class="block text-sm font-medium text-gray-700">Nama Penerima</label>
-                        <input type="text" name="recipient_name" id="recipient_name" required placeholder="Nama lengkap penerima"
+                        <label for="alamat_lengkap" class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
+                        <input type="text" name="alamat_lengkap" id="alamat_lengkap" required placeholder="Contoh: JL.xxxxxxxx"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
-                        <label for="phone_number" class="block text-sm font-medium text-gray-700">Nomor Telepon</label>
-                        <input type="text" name="phone_number" id="phone_number" required placeholder="Format: 08xxxxxxxxxx"
+                        <label for="provinsi" class="block text-sm font-medium text-gray-700">Provinsi</label>
+                        <input type="text" name="provinsi" id="provinsi" required placeholder="Masukan Provinsi Anda"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
-                        <label for="address" class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
-                        <textarea name="address" id="address" rows="3" required placeholder="Masukkan alamat lengkap"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                        <label for="kota" class="block text-sm font-medium text-gray-700">Kota</label>
+                        <input type="text" name="kota" id="kota" required placeholder="Masukan Kota Anda"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
+                    <div>
+                        <label for="kecamatan" class="block text-sm font-medium text-gray-700">Kecamatan</label>
+                        <input type="text" name="kecamatan" id="kecamatan" required placeholder="Masukan Kecamatan Anda"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div >
+                        <label for="kode_pos" class="block text-sm font-medium text-gray-700">Kode POS</label>
+                        <input type="number" name="kode_pos" id="kode_pos" maxlength="5" placeholder="Masukkan Kode POS"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
                 </div>
                 <div class="mt-5 flex justify-end gap-3">
                     <button type="button" onclick="closeAddressModal()"
@@ -345,6 +382,16 @@
 </div>
 
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
+            const kodePosInput = document.getElementById("kode_pos");
+            kodePosInput.addEventListener("input", function () {
+                this.value = this.value.replace(/\D/g, "");
+                if (this.value.length > 5) {
+                    this.value = this.value.slice(0, 5);
+                }
+            });
+        });
+
 document.addEventListener('DOMContentLoaded', function() {
     // Success message fade out
     setTimeout(function() {

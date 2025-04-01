@@ -8,7 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
 
-    <title>{{ config('app.name') }} - Modern E-commerce</title>
+    <title>Ludwig</title>
     
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/bootstrap.js'])
     @php

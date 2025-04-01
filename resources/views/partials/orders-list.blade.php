@@ -16,27 +16,6 @@
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     Paid
                 </span>
-                @if($order->status_order == 'pending')
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    Pending
-                </span>
-                @elseif($order->status_order == 'processed')
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Processed
-                </span>
-                @endif
-                @elseif($order->status == 'cancelled')
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    Cancelled
-                </span>
-                @elseif($order->status == 'delivered')
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    Delivered
-                </span>
-                @else
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    {{ ucfirst($order->status) }}
-                </span>
                 @endif
             </div>
         </div>
@@ -44,6 +23,7 @@
 
     <div class="p-4">
         <div class="space-y-4">
+
             @foreach($order->items as $item)
             <div class="flex items-start">
                 <div class="flex-shrink-0 h-20 w-20">
@@ -77,6 +57,25 @@
                 </div>
             </div>
             @endforeach
+
+            @if($order->status == 'paid')
+                <div class="mb-8">
+                        <h3 class="font-semibold text-gray-800 mb-3">Items Purchased</h3>
+                        <div class="flex items-center space-x-4 p-4 bg-green-50 border border-green-400 rounded-md">
+                            <div class="flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-green-700">
+                                Status Order: <span class="font-bold text-green-700">{{ $order->status_package }}</span>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+            @endif
         </div>
 
         <div class="mt-6 border-t border-gray-200 pt-4">

@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\SellerWallet;
+use App\Models\LudwigWallet;
 
 use App\Models\Pin;
 use App\Models\Wallet;
@@ -99,58 +100,28 @@ class ProductPaymentController extends Controller
         return response()->json($products);
     }
 
-    public function processPayment(Request $request)
+        public function processPayment(Request $request)
     {
+        // Validasi input
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'amount' => 'required|numeric|min:1000',
             'pin' => 'required|digits:6'
         ]);
 
+        // Ambil user & product
         $user = auth()->user();
         $product = Product::with('store')->findOrFail($request->product_id);
         $amount = $request->amount;
         
-        // Log payment attempt
-        Log::info('Mencoba proses pembayaran produk', [
+        // Log attempt pembayaran
+        Log::info('Proses Pembayaran Produk', [
             'user_id' => $user->id,
             'product_id' => $product->id,
             'amount' => $amount
         ]);
-        
-        // Get the seller's wallet
-        $sellerWallet = SellerWallet::where('store_id', $product->store_id)->first();
-        
-        // Log seller wallet status
-        Log::info('Status seller wallet', [
-            'store_id' => $product->store_id,
-            'wallet_exists' => $sellerWallet ? 'Ya' : 'Tidak',
-            'wallet_id' => $sellerWallet ? $sellerWallet->id : null,
-            'current_balance' => $sellerWallet ? $sellerWallet->balance : null
-        ]);
-        
-        if (!$sellerWallet && $product->store) {
-            // Buat wallet baru jika tidak ada
-            Log::info('Membuat wallet baru untuk seller', [
-                'store_id' => $product->store_id,
-                'store_user_id' => $product->store->user_id
-            ]);
-            
-            $sellerWallet = SellerWallet::create([
-                'store_id' => $product->store_id,
-                'user_id' => $product->store->user_id,
-                'balance' => 0
-            ]);
-        }
-        
-        if (!$sellerWallet) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Seller wallet tidak ditemukan'
-            ], 400);
-        }
 
-        // Verify PIN
+        // Cek PIN
         $pinRecord = Pin::where('user_id', $user->id)->first();
         
         if (!$pinRecord) {
@@ -160,15 +131,15 @@ class ProductPaymentController extends Controller
             ], 400);
         }
 
-        // Check if PIN is locked
+        // Cek PIN terkunci
         if ($pinRecord->is_locked && now()->lessThan($pinRecord->locked_until)) {
             return response()->json([
                 'success' => false,
-                'message' => 'PIN telah dikunci karena terlalu banyak percobaan. Silakan coba lagi nanti.'
+                'message' => 'PIN dikunci. Silakan coba lagi nanti.'
             ], 400);
         }
 
-        // Verify PIN
+        // Verifikasi PIN
         if (!Hash::check($request->pin, $pinRecord->pin)) {
             $pinRecord->increment('attempts');
 
@@ -180,20 +151,20 @@ class ProductPaymentController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'PIN telah dikunci karena terlalu banyak percobaan. Silakan coba lagi dalam 30 menit.'
+                    'message' => 'PIN dikunci. Coba lagi dalam 30 menit.'
                 ], 400);
             }
 
             return response()->json([
                 'success' => false,
-                'message' => 'PIN tidak valid. Silakan coba lagi.'
+                'message' => 'PIN salah. Coba lagi.'
             ], 400);
         }
 
-        // Reset PIN attempts on successful verification
+        // Reset percobaan PIN
         $pinRecord->update(['attempts' => 0]);
 
-        // Check wallet balance
+        // Cek saldo wallet
         if ($user->wallet->balance < $amount) {
             return response()->json([
                 'success' => false,
@@ -201,38 +172,15 @@ class ProductPaymentController extends Controller
             ], 400);
         }
 
-        // Process payment and create order
+        // Proses pembayaran
         try {
-            $order = null; // Declare outside the transaction to access it later
+            $order = null;
             
-            DB::transaction(function () use ($user, $product, $amount, &$order, $sellerWallet) {
-                // Log wallet balances before transaction
-                Log::info('Saldo sebelum transaksi', [
-                    'user_wallet' => $user->wallet->balance,
-                    'seller_wallet' => $sellerWallet->balance
-                ]);
-                
-                // Deduct from user's wallet
+            DB::transaction(function () use ($user, $product, $amount, &$order) {
+                // Kurangi saldo user
                 $user->wallet->decrement('balance', $amount);
-                
-                // PENTING: Refresh seller wallet sebelum increment
-                $sellerWallet = $sellerWallet->fresh();
-                
-                // Add to seller's wallet with explicit logging
-                $oldBalance = $sellerWallet->balance;
-                $sellerWallet->increment('balance', $amount);
-                $newBalance = $sellerWallet->fresh()->balance;
-                
-                Log::info('Penambahan saldo seller wallet', [
-                    'wallet_id' => $sellerWallet->id,
-                    'store_id' => $product->store_id,
-                    'old_balance' => $oldBalance,
-                    'added_amount' => $amount,
-                    'new_balance' => $newBalance,
-                    'difference' => $newBalance - $oldBalance
-                ]);
 
-                // Create order
+                // Buat order
                 $order = Order::create([
                     'user_id' => $user->id,
                     'order_number' => 'ORD-' . strtoupper(uniqid()),
@@ -240,10 +188,11 @@ class ProductPaymentController extends Controller
                     'subtotal' => $amount,
                     'total' => $amount,
                     'status' => 'paid',
+                    'store_id' => $product->store_id,
                     'paid_at' => now()
                 ]);
 
-                // Create order item
+                // Buat order item
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $product->id,
@@ -251,261 +200,306 @@ class ProductPaymentController extends Controller
                     'price' => $amount
                 ]);
 
-                // Update product stock
+                // Simpan ke Ludwig Wallet
+                LudwigWallet::create([
+                    'order_id' => $order->id,
+                    'user_id' => $user->id,
+                    'seller_id' => $product->store->user_id,
+                    'amount' => $amount,
+                    'status_package' => 'pending',
+                    'status_payment' => 'pending'
+                ]);
+
+                // Kurangi stok produk
                 $product->decrement('stock', 1);
-                
-                // Log wallet balances after transaction
-                Log::info('Saldo setelah transaksi', [
-                    'user_wallet' => $user->wallet->fresh()->balance,
-                    'seller_wallet' => $sellerWallet->fresh()->balance
+
+                // Log transaksi
+                Log::info('Transaksi Berhasil', [
+                    'order_id' => $order->id,
+                    'user_id' => $user->id,
+                    'product_id' => $product->id
                 ]);
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pembayaran berhasil diproses',
+                'message' => 'Pembayaran berhasil',
                 'redirect' => route('order.receipt', ['order' => $order->id])
             ]);
+
         } catch (\Exception $e) {
-            Log::error('Proses pembayaran gagal', [
+            Log::error('Gagal Proses Pembayaran', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Proses pembayaran gagal: ' . $e->getMessage()
+                'message' => 'Pembayaran gagal: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    public function processOrderPayment(Request $request)
+    // Tambahan method untuk update status paket oleh driver
+    public function updatePackageStatus(Request $request)
     {
         $request->validate([
             'order_id' => 'required|exists:orders,id',
-            'pin' => 'required|digits:6'
+            'status' => 'required|in:pickup,on_delivery,delivered,failed_delivery,returned'
         ]);
 
-        $user = auth()->user();
-        
-        // Get the initial order
-        $order = Order::with([
-            'items', 
-            'items.product', 
-            'items.product.store'
-        ])->findOrFail($request->order_id);
+        $driver = auth()->user();
+        $ludwigWallet = LudwigWallet::where('order_id', $request->order_id)->first();
 
-        // Find all related orders with the same payment code
-        $relatedOrders = collect([$order]);
-        if ($order->payment_code) {
-            $additionalOrders = Order::where('payment_code', $order->payment_code)
-                ->where('id', '!=', $order->id)
-                ->where('status', 'pending')
-                ->with(['items', 'items.product', 'items.product.store'])
-                ->get();
-            
-            $relatedOrders = $relatedOrders->merge($additionalOrders);
+        if (!$ludwigWallet) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data transaksi tidak ditemukan'
+            ], 404);
         }
 
-        // Calculate the total amount across all orders
-        $totalAmount = $relatedOrders->sum('total');
-        
-        Log::info('Processing payment for multiple orders', [
-            'primary_order_id' => $order->id,
-            'payment_code' => $order->payment_code,
-            'order_count' => $relatedOrders->count(),
-            'total_amount' => $totalAmount
+        // Update status paket
+        $ludwigWallet->update([
+            'status_package' => $request->status,
+            'driver_id' => $driver->id,
+            'delivery_notes' => $request->notes ?? null
         ]);
 
-        // Validate ownership and status for all orders
-        foreach ($relatedOrders as $relOrder) {
-            if ($relOrder->user_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized access to one or more orders'
-                ], 403);
-            }
-
-            if ($relOrder->status !== 'pending') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'One or more orders are not eligible for payment'
-                ], 400);
-            }
+        // Logika release dana ke seller kalo barang udah delivered
+        if ($request->status === 'delivered') {
+            $this->releaseFundsToSeller($ludwigWallet);
         }
 
-        // PIN verification
-        $pinRecord = Pin::where('user_id', $user->id)->first();
-        if (!$pinRecord) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please set up your PIN first'
-            ], 400);
-        }
-        
-        // Check if PIN is locked
-        if ($pinRecord->is_locked && now()->lessThan($pinRecord->locked_until)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'PIN has been locked due to too many attempts. Please try again later.'
-            ], 400);
-        }
-        
-        // Verify PIN
-        if (!Hash::check($request->pin, $pinRecord->pin)) {
-            $pinRecord->increment('attempts');
+        return response()->json([
+            'success' => true,
+            'message' => 'Status paket diperbarui'
+        ]);
+    }
 
-            if ($pinRecord->attempts >= 3) {
-                $pinRecord->update([
-                    'is_locked' => true,
-                    'locked_until' => now()->addMinutes(30)
-                ]);
+    // Method internal buat release dana ke seller
+    private function releaseFundsToSeller(LudwigWallet $ludwigWallet)
+    {
+        DB::transaction(function () use ($ludwigWallet) {
+            // Ambil seller wallet
+            $sellerWallet = SellerWallet::where('user_id', $ludwigWallet->seller_id)->first();
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'PIN has been locked due to too many attempts. Please try again in 30 minutes.'
-                ], 400);
-            }
+            // Tambah saldo seller
+            $sellerWallet->increment('balance', $ludwigWallet->amount);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid PIN. Please try again.'
-            ], 400);
-        }
-        
-        // Reset PIN attempts on successful verification
-        $pinRecord->update(['attempts' => 0]);
-
-        // Check user balance against total amount
-        if ($user->wallet->balance < $totalAmount) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Insufficient wallet balance'
-            ], 400);
-        }
-
-        // Verify all orders have items before proceeding
-        foreach ($relatedOrders as $relOrder) {
-            if ($relOrder->items->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No items found in one or more orders'
-                ], 400);
-            }
-            
-            // Verify each item's product and store
-            foreach ($relOrder->items as $item) {
-                if (!$item->product) {
-                    Log::warning('Product not found for item', ['item_id' => $item->id, 'product_id' => $item->product_id]);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'One or more products in your orders are no longer available'
-                    ], 400);
-                }
-                
-                if (!$item->product->store_id) {
-                    Log::warning('Product has no store', ['product_id' => $item->product_id]);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'One or more products in your orders have invalid store information'
-                    ], 400);
-                }
-            }
-        }
-
-        // Process the payment for all orders
-        try {
-            DB::beginTransaction();
-
-            // Deduct total amount from buyer's wallet
-            $user->wallet()->decrement('balance', $totalAmount);
-            
-            Log::info('Deducted from user wallet', [
-                'user_id' => $user->id, 
-                'amount' => $totalAmount
+            // Update status di ludwig wallet
+            $ludwigWallet->update([
+                'status_payment' => 'released',
+                'released_at' => now()
             ]);
 
-            // Process each order
-            foreach ($relatedOrders as $relOrder) {
-                // Group items by store for this order
-                $itemsByStore = $relOrder->items->groupBy(function($item) {
-                    return $item->product->store_id;
-                });
-                
-                // Process seller payments for each store
-                foreach ($itemsByStore as $storeId => $items) {
-                    // Get store object by ID
-                    $store = \App\Models\Store::find($storeId);
-                    
-                    if (!$store) {
-                        Log::warning('Store not found', ['store_id' => $storeId]);
-                        DB::rollBack();
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'One or more stores in your orders are not available'
-                        ], 400);
-                    }
-                    
-                    // Calculate store's share
-                    $storeSubtotal = $items->sum(function($item) {
-                        return $item->price * $item->quantity;
-                    });
-                    
-                    $storeShipping = $relOrder->shipping_fee ?? 0;
-                    
-                    // If there are multiple stores, distribute shipping fee proportionally
-                    if (count($itemsByStore) > 1 && $relOrder->subtotal > 0) {
-                        $storeShipping = ($relOrder->shipping_fee * ($storeSubtotal / $relOrder->subtotal));
-                    }
-
-                    $totalToAdd = round($storeSubtotal + $storeShipping, 2);
-                    
-                    // Get or create seller wallet
-                    $sellerWallet = SellerWallet::firstOrCreate(
-                        ['store_id' => $storeId],
-                        ['user_id' => $store->user_id, 'balance' => 0]
-                    );
-                    
-                    // Update seller wallet balance
-                    $sellerWallet->increment('balance', $totalToAdd);
-                    
-                    Log::info('Processed payment for store', [
-                        'order_id' => $relOrder->id,
-                        'store_id' => $storeId,
-                        'amount' => $totalToAdd
-                    ]);
-                }
-
-                // Update order status
-                $relOrder->update([
-                    'status' => 'paid',
-                    'payment_method' => 'LudwigPayment',
-                    'paid_at' => now()
-                ]);
-                
-                Log::info('Order marked as paid', ['order_id' => $relOrder->id]);
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Payment processed successfully',
-                'redirect' => route('order.receipt', $order->id)
+            Log::info('Dana Dirilis ke Seller', [
+                'order_id' => $ludwigWallet->order_id,
+                'seller_id' => $ludwigWallet->seller_id,
+                'amount' => $ludwigWallet->amount
             ]);
+        });
+    }
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Payment processing failed: '.$e->getMessage(), [
-                'primary_order_id' => $order->id,
-                'user_id' => $user->id,
-                'error' => $e->getTraceAsString()
-            ]);
 
+    public function processOrderPayment(Request $request)
+{
+    $request->validate([
+        'order_id' => 'required|exists:orders,id',
+        'pin' => 'required|digits:6'
+    ]);
+
+    $user = auth()->user();
+    
+    // Ambil order utama
+    $order = Order::with([
+        'items', 
+        'items.product', 
+        'items.product.store'
+    ])->findOrFail($request->order_id);
+
+    // Cari semua order terkait dengan payment code yang sama
+    $relatedOrders = collect([$order]);
+    if ($order->payment_code) {
+        $additionalOrders = Order::where('payment_code', $order->payment_code)
+            ->where('id', '!=', $order->id)
+            ->where('status', 'pending')
+            ->with(['items', 'items.product', 'items.product.store'])
+            ->get();
+        
+        $relatedOrders = $relatedOrders->merge($additionalOrders);
+    }
+
+    // Hitung total amount semua order
+    $totalAmount = $relatedOrders->sum('total');
+    
+    Log::info('Proses pembayaran multiple order', [
+        'order_utama_id' => $order->id,
+        'payment_code' => $order->payment_code,
+        'jumlah_order' => $relatedOrders->count(),
+        'total_amount' => $totalAmount
+    ]);
+
+    // Validasi kepemilikan dan status order
+    foreach ($relatedOrders as $relOrder) {
+        if ($relOrder->user_id !== $user->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Payment processing failed: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Akses tidak sah ke salah satu order'
+            ], 403);
+        }
+
+        if ($relOrder->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Salah satu order tidak bisa dibayar'
+            ], 400);
         }
     }
+
+    // Verifikasi PIN
+    $pinRecord = Pin::where('user_id', $user->id)->first();
+    if (!$pinRecord) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Harap siapkan PIN terlebih dahulu'
+        ], 400);
+    }
+    
+    // Cek PIN terkunci
+    if ($pinRecord->is_locked && now()->lessThan($pinRecord->locked_until)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'PIN dikunci. Silakan coba lagi nanti.'
+        ], 400);
+    }
+    
+    // Verifikasi PIN
+    if (!Hash::check($request->pin, $pinRecord->pin)) {
+        $pinRecord->increment('attempts');
+
+        if ($pinRecord->attempts >= 3) {
+            $pinRecord->update([
+                'is_locked' => true,
+                'locked_until' => now()->addMinutes(30)
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'PIN dikunci. Coba lagi dalam 30 menit.'
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'PIN salah. Coba lagi.'
+        ], 400);
+    }
+    
+    // Reset percobaan PIN
+    $pinRecord->update(['attempts' => 0]);
+
+    // Cek saldo wallet
+    if ($user->wallet->balance < $totalAmount) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Saldo tidak mencukupi'
+        ], 400);
+    }
+
+    // Proses pembayaran
+    try {
+        DB::beginTransaction();
+
+        // Kurangi saldo user
+        $user->wallet()->decrement('balance', $totalAmount);
+        
+        Log::info('Saldo dikurangi dari wallet user', [
+            'user_id' => $user->id, 
+            'amount' => $totalAmount
+        ]);
+
+        // Proses setiap order
+        foreach ($relatedOrders as $relOrder) {
+            // Kelompokkan item berdasarkan store
+            $itemsByStore = $relOrder->items->groupBy(function($item) {
+                return $item->product->store_id;
+            });
+            
+            // Proses pembayaran untuk setiap store
+            foreach ($itemsByStore as $storeId => $items) {
+                // Ambil store berdasarkan ID
+                $store = \App\Models\Store::find($storeId);
+                
+                if (!$store) {
+                    Log::warning('Store tidak ditemukan', ['store_id' => $storeId]);
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Store tidak tersedia'
+                    ], 400);
+                }
+                
+                // Hitung subtotal untuk store ini
+                $storeSubtotal = $items->sum(function($item) {
+                    return $item->price * $item->quantity;
+                });
+                
+                $storeShipping = $relOrder->shipping_fee ?? 0;
+                
+                // Distribusi ongkos kirim proporsional jika ada multiple store
+                if (count($itemsByStore) > 1 && $relOrder->subtotal > 0) {
+                    $storeShipping = ($relOrder->shipping_fee * ($storeSubtotal / $relOrder->subtotal));
+                }
+
+                $totalToAdd = round($storeSubtotal + $storeShipping, 2);
+                
+                // Buat Ludwig Wallet entry untuk dana yang ditahan
+                LudwigWallet::create([
+                    'order_id' => $relOrder->id,
+                    'user_id' => $user->id,
+                    'seller_id' => $store->user_id,
+                    'amount' => $totalToAdd,
+                    'status_package' => 'pending',
+                    'status_payment' => 'pending'
+                ]);
+                
+                Log::info('Dana ditahan di Ludwig Wallet', [
+                    'order_id' => $relOrder->id,
+                    'store_id' => $storeId,
+                    'amount' => $totalToAdd
+                ]);
+            }
+
+            // Update status order
+            $relOrder->update([
+                'status' => 'paid',
+                'payment_method' => 'LudwigPayment',
+                'paid_at' => now()
+            ]);
+            
+            Log::info('Order dikonfirmasi pembayaran', ['order_id' => $relOrder->id]);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran berhasil',
+            'redirect' => route('order.receipt', $order->id)
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Pembayaran gagal: '.$e->getMessage(), [
+            'order_utama_id' => $order->id,
+            'user_id' => $user->id,
+            'error' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Pembayaran gagal: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }

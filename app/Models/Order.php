@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
 
 class Order extends Model
 {
@@ -16,6 +18,7 @@ class Order extends Model
         'payment_method',
         'payment_code',
         'shipping_method',
+        'shipping_kurir',
         'subtotal',
         'shipping_fee',
         'service_fee',
@@ -26,6 +29,9 @@ class Order extends Model
         'kecamatan',
         'kode_pos',
         'address_id',
+        'status_order',
+        'nomer_resi',
+        'status_package',
         'status',
         'store_id',
     ];
@@ -59,4 +65,21 @@ class Order extends Model
             ];
         });
     }
+    public function generateTrackingNumber()
+    {
+        if ($this->status_order === 'processing') {
+            $shippingKurir = Str::upper($this->shipping_kurir);
+            $randomPart = Str::upper(Str::random(15));
+            $this->nomor_resi = "LW-{$shippingKurir}-{$randomPart}";
+            $this->save();
+        }
+    }
+    public function clearTrackingNumber()
+    {
+        if (in_array($this->status_order, ['pending', 'cancelled'])) {
+            $this->nomor_resi = null;
+            $this->save();
+        }
+    }
+
 }

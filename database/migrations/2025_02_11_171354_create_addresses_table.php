@@ -18,8 +18,6 @@ return new class extends Migration
             $table->text('kecamatan');
             $table->string('kode_pos');
             $table->boolean('is_primary')->default(false);
-            $table->string('recipient_name');
-            $table->string('phone_number');
             $table->timestamps();
         });
     }
