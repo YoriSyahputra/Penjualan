@@ -54,6 +54,7 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'phone_number' => $request->phone_number,
             'gender' => $request->gender,
+            'is_driver' => $request->has('is_driver'),
         ]);
         
         $user->addresses()->create([

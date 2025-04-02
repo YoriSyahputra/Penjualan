@@ -250,6 +250,12 @@
                                     Admin Dashboard
                                 </a>
                                 <div class="border-t border-gray-100 my-1"></div>
+                            @elseif(auth()->user()->is_driver)
+                                <a href="{{ route('driver.dashboard') }}"
+                                class="block px-4 py-2 text-green-600 hover:bg-indigo-50 transition-colors">
+                                    driver Dashboard
+                                </a>
+                                <div class="border-t border-gray-100 my-1"></div>
                             @endif
                             
                             <a href="{{ route('profile.edit') }}"

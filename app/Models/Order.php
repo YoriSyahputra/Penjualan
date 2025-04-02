@@ -30,7 +30,7 @@ class Order extends Model
         'kode_pos',
         'address_id',
         'status_order',
-        'nomer_resi',
+        'nomor_resi',
         'status_package',
         'status',
         'store_id',

@@ -25,6 +25,7 @@ class User extends Authenticatable
         'password',
         'is_admin',
         'is_super_admin',
+        'is_driver',
         'admin_status',
         'phone_number',
         'gender',

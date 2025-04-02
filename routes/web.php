@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\EWalletController;
+use App\Http\Controllers\DriverController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\HomeController;
@@ -30,8 +31,10 @@ Route::post('/logout', function (Request $request) {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
-// Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails'])->name('product.details');
+
+Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails'])->name('product.details');
 Route::get('/product/{id}', [ShopController::class, 'getProductDetail'])->name('product.details');
+
 Route::get('/store/{storeId}/products/ajax', [ShopController::class, 'storeProductsAjax'])
     ->name('store.products.ajax');
 Route::post('/product/{id}/addComment', [ShopController::class, 'addComment'])->name('product.addComment');
@@ -152,14 +155,10 @@ Route::prefix('dashboard')
         Route::get('/orders/{order}/resi-sticker', [OrderController::class, 'generateResiSticker'])
             ->name('orders.resi-sticker');
 
-            Route::get('/orders/multiple/resi-sticker', [OrderController::class, 'generateBulkResiSticker'])
-            ->name('orders.bulk-resi-sticker');
-
-        Route::get('/orders/{order}/resi-sticker', [OrderController::class, 'generateResiSticker'])
-            ->where('order', '[0-9]+')
-            ->name('orders.resi-sticker');
-
-});
+        // Ini yang baru, tambah di dalam group Route::prefix('dashboard')
+    Route::get('/orders/multiple/resi-sticker', [OrderController::class, 'generateBulkResiSticker'])
+    ->name('orders.bulk-resi-sticker');
+        });
 /*
 |--------------------------------------------------------------------------
 | Super Admin Routes
@@ -174,3 +173,18 @@ Route::prefix('super-admin')
         Route::post('/approve/{user}', [SuperAdminController::class, 'approveAdmin'])->name('approve');
         Route::post('/reject/{user}', [SuperAdminController::class, 'rejectAdmin'])->name('reject');
     });
+
+
+/*
+|--------------------------------------------------------------------------
+| Driver Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'driver'])
+    ->prefix('driver')
+    ->name('driver.')
+    ->group(function () {
+    Route::get('/dashboard', [DriverController::class, 'dashboard'])->name('dashboard');
+    Route::get('/check-tracking', [DriverController::class, 'checkTracking'])->name('check.tracking');
+    Route::get('/delivery/{id}', [DriverController::class, 'deliveryProcess'])->name('delivery.process');
+});

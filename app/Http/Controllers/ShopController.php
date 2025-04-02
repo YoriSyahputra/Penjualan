@@ -493,18 +493,18 @@ public function cart()
         return redirect()->route('shop.index')->with('error', 'Product not found or an error occurred.');
     }
 }
-    // public function getProductDetails($id)
-    // {
-    //     $product = Product::with(['variants', 'packages', 'productImages'])
-    //         ->findOrFail($id);
+    public function getProductDetails($id)
+    {
+        $product = Product::with(['variants', 'packages', 'productImages'])
+            ->findOrFail($id);
         
-    //     return response()->json([
-    //         'product' => $product,
-    //         'variants' => $product->variants,
-    //         'packages' => $product->packages,
-    //         'productImages' => $product->productImages
-    //     ]);
-    // }
+        return response()->json([
+            'product' => $product,
+            'variants' => $product->variants,
+            'packages' => $product->packages,
+            'productImages' => $product->productImages
+        ]);
+    }
 
     public function checkout(Request $request)
     {

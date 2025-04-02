@@ -154,6 +154,15 @@
                                 placeholder="Confirm Password">
                         </div>
                     </div>
+                    <div class="flex items-center">
+                        <input id="is_driver" name="is_driver" type="checkbox" value="1" 
+                            class="h-6 w-6 text-gray-600 focus:ring-gray-500 border-gray-300 rounded">
+                        <label for="is_driver" class="ml-3 block text-base text-gray-900">
+                            Driver
+                        </label>
+                    </div>
+
+
 
                     <div class="text-gray-500 px-4">
                         Alamat
