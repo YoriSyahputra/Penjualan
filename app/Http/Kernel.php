@@ -33,6 +33,7 @@ class Kernel extends HttpKernel
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'super.admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
         'super' => \App\Http\Middleware\SuperAdminMiddleware::class,
+        'driver' => \App\Http\Middleware\DriverMiddleware::class,
     ];
 
      protected $middlewareGroups = [

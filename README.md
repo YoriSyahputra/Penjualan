@@ -41,23 +41,32 @@ Ikuti langkah-langkah berikut untuk menginstall dan menjalankan aplikasi:
 
 1. **Clone Repository**
    ```bash
-   git clone 'https://github.com/YoriSyahputra/Penjualan.git'
+   git clone https://github.com/YoriSyahputra/Penjualan.git
 2. **Install Package PHP**
     ```bash
     composer install
 3. **Install dependencies front-end**
     ```bash
     npm install
-4. **Migrasi Database**
-    ```bash
-    php artisan migrate
-5. **Seed Data**
+4. **Seed Data**
     ```bash
     php artisan db:seed --class=CategoriesTableSeeder
-6. **Builds Assets**
+5. **Setup ENV**
+    ubah nama file dari .env.exampe mmenjadi .env
+    lalu DB_DATABASE= ubah sesuai nama database yang kamu inginkan
+6. **application key**
+  ```bash
+    php artisan key:generate
+7. **Migrasi Data**
+  ```bash
+    php artisan migrate
+8. **Link Storage**
+  ```bash
+    php artisan storage:link
+9. **Builds Assets**
     ```bash
     npm run build
-7. **Jalankan Server**
+10. **Jalankan Server**
     ```bash
     php artisan serve
 
