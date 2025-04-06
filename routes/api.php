@@ -1,5 +1,7 @@
 <?php
 use App\Http\Controllers\DriverController;
+use App\Http\Controllers\Api\DriverApiController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +20,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// API routes for tracking validation (PERBAIKAN DISINI)
+Route::middleware(['auth:sanctum'])
+    ->prefix('driver')
+    ->name('api.driver.')
+    ->group(function () {
+    Route::post('/update-location/{id}', [DriverApiController::class, 'updateLocation'])->name('update.location');
+    Route::get('/active-deliveries', [DriverApiController::class, 'activeDeliveries'])->name('active.deliveries');
+});
+
+// EXISTING API ROUTES FOR TRACKING CHECK
 Route::get('/check-tracking', [DriverController::class, 'checkTrackingNumber']);
 Route::get('/check-tracking-details', [DriverController::class, 'checkTrackingDetails']);

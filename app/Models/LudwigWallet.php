@@ -15,6 +15,8 @@ class LudwigWallet extends Model
         'seller_id', 
         'driver_id',
         'amount', 
+        'shipping_fee', // Add this field to separate the shipping fee
+        'subtotal',     // Add this field to store the product subtotal
         'status_package', 
         'status_payment',
         'pickup_at',
@@ -42,10 +44,10 @@ class LudwigWallet extends Model
     }
 
     // Relasi ke Driver
-    // public function driver()
-    // {
-    //     return $this->belongsTo(User::class, 'driver_id');
-    // }
+    public function driver()
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
 
     // Scope buat filter status package
     public function scopePending($query)

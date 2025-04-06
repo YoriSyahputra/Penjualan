@@ -30,50 +30,64 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
-    {
-        \Log::info('Registration data:', $request->all());
-
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'alamat_lengkap' => ['required', 'string'],
-            'provinsi' => ['required', 'string'],
-            'kota' => ['required', 'string'],
-            'kecamatan' => ['required', 'string'],
-            'kode_pos' => ['required', 'string'],
-            'gender' => ['required', 'in:male,female,prefer_not_to_say'],
-            'phone_number' => ['required', 'string'],
-        ]);
-
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'phone_number' => $request->phone_number,
-            'gender' => $request->gender,
-            'is_driver' => $request->has('is_driver'),
-        ]);
-        
-        $user->addresses()->create([
-            'label' => $request->label,
-            'alamat_lengkap' => $request->alamat_lengkap,
-            'provinsi' => $request->provinsi,
-            'kota' => $request->kota,
-            'kecamatan' => $request->kecamatan,
-            'kode_pos' => $request->kode_pos,
-            'is_primary' => true, 
-        ]);
-        
-
-        $user->wallet()->create([
+    public function store(Request $request): RedirectResponse 
+{
+    \Log::info('Registration data:', $request->all());
+    
+    $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        'alamat_lengkap' => ['required', 'string'],
+        'provinsi' => ['required', 'string'],
+        'kota' => ['required', 'string'],
+        'kecamatan' => ['required', 'string'],
+        'kode_pos' => ['required', 'string'],
+        'gender' => ['required', 'in:male,female,prefer_not_to_say'],
+        'phone_number' => ['required', 'string'],
+    ]);
+    
+    // Membuat user
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'phone_number' => $request->phone_number,
+        'gender' => $request->gender,
+        'is_driver' => $request->has('is_driver'),
+    ]);
+    
+    // Membuat alamat
+    $user->addresses()->create([
+        'label' => $request->label ?? 'Rumah',
+        'alamat_lengkap' => $request->alamat_lengkap,
+        'provinsi' => $request->provinsi,
+        'kota' => $request->kota,
+        'kecamatan' => $request->kecamatan,
+        'kode_pos' => $request->kode_pos,
+        'is_primary' => true,
+    ]);
+    
+    // Membuat wallet untuk user
+    $user->wallet()->create([
+        'balance' => 0,
+    ]);
+    
+    // Jika user ingin menjadi driver, buat driver wallet juga
+    if ($request->has('is_driver')) {
+        // Buat driver wallet
+        \DB::table('driver_wallets')->insert([
+            'user_id' => $user->id,
+            'driver_id' => $user->id,
             'balance' => 0,
-        ]);        
-
-        event(new Registered($user));
-        Auth::login($user);
-        return redirect(RouteServiceProvider::HOME);
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
+    
+    event(new Registered($user));
+    Auth::login($user);
+    
+    return redirect(RouteServiceProvider::HOME);
+}
 }

@@ -34,6 +34,8 @@ class Order extends Model
         'status_package',
         'status',
         'store_id',
+        'auto_confirmed',
+        'completed_at',
     ];
 
     public function user()
@@ -50,6 +52,19 @@ class Order extends Model
     {
         return $this->belongsTo(Address::class, 'address_id');
     }
+    public function deliveryHistories()
+    {
+        return $this->hasMany(DeliveryHistory::class);
+    }
+    public function deliveryHistory()
+{
+    return $this->hasOne(DeliveryHistory::class);
+}
+    public function latestDeliveryStatus()
+    {
+        return $this->deliveryHistories()->latest()->first()?->status ?? 'not_assigned';
+    }
+
     public function calculateStorePayments()
     {
         return $this->items->groupBy('product.store_id')->map(function($items, $storeId) {

@@ -10,6 +10,7 @@ use App\Models\Comment;
 use App\Models\Cart;  
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\DeliveryHistory;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
@@ -684,7 +685,7 @@ public function cart()
                 'kode_pos' => $addressDetails ? $addressDetails->kode_pos : $request->kode_pos,
                 'address_id' => $request->selected_address,
                 'status' => 'pending',
-                'store_id' => $storeId, // Save the store ID in the order
+                'store_id' => $storeId,
             ]);
 
             $orders[] = $order;
@@ -1044,36 +1045,36 @@ public function verifyPayment(Request $request)
     return redirect()->route('ecom.list_order_payment')->with('success', 'Order berhasil dibatalkan.');
 }
 
-    public function listOrderPayment(Request $request)
-    {
-        $user = auth()->user();
-        $search = $request->input('search');
-        
-        // Query builder for orders
-        $ordersQuery = Order::where('user_id', $user->id)
-                            ->with(['items.product', 'items.variant', 'items.package'])
-                            ->orderBy('created_at', 'desc');
-        
-        // Apply search if provided
-        if ($search) {
-            $ordersQuery->where(function($query) use ($search) {
-                $query->where('id', 'like', "%{$search}%") // Ubah ke order_number
-                    ->orWhereHas('items.product', function($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-        
-        // Get paginated results
-        $allOrders = $ordersQuery->paginate(10);
-        
-        // Get unpaid orders count for notification
-        $unpaidOrders = Order::where('user_id', $user->id)
-                            ->where('status', 'pending')
-                            ->get();
-        
-        return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders', 'search'));
+public function listOrderPayment(Request $request)
+{
+    $user = auth()->user();
+    $search = $request->input('search');
+    
+    // Query builder for orders
+    $ordersQuery = Order::where('user_id', $user->id)
+                        ->with(['items.product', 'items.variant', 'items.package', 'deliveryHistory'])
+                        ->orderBy('created_at', 'desc');
+    
+    // Apply search if provided
+    if ($search) {
+        $ordersQuery->where(function($query) use ($search) {
+            $query->where('id', 'like', "%{$search}%") // Ubah ke order_number
+                ->orWhereHas('items.product', function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+        });
     }
+    
+    // Get paginated results
+    $allOrders = $ordersQuery->paginate(10);
+    
+    // Get unpaid orders count for notification
+    $unpaidOrders = Order::where('user_id', $user->id)
+                        ->where('status', 'pending')
+                        ->get();
+    
+    return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders', 'search'));
+}
 
 public function addComment(Request $request, $productId)
 {

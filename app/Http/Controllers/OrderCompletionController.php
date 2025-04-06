@@ -2,21 +2,73 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\SellerWallet;
 use App\Models\LudwigWallet;
+use App\Models\SellerWallet;
 use App\Models\DriverWallet;
-use App\Models\Pin;
-use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-class ProductPaymentController extends Controller
+
+class OrderCompletionController extends Controller
 {
-    //existing function ......
+    public function confirmOrderCompletion(Request $request, $orderId)
+    {
+        $order = Order::findOrFail($orderId);
+        
+        // Validasi kepemilikan order
+        if ($order->user_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu tidak punya akses ke order ini'
+            ], 403);
+        }
+        
+        // Validasi status order (harus delivered)
+        if ($order->status_order !== 'delivered') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order ini belum selesai diantar'
+            ], 400);
+        }
+        
+        try {
+            // Update status order dan release funds
+            DB::transaction(function () use ($order) {
+                // Update status order
+                $order->update([
+                    'status_order' => 'completed',
+                    'completed_at' => now()
+                ]);
+                
+                // Ambil semua LudwigWallet entries untuk order ini
+                $ludwigWallets = LudwigWallet::where('order_id', $order->id)
+                    ->where('status_payment', 'pending')
+                    ->get();
+                
+                foreach ($ludwigWallets as $ludwigWallet) {
+                    $this->releaseFunds($ludwigWallet);
+                }
+            });
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Pesanan berhasil dikonfirmasi dan dana telah dirilis'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error saat konfirmasi pesanan: ' . $e->getMessage(), [
+                'order_id' => $orderId,
+                'user_id' => auth()->id(),
+                'error' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengkonfirmasi pesanan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     
     private function releaseFunds(LudwigWallet $ludwigWallet)
     {
@@ -72,5 +124,17 @@ class ProductPaymentController extends Controller
             ]);
         });
     }
-
+    
+    // Method untuk konfirmasi otomatis setelah 1 jam
+    public function scheduleAutomaticCompletion($orderId)
+    {
+        // Membuat job untuk dijalankan setelah 1 jam
+        \App\Jobs\AutoConfirmOrderJob::dispatch($orderId)
+            ->delay(now()->addHour());
+            
+        return response()->json([
+            'success' => true,
+            'message' => 'Pesanan akan dikonfirmasi otomatis dalam 1 jam'
+        ]);
+    }
 }

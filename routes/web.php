@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\OrderCompletionController;
 use App\Http\Controllers\ProductPaymentController;
 use App\Http\Controllers\LudwigPaymentController;
 use App\Http\Controllers\SuperAdminController;
@@ -62,7 +62,15 @@ Route::get('/forgot-password', function () {
 */
 
 Route::middleware(['auth'])->group(function () {
+    // Route untuk konfirmasi pesanan selesai (manual)
+Route::post('/orders/{id}/confirm', [App\Http\Controllers\OrderCompletionController::class, 'confirmOrderCompletion'])
+->middleware(['auth'])
+->name('order.confirm');
 
+// Route untuk schedule otomatis konfirmasi
+Route::post('/orders/{id}/schedule-confirmation', [App\Http\Controllers\OrderCompletionController::class, 'scheduleAutomaticCompletion'])
+->middleware(['auth'])
+->name('order.schedule-confirmation');
     Route::get('/checkout', [ShopController::class, 'checkout'])->name('checkout');
 
     Route::post('/process-checkout', [ShopController::class, 'placeOrder'])->name('checkout.process');
@@ -180,6 +188,8 @@ Route::prefix('super-admin')
 | Driver Routes
 |--------------------------------------------------------------------------
 */
+// Tambahkan routes ini ke dalam group route driver yang sudah ada
+
 Route::middleware(['auth', 'driver'])
     ->prefix('driver')
     ->name('driver.')
@@ -187,4 +197,15 @@ Route::middleware(['auth', 'driver'])
     Route::get('/dashboard', [DriverController::class, 'dashboard'])->name('dashboard');
     Route::get('/check-tracking', [DriverController::class, 'checkTracking'])->name('check.tracking');
     Route::get('/delivery/{id}', [DriverController::class, 'deliveryProcess'])->name('delivery.process');
+
+    Route::post('/start-delivery/{id}', [DriverController::class, 'startDelivery'])->name('start.delivery');
+    Route::post('/update-delivery-status/{id}', [DriverController::class, 'updateDeliveryStatus'])->name('update.delivery.status');
+    Route::post('/complete-delivery/{id}', [DriverController::class, 'completeDelivery'])->name('complete.delivery');
+    
+    Route::get('/delivery-history', [DriverController::class, 'deliveryHistory'])->name('delivery.history');
+    Route::get('/delivery-history/{id}', [DriverController::class, 'deliveryHistoryDetail'])->name('delivery.history.detail');
+    Route::get('/export-delivery-history', [DriverController::class, 'exportDeliveryHistory'])->name('export.delivery.history');
+    
+    Route::get('/profile', [DriverController::class, 'profile'])->name('profile');
+    Route::post('/profile/update', [DriverController::class, 'updateProfile'])->name('profile.update');
 });

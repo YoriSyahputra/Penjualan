@@ -99,7 +99,11 @@ class User extends Authenticatable
     {
         return $this->is_super_admin;
     }
- 
+    
+    public function driverWallet()
+    {
+        return $this->hasOne(DriverWallet::class, 'driver_id');
+    }
 
 
     /**

@@ -40,7 +40,7 @@
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Completed Today</dt>
                                 <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold text-gray-900">8</div>
+                                    <div class="text-2xl font-semibold text-gray-900">{{$completeToday}}</div>
                                 </dd>
                             </dl>
                         </div>
@@ -80,9 +80,9 @@
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Today's Earnings</dt>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Earning's</dt>
                                 <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold text-gray-900">Rp 120.000</div>
+                                    <div class="text-2xl font-semibold text-gray-900"></div>
                                 </dd>
                             </dl>
                         </div>
@@ -107,7 +107,7 @@
             </a>
 
             <!-- Package History Button -->
-            <a href="#" class="bg-white overflow-hidden shadow rounded-lg hover:bg-indigo-50 transition-colors duration-300">
+            <a href="{{ route('driver.delivery.history') }}" class="bg-white overflow-hidden shadow rounded-lg hover:bg-indigo-50 transition-colors duration-300">
                 <div class="p-6 text-center">
                     <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-5">
                         <svg class="h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

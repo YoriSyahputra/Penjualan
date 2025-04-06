@@ -69,10 +69,27 @@
                                 </svg>
                             </div>
                             <div>
-                                <h4 class="font-bold text-green-700">
-                                Status Order: <span class="font-bold text-green-700">{{ $order->status_package }}</span>
-                                </h4>
-                            </div>
+                            <h4 class="font-bold text-green-700">
+                                Status Order: <span class="font-bold text-green-700">
+                                    @if($order->deliveryHistory)
+                                        @switch($order->deliveryHistory->status)
+                                            @case('sedang_diantar')
+                                                Sedang diantar ke lokasi kamu
+                                                @break
+                                            @case('menuju_alamat')
+                                                Kurir sedang menuju alamat kamu
+                                                @break
+                                            @case('tiba_di_tujuan')
+                                                Paket sudah sampai di tujuan
+                                                @break
+                                            @default
+                                                {{ $order->deliveryHistory->status }}
+                                        @endswitch
+                                    @else
+                                        Menunggu pengiriman
+                                    @endif
+                                </span>
+                            </h4>
                         </div>
                     </div>
             @endif
