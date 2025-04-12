@@ -48,7 +48,25 @@ class AutoConfirmOrderJob implements ShouldQueue
             ]);
             return;
         }
-        
+        foreach ($order->items as $item) {
+            $product = $item->product;
+            
+            // Kurangi stok
+            $product->decrement('stock', $item->quantity);
+            
+            // Tambah sold count
+            $product->increment('sold_count', $item->quantity);
+            
+            // Log perubahan stok
+            Log::info('Stok diperbarui setelah auto-konfirmasi', [
+                'order_id' => $order->id,
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'old_stock' => $product->stock + $item->quantity,
+                'new_stock' => $product->stock,
+                'sold_count' => $product->sold_count
+            ]);
+        }
         try {
             // Update status order dan release funds
             DB::transaction(function () use ($order) {

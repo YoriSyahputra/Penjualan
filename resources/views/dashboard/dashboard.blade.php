@@ -7,16 +7,16 @@
     <div class="flex justify-between items-center">
         <h2 class="text-2xl font-semibold text-gray-800">Dashboard Overview</h2>
         <div class="flex space-x-3">
-            <select class="bg-white border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="7">Last 7 Days</option>
-                <option value="30">Last 30 Days</option>
-                <option value="90">Last 90 Days</option>
+            <select id="timeRangeSelector" class="bg-white border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="7" {{ $selectedTimeRange == 7 ? 'selected' : '' }}>Last 7 Days</option>
+                <option value="30" {{ $selectedTimeRange == 30 ? 'selected' : '' }}>Last 30 Days</option>
+                <option value="90" {{ $selectedTimeRange == 90 ? 'selected' : '' }}>Last 90 Days</option>
             </select>
         </div>
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div class="flex items-center">
                 <div class="p-3 rounded-full bg-blue-50">
@@ -28,7 +28,6 @@
                     <h3 class="text-sm font-medium text-gray-500">Total Stock</h3>
                     <p class="text-2xl font-semibold text-gray-900">{{ number_format($totalStock) }}</p>
                     <p class="text-sm text-gray-600 mt-1">
-                        <span class="text-green-500">↑ 12%</span> vs last month
                     </p>
                 </div>
             </div>
@@ -42,11 +41,9 @@
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500">Daily Sales</h3>
-                    <p class="text-2xl font-semibold text-gray-900">{{ number_format($dailySales->last()->total_sold ?? 0) }}</p>
-                    <p class="text-sm text-gray-600 mt-1">
-                        <span class="text-green-500">↑ 8%</span> vs yesterday
-                    </p>
+                    <h3 class="text-sm font-medium text-gray-500">Today's Sales</h3>
+                    <p class="text-2xl font-semibold text-gray-900">{{ number_format($dailySales['total_items_sold']) }}</p>
+                    <p class="text-sm text-gray-600 mt-1">Rp {{ number_format($dailySales['total_revenue']) }}</p>
                 </div>
             </div>
         </div>
@@ -59,11 +56,22 @@
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <h3 class="text-sm font-medium text-gray-500">Monthly Sales</h3>
-                    <p class="text-2xl font-semibold text-gray-900">{{ number_format($monthlySales->last()->total_sold ?? 0) }}</p>
-                    <p class="text-sm text-gray-600 mt-1">
-                        <span class="text-red-500">↓ 3%</span> vs last month
-                    </p>
+                    <h3 class="text-sm font-medium text-gray-500">This Month's Sales</h3>
+                    <p class="text-2xl font-semibold text-gray-900">{{ number_format($monthlySales['total_items_sold']) }}</p>
+                    <p class="text-sm text-gray-600 mt-1">Rp {{ number_format($monthlySales['total_revenue']) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-50">
+                    <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-sm font-medium text-gray-500">Saldo Wallet</h3>
+                    <p class="text-2xl font-semibold text-gray-900">Rp {{ number_format($walletBalance) }}</p>
                 </div>
             </div>
         </div>
@@ -74,25 +82,75 @@
         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-gray-900">Daily Sales (Last 7 Days)</h3>
-                <button class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-                    </svg>
-                </button>
+                <div class="flex items-center space-x-2">
+                    <a href="{{ route('dashboard.export.daily_sales', ['days' => 7]) }}"
+                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-sm flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export Excel
+                    </a>
+                    <button class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <canvas id="dailySalesChart" class="w-full"></canvas>
+            <div style="height: 300px;">
+                <canvas id="dailySalesChart"></canvas>
+            </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-gray-900">Monthly Sales</h3>
-                <button class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-                    </svg>
-                </button>
+                <div class="flex items-center space-x-2">
+                        <a href="{{ route('dashboard.export.monthly_sales', ['month' => $selectedMonth]) }}"
+                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md text-sm flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Export Excel
+                        </a>
+                        <a href="{{ route('dashboard.export.yearly_sales', ['year' => $selectedYear ?? date('Y')]) }}"
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-md text-sm flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Export Yearly
+                        </a>
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                            </svg>
+                        </button>
+                        <select id="monthSelector" class="bg-white border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            @foreach($availableMonths as $month)
+                                <option value="{{ $month->month_key }}" {{ $selectedMonth == $month->month_key ? 'selected' : '' }}>
+                                    {{ $month->month_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <select id="yearSelector" class="bg-white border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            @php
+                                $currentYear = date('Y');
+                                $startYear = $currentYear - 5; // 5 tahun ke belakang
+                            @endphp
+                            @for($year = $currentYear; $year >= $startYear; $year--)
+                                <option value="{{ $year }}" {{ ($selectedYear ?? $currentYear) == $year ? 'selected' : '' }}>
+                                    {{ $year }}
+                                </option>
+                            @endfor
+                        </select>
+                    </div>            
+                </div>
+            <div style="height: 300px;">
+                <canvas id="monthlySalesChart"></canvas>
             </div>
-            <canvas id="monthlySalesChart" class="w-full"></canvas>
         </div>
     </div>
 
@@ -100,7 +158,6 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100">
         <div class="flex items-center justify-between p-6 border-b border-gray-100">
             <h3 class="text-lg font-semibold text-gray-900">Top Selling Products</h3>
-            <a href="#" class="text-sm text-indigo-600 hover:text-indigo-900">View All</a>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -119,31 +176,32 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="h-10 w-10 flex-shrink-0">
-                                    <img class="h-10 w-10 rounded-full" src="/api/placeholder/40/40" alt="">
+                                    <img src="{{ Storage::url($product->productImages->first()->path_gambar) }}"
+                                        alt="{{ $product->name }}">
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $product->nama }}</div>
-                                    <div class="text-sm text-gray-500">SKU: {{ $product->id }}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $product->name }}</div>
+                                    <div class="text-sm text-gray-500">SKU: {{ $product->sku ?? 'N/A' }}</div>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ number_format($product->total_sold) }}</div>
+                            <div class="text-sm text-gray-900">{{ number_format($product->sold_count) }}</div>
                             <div class="text-sm text-gray-500">units</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ number_format($product->stok) }}</div>
+                            <div class="text-sm text-gray-900">{{ number_format($product->stock) }}</div>
                             <div class="text-sm text-gray-500">in stock</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">Rp {{ number_format($product->harga) }}</div>
+                            <div class="text-sm text-gray-900">Rp {{ number_format($product->price) }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($product->stok > 50)
+                            @if($product->stock > 50)
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                     In Stock
                                 </span>
-                            @elseif($product->stok > 0)
+                            @elseif($product->stock > 0)
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                     Low Stock
                                 </span>
@@ -161,83 +219,185 @@
     </div>
 </div>
 
-@push('scripts')
 <script>
-    // Daily Sales Chart
+document.addEventListener('DOMContentLoaded', function() {
+    // Data untuk chart 7 hari terakhir
+    const dailyLabels = @json(collect($last7DaysSales['daily_data'])->pluck('date'));
+    const dailyData = @json(collect($last7DaysSales['daily_data'])->pluck('total_sold'));
+    
+    const monthlyLabels = @json(collect($selectedMonthSales)->pluck('date'));
+    const monthlyData = @json(collect($selectedMonthSales)->pluck('total_sold'));
+    
+    // Daily Sales Chart dengan gradient
     const dailyCtx = document.getElementById('dailySalesChart').getContext('2d');
-    new Chart(dailyCtx, {
+    const dailyGradient = dailyCtx.createLinearGradient(0, 0, 0, 400);
+    dailyGradient.addColorStop(0, 'rgba(79, 70, 229, 0.6)');
+    dailyGradient.addColorStop(1, 'rgba(79, 70, 229, 0.1)');
+
+    const dailySalesChart = new Chart(dailyCtx, {
         type: 'line',
         data: {
-            labels: {!! json_encode($dailySales->pluck('date')) !!},
+            labels: dailyLabels,
             datasets: [{
                 label: 'Products Sold',
-                data: {!! json_encode($dailySales->pluck('total_sold')) !!},
+                data: dailyData,
+                borderWidth: 3,
                 borderColor: 'rgb(79, 70, 229)',
-                backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                tension: 0.3,
-                fill: true
+                backgroundColor: dailyGradient,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: 'white',
+                pointBorderColor: 'rgb(79, 70, 229)',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 8
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `Products Sold: ${context.formattedValue}`;
+                        }
+                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     grid: {
-                        borderDash: [2, 4]
+                        borderDash: [3, 3],
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 12
+                        },
+                        padding: 10
                     }
                 },
                 x: {
                     grid: {
-                        display: false
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 12
+                        },
+                        padding: 10
                     }
                 }
             }
         }
     });
 
-    // Monthly Sales Chart
+    // Monthly Sales Chart - Bar chart sesuai bulan yang dipilih
     const monthlyCtx = document.getElementById('monthlySalesChart').getContext('2d');
-    new Chart(monthlyCtx, {
+    const monthlySalesChart = new Chart(monthlyCtx, {
         type: 'bar',
         data: {
-            labels: {!! json_encode($monthlySales->pluck('month')) !!},
+            labels: monthlyLabels,
             datasets: [{
                 label: 'Products Sold',
-                data: {!! json_encode($monthlySales->pluck('total_sold')) !!},
-                backgroundColor: 'rgba(79, 70, 229, 0.2)',
-                borderColor: 'rgb(79, 70, 229)',
-                borderWidth: 1,
-                borderRadius: 4
+                data: monthlyData,
+                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                borderColor: 'rgb(16, 185, 129)',
+                borderWidth: 2,
+                borderRadius: 6,
+                hoverBackgroundColor: 'rgb(16, 185, 129)'
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `Products Sold: ${context.formattedValue}`;
+                        }
+                    }
                 }
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeOutQuart'
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     grid: {
-                        borderDash: [2, 4]
+                        borderDash: [3, 3],
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 12
+                        },
+                        padding: 10
                     }
                 },
                 x: {
                     grid: {
-                        display: false
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 12
+                        },
+                        padding: 10
                     }
                 }
             }
         }
     });
+    
+    // Event listener for time range selector
+    document.getElementById('timeRangeSelector').addEventListener('change', function() {
+        // Redirect dengan parameter baru
+        window.location.href = '{{ route("dashboard.index") }}?time_range=' + this.value + '&month={{ $selectedMonth }}';
+    });
+    
+    // Event listener for month selector
+    document.getElementById('monthSelector').addEventListener('change', function() {
+        // Redirect dengan parameter baru including year
+        window.location.href = '{{ route("dashboard.index") }}?month=' + this.value + '&time_range={{ $selectedTimeRange }}&year={{ $selectedYear ?? date("Y") }}';
+    });
+    document.getElementById('yearSelector').addEventListener('change', function() {
+        // Redirect dengan parameter baru termasuk year
+        window.location.href = '{{ route("dashboard.index") }}?month={{ $selectedMonth }}&time_range={{ $selectedTimeRange }}&year=' + this.value;
+    });
+});
 </script>
-@endpush
 @endsection

@@ -17,7 +17,9 @@ class Product extends Model
         'price',
         'discount_price',
         'stock',
+        'stock_awal',
         'stock_alert',
+        'sold_count',
         'is_active'
     ];
     public function variants()

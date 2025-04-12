@@ -1,6 +1,6 @@
 @forelse($allOrders as $order)
-<div class="border rounded-lg mb-4 overflow-hidden">
-    <div class="bg-gray-50 px-4 py-3 border-b">
+<div class="border border-gray-200 rounded-lg mb-6 overflow-hidden shadow-sm">
+    <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
         <div class="flex items-center justify-between">
             <div>
                 <span class="text-sm text-gray-600">Order ID:</span>
@@ -9,15 +9,34 @@
             </div>
             <div>
                 @if($order->status == 'pending')
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    Unpaid
-                </span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        Unpaid
+                    </span>
                 @elseif($order->status == 'paid')
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Paid
-                </span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Paid
+                    </span>
+                @elseif($order->status == 'cancelled')
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Cancelled
+                    </span>
+                @elseif($order->status == 'paid' && $order->status_order == 'pending')
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Paid
+                    </span>
+                @endif
+                @if($order->status == 'paid' && $order->status_order == 'cancelled')
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        refunded
+                    </span>
+                @endif
+                @if($order->status == 'paid' && $order->status_order == 'completed')
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Completed
+                        </span>
                 @endif
             </div>
+
         </div>
     </div>
 
@@ -59,39 +78,48 @@
             @endforeach
 
             @if($order->status == 'paid')
-                <div class="mb-8">
-                        <h3 class="font-semibold text-gray-800 mb-3">Items Purchased</h3>
-                        <div class="flex items-center space-x-4 p-4 bg-green-50 border border-green-400 rounded-md">
-                            <div class="flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                                </svg>
-                            </div>
-                            <div>
-                            <h4 class="font-bold text-green-700">
-                                Status Order: <span class="font-bold text-green-700">
-                                    @if($order->deliveryHistory)
-                                        @switch($order->deliveryHistory->status)
-                                            @case('sedang_diantar')
-                                                Sedang diantar ke lokasi kamu
-                                                @break
-                                            @case('menuju_alamat')
-                                                Kurir sedang menuju alamat kamu
-                                                @break
-                                            @case('tiba_di_tujuan')
-                                                Paket sudah sampai di tujuan
-                                                @break
-                                            @default
-                                                {{ $order->deliveryHistory->status }}
-                                        @endswitch
+                <div class="mt-4">
+                    <h3 class="font-semibold text-gray-800 mb-3">Items Purchased</h3>
+                    <div class=" @if($order->status_order == 'cancelled')flex items-center space-x-4 p-4 bg-red-50 border border-red-400 rounded-md @else flex items-center space-x-4 p-4 bg-green-50 border border-green-400 rounded-md @endif">
+                        <div class="flex-shrink-0">
+                            @if($order->status_order == 'cancelled')
+                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                            @else
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                            </svg>
+                            @endif
+                        </div>
+                        <div>
+                            <h4 class="@if($order->status_order == 'cancelled')font-bold text-red-700 @else font-bold text-green-700 @endif">
+                                Status Order: <span class="@if($order->status_order == 'cancelled')font-bold text-red-700 @else font-bold text-green-700 @endif">
+                                @if($order->deliveryHistory)
+                                    @switch($order->deliveryHistory->status)
+                                        @case('sedang_diantar')
+                                            Sedang diantar ke lokasi kamu
+                                            @break
+                                        @case('menuju_alamat')
+                                            Kurir sedang menuju alamat kamu
+                                            @break
+                                        @case('tiba_di_tujuan')
+                                            Paket sudah sampai di tujuan
+                                            @break
+                                        @default
+                                            {{ $order->deliveryHistory->status }}
+                                    @endswitch
+                                    @elseif($order->status_order == 'cancelled')
+                                        {{ $cancellationReason[$order->cancellation_reason] ?? 'Alasan tidak tersedia' }}
                                     @else
-                                        Menunggu pengiriman
-                                    @endif
+                                    Order Sedang Di prosses
+                                @endif
                                 </span>
                             </h4>
                         </div>
                     </div>
+                </div>
             @endif
         </div>
 
@@ -127,7 +155,6 @@
                         View Details
                     </a>
                 @endif
-                
             </div>
         </div>
     </div>

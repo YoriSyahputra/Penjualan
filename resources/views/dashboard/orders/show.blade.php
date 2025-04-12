@@ -124,16 +124,49 @@
 
         <div>
             <h2 class="text-lg font-semibold mb-2">Update Status Order</h2>
-            <form action="{{ route('dashboard.orders.update-status', $order->id) }}" method="POST">
-            @csrf
-                @method('PUT')
-                <select name="status_order" class="border-gray-300 rounded-md shadow-sm mr-2">
-                    <option value="pending" {{ $order->status_order == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="processing" {{ $order->status_order == 'processing' ? 'selected' : '' }}>Processing</option>
-                    <option value="cancelled" {{ $order->status_order == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                </select>
-                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Update Status</button>
-            </form>
+            @if($order->status_order == 'pending' || $order->status_order == 'processing')
+                <form action="{{ route('dashboard.orders.update-status', $order->id) }}" method="POST">
+                @csrf
+                    @method('PUT')
+                    <select name="status_order" class="border-gray-300 rounded-md shadow-sm mr-2">
+                        <option value="pending" {{ $order->status_order == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="processing" {{ $order->status_order == 'processing' ? 'selected' : '' }}>Processing</option>
+                    </select>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Update Status</button>
+                </form>
+                @endif
+            @if($order->status_order == 'cancelled')
+                Order Telah Di kembalikan
+            @endif
+
+
+            @if($order->status == 'paid' && $order->status_order == 'pending')
+            <div class="mt-6">
+                <h2 class="text-lg font-semibold mb-2">Cancel Order</h2>
+                <form action="{{ route('dashboard.orders.cancel', $order->id) }}" method="POST" id="cancelOrderForm">
+                    @csrf
+                    <div class="mb-4">
+                        <label for="reason" class="block text-sm font-medium text-gray-700">Alasan Pembatalan</label>
+                        <textarea name="reason" id="reason" rows="3" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" 
+                            required placeholder="Masukkan alasan pembatalan order..."></textarea>
+                    </div>
+                    <button type="button" 
+                        onclick="confirmCancel()"
+                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+                        Batalkan Order & Refund
+                    </button>
+                </form>
+            </div>
+
+            <script>
+            function confirmCancel() {
+                if (confirm('Apakah Anda yakin ingin membatalkan order ini? Dana akan dikembalikan ke pelanggan.')) {
+                    document.getElementById('cancelOrderForm').submit();
+                }
+            }
+            </script>
+            @endif
         </div>
     </div>
 </div>

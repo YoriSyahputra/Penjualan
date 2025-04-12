@@ -77,15 +77,6 @@
                         </div>
                     </div>
 
-                    <!-- Notes -->
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
-                        <textarea name="notes" 
-                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                                rows="2"
-                                placeholder="What's this transfer for?"></textarea>
-                    </div>
-
                     <!-- Continue Button -->
                     <button type="button" 
                             id="continueBtn"

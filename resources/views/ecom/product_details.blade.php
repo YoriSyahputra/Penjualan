@@ -304,7 +304,7 @@
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
         @foreach(\App\Models\Product::with(['category', 'productImages'])->inRandomOrder()->where('id', '!=', $product->id)->take(4)->get() as $randomProduct)
             <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <a href="{{ route('product.details', $randomProduct->id) }}" class="block">
+                <a href="{{ route('product.show', $randomProduct->id) }}" class="block">
                     <div class="relative overflow-hidden" style="height: 200px;">
                         @if($randomProduct->productImages->isNotEmpty())
                             <img src="{{ asset('storage/' . $randomProduct->productImages->first()->path_gambar) }}"

@@ -28,7 +28,7 @@
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Cetak R</th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Cetak Resi</th>
             </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -75,13 +75,15 @@
                     Rp {{ number_format($storeTotal, 0, ',', '.') }}
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-center">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        {{ $order->status_order == 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                           ($order->status_order == 'processing' ? 'bg-blue-100 text-blue-800' : 
-                           'bg-green-100 text-green-800') }}">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                        {{ $order->status_order == 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            ($order->status_order == 'cancelled' ? 'bg-red-100 text-red-800' :
+                            ($order->status_order == 'processing' ? 'bg-blue-100 text-blue-800' :
+                            'bg-green-100 text-green-800')) }}">
                         {{ ucfirst($order->status_order) }}
                     </span>
                 </td>
+
                 <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <a href="{{ route('dashboard.orders.show', $order) }}" 
                        class="text-indigo-600 hover:text-indigo-900 transition duration-150 ease-in-out">

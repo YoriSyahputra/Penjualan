@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\DriverController;
+use App\Http\Controllers\OrderCancellationController;
 use App\Http\Controllers\Api\DriverApiController;
 
 use Illuminate\Http\Request;
@@ -31,3 +32,8 @@ Route::middleware(['auth:sanctum'])
 // EXISTING API ROUTES FOR TRACKING CHECK
 Route::get('/check-tracking', [DriverController::class, 'checkTrackingNumber']);
 Route::get('/check-tracking-details', [DriverController::class, 'checkTrackingDetails']);
+
+Route::post('/orders/{order}/cancel', [OrderCancellationController::class, 'cancelOrder'])
+    ->name('api.orders.cancel')
+    ->middleware(['auth:sanctum', 'ability:seller']);
+

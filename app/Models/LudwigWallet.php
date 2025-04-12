@@ -15,14 +15,17 @@ class LudwigWallet extends Model
         'seller_id', 
         'driver_id',
         'amount', 
-        'shipping_fee', // Add this field to separate the shipping fee
-        'subtotal',     // Add this field to store the product subtotal
+        'shipping_fee', 
+        'subtotal',     
         'status_package', 
         'status_payment',
         'pickup_at',
         'delivery_at',
         'released_at',
-        'delivery_notes'
+        'delivery_notes',
+        'cancellation_reason', 
+        'cancelled_at',        
+        'cancellation_by'  
     ];
 
     // Relasi ke Order

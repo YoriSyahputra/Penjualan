@@ -20,7 +20,12 @@ class ProductPaymentController extends Controller
     {
         return view('payment.transfer_search_product');
     }
-
+    public function hasPin()
+    {
+        return response()->json([
+            'hasPin' => auth()->user()->hasPin()
+        ]);
+    }
     public function getOrderByPaymentCode($code)
     {
         // Validate payment code format

@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\DeliveryHistory;
 use App\Models\Order;
-use App\Models\LdwigWallet;
+use App\Models\LudwigWallet;
+use App\Models\DriverWallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -19,11 +20,27 @@ class DriverController extends Controller
 {
     public function dashboard()
     {
-        $completeToday = Order::where('status_order', 'delivered')
+        $driverId = Auth::id(); // Tambahkan ini untuk mendapatkan ID driver yang login
+        $wallet = DriverWallet::where('driver_id', $driverId)->first();
+        $walletBalance = $wallet ? $wallet->balance : 0;
+        $completeToday = Order::where(function($query) {
+            $query->where('status_order', 'delivered')
+                  ->orWhere('status_order', 'completed');
+          })
+          ->whereDate('updated_at', Carbon::today())
+          ->count();
+        $pendingDelivery = Order::where('status_order', 'on_delivery')
                             ->whereDate('updated_at', Carbon::today())
-                            ->count();
-
-        return view('driver.home', compact('completeToday'));
+                            ->count();                   
+        $totalDelivery = Order::whereIn('status_order', ['delivered', 'completed'])
+                            ->count();    
+        $driverId = Auth::id(); // Ini sudah integer ID
+        $recentDeliveries = DeliveryHistory::where('driver_id', $driverId) // Tanpa ->id
+                                                    ->with(['order', 'order.user', 'order.user.addresses', 'order.store', 'order.store.user', 'order.store.user.addresses'])
+                                                    ->latest()
+                                                    ->take(3)
+                                                    ->get();
+        return view('driver.home', compact('completeToday', 'walletBalance','pendingDelivery','totalDelivery','recentDeliveries'));
     }
 
     public function checkTracking()

@@ -12,63 +12,85 @@ use Illuminate\Support\Facades\Log;
 
 class OrderCompletionController extends Controller
 {
-    public function confirmOrderCompletion(Request $request, $orderId)
-    {
-        $order = Order::findOrFail($orderId);
-        
-        // Validasi kepemilikan order
-        if ($order->user_id !== auth()->id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kamu tidak punya akses ke order ini'
-            ], 403);
-        }
-        
-        // Validasi status order (harus delivered)
-        if ($order->status_order !== 'delivered') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order ini belum selesai diantar'
-            ], 400);
-        }
-        
-        try {
-            // Update status order dan release funds
-            DB::transaction(function () use ($order) {
-                // Update status order
-                $order->update([
-                    'status_order' => 'completed',
-                    'completed_at' => now()
-                ]);
-                
-                // Ambil semua LudwigWallet entries untuk order ini
-                $ludwigWallets = LudwigWallet::where('order_id', $order->id)
-                    ->where('status_payment', 'pending')
-                    ->get();
-                
-                foreach ($ludwigWallets as $ludwigWallet) {
-                    $this->releaseFunds($ludwigWallet);
-                }
-            });
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Pesanan berhasil dikonfirmasi dan dana telah dirilis'
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Error saat konfirmasi pesanan: ' . $e->getMessage(), [
-                'order_id' => $orderId,
-                'user_id' => auth()->id(),
-                'error' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengkonfirmasi pesanan: ' . $e->getMessage()
-            ], 500);
-        }
+
+public function confirmOrderCompletion(Request $request, $orderId)
+{
+    $order = Order::findOrFail($orderId);
+    
+    // Validasi kepemilikan order
+    if ($order->user_id !== auth()->id()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Kamu tidak punya akses ke order ini'
+        ], 403);
     }
+    
+    // Validasi status order (harus delivered)
+    if ($order->status_order !== 'delivered') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Order ini belum selesai diantar'
+        ], 400);
+    }
+    
+    try {
+        // Update status order, release funds, dan update stok+sold count
+        DB::transaction(function () use ($order) {
+            // Update status order
+            $order->update([
+                'status_order' => 'completed',
+                'completed_at' => now()
+            ]);
+            
+            // Update stok dan sold count untuk setiap item
+            foreach ($order->items as $item) {
+                $product = $item->product;
+                
+                // Kurangi stok
+                $product->decrement('stock', $item->quantity);
+                
+                // Tambah sold count
+                $product->increment('sold_count', $item->quantity);
+                
+                // Log perubahan stok
+                Log::info('Stok diperbarui setelah konfirmasi pesanan', [
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'old_stock' => $product->stock + $item->quantity,
+                    'new_stock' => $product->stock,
+                    'sold_count' => $product->sold_count
+                ]);
+            }
+            
+            // Ambil semua LudwigWallet entries untuk order ini
+            $ludwigWallets = LudwigWallet::where('order_id', $order->id)
+                ->where('status_payment', 'pending')
+                ->get();
+            
+            foreach ($ludwigWallets as $ludwigWallet) {
+                $this->releaseFunds($ludwigWallet);
+            }
+        });
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Pesanan berhasil dikonfirmasi dan dana telah dirilis'
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error saat konfirmasi pesanan: ' . $e->getMessage(), [
+            'order_id' => $orderId,
+            'user_id' => auth()->id(),
+            'error' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengkonfirmasi pesanan: ' . $e->getMessage()
+        ], 500);
+    }
+}
     
     private function releaseFunds(LudwigWallet $ludwigWallet)
     {

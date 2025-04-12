@@ -36,7 +36,7 @@
         <div class="grid grid-cols-2 gap-3">
     @foreach($products as $product)
     <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
-        <a href="{{ route('product.details', ['id' => $product->id]) }}">
+        <a href="{{ route('product.show', ['id' => $product->id]) }}">
             <!-- Product Image -->
             <div class="relative overflow-hidden" style="height: 160px;"> 
                 @if($product->productImages->isNotEmpty())

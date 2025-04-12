@@ -36,6 +36,7 @@ class Order extends Model
         'store_id',
         'auto_confirmed',
         'completed_at',
+        'paid_at',
     ];
 
     public function user()
@@ -47,7 +48,11 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+    
     public function Address()
     {
         return $this->belongsTo(Address::class, 'address_id');
@@ -57,14 +62,17 @@ class Order extends Model
         return $this->hasMany(DeliveryHistory::class);
     }
     public function deliveryHistory()
-{
-    return $this->hasOne(DeliveryHistory::class);
-}
+    {
+        return $this->hasOne(DeliveryHistory::class);
+    }
     public function latestDeliveryStatus()
     {
         return $this->deliveryHistories()->latest()->first()?->status ?? 'not_assigned';
     }
-
+    public function cancellation()
+    {
+        return $this->hasOne(OrderCancellation::class);
+    }
     public function calculateStorePayments()
     {
         return $this->items->groupBy('product.store_id')->map(function($items, $storeId) {
@@ -96,5 +104,9 @@ class Order extends Model
             $this->save();
         }
     }
+    protected $casts = [
+        'paid_at' => 'datetime',
+        'completed_at' => 'datetime',
+    ];
 
 }

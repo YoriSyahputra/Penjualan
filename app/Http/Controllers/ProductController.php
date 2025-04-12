@@ -147,6 +147,7 @@ public function store(Request $request)
             'price' => $validated['price'],
             'discount_price' => $validated['discount_price'] ?? null,
             'stock' => $validated['stock'],
+            'stock_awal' => $validated['stock'],
             'stock_alert' => $validated['stock_alert'],
             'category_id' => $validated['category_id'],
             'is_active' => true,

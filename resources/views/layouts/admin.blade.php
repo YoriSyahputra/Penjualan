@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin Dashboard</title>
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/bootstrap.js'])
+    <!-- Pastikan Chart.js hanya dimuat sekali -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="antialiased">
     <div x-data="{ sidebarOpen: false }">
@@ -108,5 +110,14 @@
     </div>
 
     @vite('resources/js/app.js')
+    @stack('scripts')
+    
+    <script>
+        // Inisialisasi Alpine.js dan pastikan sidebar sudah siap
+        document.addEventListener('alpine:init', () => {
+            // Semua komponen Alpine.js sudah siap
+            console.log('Alpine.js initialized');
+        });
+    </script>
 </body>
 </html>

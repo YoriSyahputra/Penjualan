@@ -1,9 +1,9 @@
-<div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+<div id="cartModal" class="fixed inset-0  bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border border-gray-200 w-96 shadow-lg rounded-md bg-white">
         <!-- Modal Header -->
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900" id="modalProductName"></h3>
-            <button onclick="closeCartModal()" class="text-gray-400 hover:text-gray-500">
+            <button onclick="closeCartModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -12,65 +12,80 @@
 
         <!-- Product Image with Navigation -->
         <div class="mb-4 relative">
-            <div class="relative w-full h-48">
-                <img id="modalProductImage" src="" alt="Product" class="w-full h-48 object-cover rounded-lg">
+            <div class="relative w-full h-48 rounded-lg overflow-hidden">
+                <img id="modalProductImage" src="" alt="Product" class="w-full h-48 object-cover">
                 <div id="imageNavigation" class="absolute inset-0 flex justify-between items-center px-2">
                     <button onclick="previousImage()" class="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                     <button onclick="nextImage()" class="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
+        
         <!-- Product Price -->
-        <div class="mb-4">
+        <div class="mb-5">
             <p class="text-lg font-semibold text-gray-900" id="modalProductPrice"></p>
         </div>
 
         <!-- Product Variants Dropdown -->
-        <div id="variantsContainer" class="mb-4 hidden">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Select Variant</label>
-            <select id="variantSelect" class="mt-1 block w-full px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                <option value="">Choose a variant</option>
-                @if(isset($product->variants) && count($product->variants) > 0)
-                    @foreach($product->variants as $variant)
-                        <option value="{{ $variant->id }}">{{ $variant->name }}</option>
-                    @endforeach
-                @endif
-            </select>
+        <div id="variantsContainer" class="mb-5 hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Select Variant</label>
+            <div class="relative">
+                <select id="variantSelect" class="block w-full px-3 py-2 rounded-md border border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">Choose a variant</option>
+                    @if(isset($product->variants) && count($product->variants) > 0)
+                        @foreach($product->variants as $variant)
+                            <option value="{{ $variant->id }}">{{ $variant->name }}</option>
+                        @endforeach
+                    @endif
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
         </div>
 
         <!-- Product Packages Dropdown -->
-        <div id="packagesContainer" class="mb-4 hidden">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Select Package</label>
-            <select id="packageSelect" class="mt-1 block w-full px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                <option value="">Choose a package</option>
-                @if(isset($product->packages) && count($product->packages) > 0)
-                    @foreach($product->packages as $package)
-                        <option value="{{ $package->id }}">{{ $package->name }}</option>
-                    @endforeach
-                @endif
-            </select>
+        <div id="packagesContainer" class="mb-5 hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Select Package</label>
+            <div class="relative">
+                <select id="packageSelect" class="block w-full px-3 py-2 rounded-md border border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">Choose a package</option>
+                    @if(isset($product->packages) && count($product->packages) > 0)
+                        @foreach($product->packages as $package)
+                            <option value="{{ $package->id }}">{{ $package->name }}</option>
+                        @endforeach
+                    @endif
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
         </div>
 
         <!-- Quantity Selector -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+        <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
             <div class="flex items-center">
-                <button onclick="decrementQuantity()" class="p-2 border rounded-l bg-gray-100 hover:bg-gray-200">
+                <button onclick="decrementQuantity()" class="p-2 border border-gray-300 rounded-l bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
                     </svg>
                 </button>
                 <input type="number" id="quantityInput" value="1" min="1" 
-                       class="p-2 w-20 border-t border-b text-center focus:outline-none focus:border-indigo-500" readonly/>
-                <button onclick="incrementQuantity()" class="p-2 border rounded-r bg-gray-100 hover:bg-gray-200">
+                       class="p-2 w-20 border-t border-b border-gray-300 text-center focus:outline-none focus:ring-1 focus:ring-indigo-500" readonly/>
+                <button onclick="incrementQuantity()" class="p-2 border border-gray-300 rounded-r bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
@@ -81,7 +96,10 @@
         <!-- Add to Cart Button -->
         <div class="mt-6">
             <button onclick="addToCartWithOptions()" 
-                    class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    class="w-full flex items-center justify-center bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
                 Add to Cart
             </button>
         </div>
@@ -102,7 +120,7 @@ function openCartModal(productId) {
     document.getElementById('quantityInput').value = 1;
     
     // Fetch product details
-    fetch(`/product-details/${productId}`)
+    fetch(`/api/product/${productId}`)
         .then(response => response.json())
         .then(data => {
             currentProduct = data.product;

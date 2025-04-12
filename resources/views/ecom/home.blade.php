@@ -201,7 +201,7 @@
             @foreach($products as $product)
             <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
                 <!-- Product Image -->
-                <a href="{{ route('product.details', ['id' => $product->id]) }}">
+                <a href="{{ route('product.show', ['id' => $product->id]) }}">
                 <div class="relative overflow-hidden" style="height: 200px;"> 
                     @if($product->productImages->isNotEmpty())
                         <img src="{{ asset('storage/' . $product->productImages->first()->path_gambar) }}"

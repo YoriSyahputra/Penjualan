@@ -224,14 +224,6 @@
                         <!-- Store Voucher -->
                         <div class="mb-6">
                             <div class="flex gap-2">
-                                <input type="text" 
-                                       name="store_voucher" 
-                                       class="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
-                                       placeholder="Enter voucher code">
-                                <button type="button" 
-                                        class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                                    Apply
-                                </button>
                             </div>
                         </div>
 
@@ -249,12 +241,6 @@
                                 <span>Service Fee</span>
                                 <span>Rp {{ number_format($serviceFee, 0, ',', '.') }}</span>
                             </div>
-                            @if(isset($discount))
-                            <div class="flex justify-between text-green-600 font-medium">
-                                <span>Discount</span>
-                                <span>-Rp {{ number_format($discount, 0, ',', '.') }}</span>
-                            </div>
-                            @endif
                         </div>
 
                         <!-- Total -->

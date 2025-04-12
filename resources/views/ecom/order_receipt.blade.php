@@ -11,55 +11,80 @@
         </div>
 
         <!-- Order Status -->
-        <div class="mb-8 bg-green-50 border-l-4 border-green-400 p-4 rounded-md">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-                @if($order->status_order == 'pending')
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-green-800">Payment Confirmed</h3>
-                        <div class="mt-2 text-sm text-green-700">
-                            <p>Order Sudah dibayar, silahkan menunggu order untuk di proces oleh Seller.</p>
-                        </div>
-                    </div>
-                @endif
-                @if($order->status_order == 'processing')
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-green-800">Order Confrimed</h3>
-                        <div class="mt-2 text-sm text-green-700">
-                            <p>Order Sudah di terima oleh seller, Dan Paket Segera di Kirim</p>
-                        </div>
-                    </div>
-                @endif
-                @if($order->status_order == 'processed')
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-green-800">Order Confrimed</h3>
-                        <div class="mt-2 text-sm text-green-700">
-                            <p>Order Sedang kirim, silakan menunggu pesanan Anda</p>
-                        </div>
-                    </div>
-                @endif
-                @if($order->status_order == 'on_delivery')
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-green-800">Order Pick Up</h3>
-                        <div class="mt-2 text-sm text-green-700">
-                            <p>Paket Sudah Di ambil Oleh Kurir</p>
-                        </div>
-                    </div>
-                @endif
-                @if($order->status_order == 'delivered')
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-green-800">Package Delivery</h3>
-                        <div class="mt-2 text-sm text-green-700">
-                            <p>Paket Sudah Datang, Silahkan Di ambil</p>
-                        </div>
-                    </div>
-                @endif
+        <div class="@if($order->status_order == 'cancelled') mb-8 bg-red-50 border-l-4 border-red-400 p-4 rounded-md @else mb-8 bg-green-50 border-l-4 border-green-400 p-4 rounded-md @endif">
+        <div class="flex">
+        @if($order->status_order == 'cancelled')
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
             </div>
-        </div>
+        @else
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            </div>
+        @endif
+
+        @if($order->status_order == 'pending')
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-green-800">Payment Confirmed</h3>
+                <div class="mt-2 text-sm text-green-700">
+                    <p>Order Sudah dibayar, silahkan menunggu order untuk di procces oleh Seller.</p>
+                </div>
+            </div>
+        @endif
+        @if($order->status_order == 'cancelled')
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Order Cancellation</h3>
+                <div class="mt-2 text-sm text-red-700">
+                    <p>Order Di batalkan oleh Seller</p>
+                </div>
+            </div>
+        @endif
+        @if($order->status_order == 'processing')
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-green-800">Order Confrimed</h3>
+                <div class="mt-2 text-sm text-green-700">
+                    <p>Order Sudah di terima oleh seller, Dan Paket Segera di Kirim</p>
+                </div>
+            </div>
+        @endif
+        @if($order->status_order == 'processed')
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-green-800">Order Confrimed</h3>
+                <div class="mt-2 text-sm text-green-700">
+                    <p>Order Sedang kirim, silakan menunggu pesanan Anda</p>
+                </div>
+            </div>
+        @endif
+        @if($order->status_order == 'on_delivery')
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-green-800">Order Pick Up</h3>
+                <div class="mt-2 text-sm text-green-700">
+                    <p>Paket Sudah Di ambil Oleh Kurir</p>
+                </div>
+            </div>
+        @endif
+        @if($order->status_order == 'delivered')
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-green-800">Package Delivery</h3>
+                <div class="mt-2 text-sm text-green-700">
+                    <p>Paket Sudah Datang, Silahkan Di ambil</p>
+                </div>
+            </div>
+        @endif
+        @if($order->status_order == 'completed')
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-green-800">Package Delivery</h3>
+                <div class="mt-2 text-sm text-green-700">
+                    <p>Terima Kasih sudah Berbelanja di LUDWIG</p>
+                </div>
+            </div>
+        @endif
+    </div>
+</div>
 
         <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 mb-6">
             <!-- Receipt Header -->
@@ -70,12 +95,15 @@
                         <p class="text-gray-600 mt-1">Placed on {{ $order->created_at->format('F j, Y, g:i a') }}</p>
                     </div>
                     <div class="text-right">
-                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medi  um bg-green-100 text-green-800">
+                        
+                        <span class="@if($order->status == 'paid' && $order->status_order =='cancelled') inline-flex items-center px-4 py-2 rounded-full text-sm font-medi  um bg-red-100 text-red-800 @else inline-flex items-center px-4 py-2 rounded-full text-sm font-medi  um bg-green-100 text-green-800 @endif">
                             <svg class="mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
                                 <circle cx="4" cy="4" r="3" />
                             </svg>
-                            Paid
+                                Paid
                         </span>
+
+
                         <p class="text-gray-600 mt-1">Paid on {{ $order->paid_at ? $order->paid_at->format('F j, Y, g:i a') : 'N/A' }}</p>
                     </div>
                 </div>
@@ -84,16 +112,22 @@
             <!-- Item List -->
             <div class="mb-8">
                 <h3 class="font-semibold text-gray-800 mb-3">Items Purchased</h3>
-                <div class="flex items-center space-x-4 p-4 bg-green-50 border border-green-400 rounded-md">
+                <div class="@if($order->status_order == 'cancelled')flex items-center space-x-4 p-4 bg-red-50 border border-red-400 rounded-md @else flex items-center space-x-4 p-4 bg-green-50 border border-green-400 rounded-md @endif">
                     <div class="flex-shrink-0">
+                        @if($order->status_order == 'cancelled')
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        @else
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0" />
                         </svg>
+                        @endif
                     </div>
                     <div>
-                        <h4 class="font-bold text-green-700">
-                            Status Order: <span class="font-bold text-green-700">
+                        <h4 class="@if($order->status_order == 'cancelled')font-bold text-red-700 @else font-bold text-green-700 @endif">
+                            Status Order: <span class="@if($order->status_order == 'cancelled')font-bold text-red-700 @else font-bold text-green-700 @endif">
                                 @if($order->deliveryHistory)
                                     @switch($order->deliveryHistory->status)
                                         @case('sedang_diantar')
@@ -108,8 +142,10 @@
                                         @default
                                             {{ $order->deliveryHistory->status }}
                                     @endswitch
+                                @elseif($order->status_order == 'cancelled')
+                                {{ $cancellationReason }}
                                 @else
-                                    Menunggu pengiriman
+                                    Order Sedang Di prosses
                                 @endif
                             </span>
                         </h4>
@@ -391,6 +427,9 @@
                     confirmModal.classList.add('hidden');
                     
                     if (data.success) {
+
+                        document.querySelector('#successNotification span').textContent = 
+                        'Pesanan berhasil dikonfirmasi! Dana telah ditransfer ke penjual dan kurir, stok barang diperbarui.';
                         // Show success notification
                         successNotif.classList.remove('invisible');
                         successNotif.classList.remove('translate-y-full');

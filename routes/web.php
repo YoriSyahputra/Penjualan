@@ -1,4 +1,5 @@
 <?php
+use App\Http\Controllers\OrderCancellationController;
 use App\Http\Controllers\OrderCompletionController;
 use App\Http\Controllers\ProductPaymentController;
 use App\Http\Controllers\LudwigPaymentController;
@@ -32,8 +33,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 
-Route::get('/product-details/{id}', [ShopController::class, 'getProductDetails'])->name('product.details');
-Route::get('/product/{id}', [ShopController::class, 'getProductDetail'])->name('product.details');
+Route::get('/product/{id}', [ShopController::class, 'getProductDetail'])->name('product.show');
+Route::get('/api/product/{id}', [ShopController::class, 'getProductDetails'])->name('api.product.details');
+
 
 Route::get('/store/{storeId}/products/ajax', [ShopController::class, 'storeProductsAjax'])
     ->name('store.products.ajax');
@@ -103,6 +105,11 @@ Route::post('/transfer', [EWalletController::class, 'transfer'])->name('ewallet.
     
     Route::get('/api/search-users', [EWalletController::class, 'searchUsers']);
     Route::post('/pin/create', [EWalletController::class, 'createPin'])->name('user.create-pin');
+    Route::get('/user/has-pin', function() {
+        $user = auth()->user();
+        $pinExists = \App\Models\Pin::where('user_id', $user->id)->exists();
+        return response()->json(['hasPin' => $pinExists]);
+    })->name('user.has-pin');
     
     Route::get('/transfer/success/{transfer}', [EWalletController::class, 'transferSuccess'])
     ->name('ewallet.transfer.success');
@@ -162,11 +169,18 @@ Route::prefix('dashboard')
             ->name('generate.tracking');
         Route::get('/orders/{order}/resi-sticker', [OrderController::class, 'generateResiSticker'])
             ->name('orders.resi-sticker');
+        Route::get('/export-daily-sales', [DashboardController::class, 'exportDailySales'])->name('export.daily_sales');
+        Route::get('/export-monthly-sales', [DashboardController::class, 'exportMonthlySales'])->name('export.monthly_sales');
+        Route::get('/dashboard/export/yearly-sales', [DashboardController::class, 'exportYearlySales'])
+    ->name('export.yearly_sales');
 
-        // Ini yang baru, tambah di dalam group Route::prefix('dashboard')
-    Route::get('/orders/multiple/resi-sticker', [OrderController::class, 'generateBulkResiSticker'])
-    ->name('orders.bulk-resi-sticker');
-        });
+        Route::post('/orders/{order}/cancel', [OrderCancellationController::class, 'cancelOrder'])
+        ->name('orders.cancel');
+        Route::get('/orders/multiple/resi-sticker', [OrderController::class, 'generateBulkResiSticker'])
+        ->name('orders.bulk-resi-sticker');
+        Route::get('/export-daily-sales', [DashboardController::class, 'exportDailySales'])->name('export.daily_sales');
+        Route::get('/export-monthly-sales', [DashboardController::class, 'exportMonthlySales'])->name('export.monthly_sales');
+});
 /*
 |--------------------------------------------------------------------------
 | Super Admin Routes

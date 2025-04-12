@@ -10,6 +10,7 @@ use App\Models\Comment;
 use App\Models\Cart;  
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderCancellation;
 use App\Models\DeliveryHistory;
 
 use Illuminate\Support\Facades\Log;
@@ -496,8 +497,7 @@ public function cart()
 }
     public function getProductDetails($id)
     {
-        $product = Product::with(['variants', 'packages', 'productImages'])
-            ->findOrFail($id);
+        $product = Product::with(['variants', 'packages', 'productImages'])->findOrFail($id);
         
         return response()->json([
             'product' => $product,
@@ -899,10 +899,11 @@ public function orderConfirmation(Order $order)
                 }
             }
         }
-
+        $cancellation = OrderCancellation::where('order_id', operator: $order->id)->first();
+        $cancellationReason = $cancellation ? $cancellation->reason : null;
+        
         // Prepare full address for display
         $fullAddress = $this->formatFullAddress($order);
-
         return view('ecom.order_receipt', [
             'order' => $order,
             'items' => $items,
@@ -918,7 +919,8 @@ public function orderConfirmation(Order $order)
             'kecamatan' => $order->kecamatan,
             'kode_pos' => $order->kode_pos,
             'relatedOrders' => $relatedOrdersData,
-            'totalAmount' => $totalAmount
+            'totalAmount' => $totalAmount,
+            'cancellationReason' => $cancellationReason,
         ]);
     }
     else {
@@ -972,49 +974,62 @@ public function verifyPayment(Request $request)
         return redirect()->back()->with('error', 'Failed to verify payment. Please try again.');
     }
 }
-    public function unpaidOrders(Request $request)
-    {
-        $user = auth()->user();
-        $search = $request->input('search');
-        $statusFilter = $request->input('status');
-        
-        // Query builder for orders
-        $ordersQuery = Order::where('user_id', $user->id)
-                            ->with(['items.product', 'items.variant', 'items.package']);
-        
-        // Apply status filter if provided
-        if ($statusFilter) {
-            $ordersQuery->where('status', $statusFilter);
-        }
-        
-        // Apply search if provided
-        if ($search) {
-            $ordersQuery->where(function($query) use ($search) {
-                $query->where('id', 'like', "%{$search}%")
-                    ->orWhereHas('items.product', function($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-        
-        // Get paginated results
-        $allOrders = $ordersQuery->latest()->paginate(10);
-        
-        // Get unpaid orders count for notification
-        $unpaidOrders = Order::where('user_id', $user->id)
-                            ->where('status', 'pending')
-                            ->get();
-        
-        if ($request->ajax()) {
-            return response()->json([
-                'html' => view('partials.orders-list', compact('allOrders', 'unpaidOrders', 'search'))->render(),
-                'pagination' => view('partials.pagination', compact('allOrders'))->render(),
-            ]);
-        }
-        
-        return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders', 'search', 'statusFilter'));
+public function unpaidOrders(Request $request)
+{
+    $user = auth()->user();
+    $search = $request->input('search');
+    $statusFilter = $request->input('status');
+    
+    // Query builder for orders
+    $ordersQuery = Order::where('user_id', $user->id)
+                        ->with(['items.product', 'items.variant', 'items.package', 'cancellation']);
+    
+    // Apply status filter if provided
+    if ($statusFilter) {
+        $ordersQuery->where('status', $statusFilter);
     }
-
+    
+    // Apply search if provided
+    if ($search) {
+        $ordersQuery->where(function($query) use ($search) {
+            $query->where('id', 'like', "%{$search}%")
+                ->orWhereHas('items.product', function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+        });
+    }
+    
+    // Get paginated results
+    $allOrders = $ordersQuery->latest()->paginate(10);
+    
+    // Get unpaid orders count for notification
+    $unpaidOrders = Order::where('user_id', $user->id)
+                        ->where('status', 'pending')
+                        ->get();
+                        
+    // Define cancellation reasons
+    $cancellationReasons = [
+        'changed_mind' => 'Berubah pikiran',
+        'found_better_price' => 'Menemukan harga lebih baik',
+        'mistaken_order' => 'Salah pesan',
+        'other' => 'Lainnya'
+    ];
+    
+    if ($request->ajax()) {
+        return response()->json([
+            'html' => view('partials.orders-list', compact('allOrders', 'unpaidOrders', 'search', 'cancellationReasons'))->render(),
+            'pagination' => view('partials.pagination', compact('allOrders'))->render(),
+        ]);
+    }
+    
+    return view('ecom.list_order_payment', compact(
+        'allOrders', 
+        'unpaidOrders', 
+        'search', 
+        'statusFilter',
+        'cancellationReasons'  // Perhatikan "s" di akhir sekarang!
+    ));
+}
     public function cancel(Request $request, $id)
 {
     // Cari order berdasarkan id
@@ -1073,7 +1088,7 @@ public function listOrderPayment(Request $request)
                         ->where('status', 'pending')
                         ->get();
     
-    return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders', 'search'));
+    return view('ecom.list_order_payment', compact('allOrders', 'unpaidOrders', 'search' ));
 }
 
 public function addComment(Request $request, $productId)

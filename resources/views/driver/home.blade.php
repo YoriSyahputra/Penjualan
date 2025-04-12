@@ -19,7 +19,7 @@
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Pending Deliveries</dt>
                                 <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold text-gray-900">12</div>
+                                    <div class="text-2xl font-semibold text-gray-900">{{$pendingDelivery}}</div>
                                 </dd>
                             </dl>
                         </div>
@@ -59,9 +59,9 @@
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Total Distance Today</dt>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Delivery </dt>
                                 <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold text-gray-900">28.5 km</div>
+                                    <div class="text-2xl font-semibold text-gray-900">{{$totalDelivery }}</div>
                                 </dd>
                             </dl>
                         </div>
@@ -82,7 +82,13 @@
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Total Earning's</dt>
                                 <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold text-gray-900"></div>
+                                    <div class="text-2xl font-semibold text-gray-900">
+                                        @if(isset($walletBalance))
+                                            Rp {{ number_format($walletBalance, 0, ',', '.') }}
+                                        @else
+                                            Rp 0
+                                        @endif
+                                    </div>
                                 </dd>
                             </dl>
                         </div>
@@ -151,75 +157,60 @@
             <h2 class="text-lg font-medium text-gray-900 mb-4">Pengiriman Terbaru</h2>
             <div class="bg-white shadow overflow-hidden sm:rounded-md">
                 <ul class="divide-y divide-gray-200">
-                    <li>
-                        <a href="#" class="block hover:bg-gray-50">
-                            <div class="px-4 py-4 sm:px-6">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0">
-                                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100">
-                                                <span class="text-sm font-medium leading-none text-green-600">LW</span>
-                                            </span>
+                    @forelse($recentDeliveries as $delivery)
+                        <li>
+                            <a href="#" class="block hover:bg-gray-50">
+                                <div class="px-4 py-4 sm:px-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
+                                                    <span class="text-sm font-medium leading-none text-blue-600">LW</span>
+                                                </span>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-indigo-600">{{ $delivery->order->nomor_resi }}</div>
+                                                <div class="text-sm text-gray-500">
+                                                    @php
+                                                        $originCity = $delivery->order->store->user->addresses->where('is_primary', true)->first()->kota ?? 'Unknown';
+                                                        $destinationCity = $delivery->order->user->addresses->where('is_primary', true)->first()->kota ?? 'Unknown';
+                                                    @endphp
+                                                    {{ $originCity }} → {{ $destinationCity }}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-indigo-600">LW-JNE-ABCDE12345</div>
-                                            <div class="text-sm text-gray-500">Jakarta Selatan → Bandung</div>
+                                        <div class="flex flex-col items-end">
+                                            @php
+                                                $statusClass = [
+                                                    'pending' => 'bg-yellow-100 text-yellow-800',
+                                                    'processing' => 'bg-blue-100 text-blue-800',
+                                                    'shipped' => 'bg-blue-100 text-blue-800',
+                                                    'delivered' => 'bg-green-100 text-green-800',
+                                                    'cancelled' => 'bg-red-100 text-red-800',
+                                                ][$delivery->order->status_order] ?? 'bg-gray-100 text-gray-800';
+                                                
+                                                $statusText = [
+                                                    'pending' => 'Pending',
+                                                    'processing' => 'Processing',
+                                                    'shipped' => 'In Transit',
+                                                    'delivered' => 'Delivered',
+                                                    'cancelled' => 'Cancelled',
+                                                ][$delivery->order->status_order] ?? 'Unknown';
+                                            @endphp
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">{{ $statusText }}</span>
+                                            <div class="text-sm text-gray-500 mt-1">
+                                                {{ $delivery->updated_at->format('h:i A, d M Y') }}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="flex flex-col items-end">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Delivered</span>
-                                        <div class="text-sm text-gray-500 mt-1">12:30 PM, Today</div>
                                     </div>
                                 </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="block hover:bg-gray-50">
-                            <div class="px-4 py-4 sm:px-6">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0">
-                                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
-                                                <span class="text-sm font-medium leading-none text-blue-600">LW</span>
-                                            </span>
-                                        </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-indigo-600">LW-SiCepat-XYZ987654</div>
-                                            <div class="text-sm text-gray-500">Depok → Jakarta Pusat</div>
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-col items-end">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">In Transit</span>
-                                        <div class="text-sm text-gray-500 mt-1">10:15 AM, Today</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="block hover:bg-gray-50">
-                            <div class="px-4 py-4 sm:px-6">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0">
-                                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-yellow-100">
-                                                <span class="text-sm font-medium leading-none text-yellow-600">LW</span>
-                                            </span>
-                                        </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-indigo-600">LW-J&T-QWERTY12345</div>
-                                            <div class="text-sm text-gray-500">Tangerang → Bekasi</div>
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-col items-end">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
-                                        <div class="text-sm text-gray-500 mt-1">9:00 AM, Today</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
+                            </a>
+                        </li>
+                    @empty
+                        <li class="px-4 py-4 sm:px-6 text-center text-gray-500">
+                            Belum ada pengiriman terbaru
+                        </li>
+                    @endforelse
                 </ul>
             </div>
         </div>

@@ -87,7 +87,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     @foreach($products as $product)
                         <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                            <a href="{{ route('product.details', $product->id) }}" class="block">
+                            <a href="{{ route('product.show', $product->id) }}" class="block">
                                 <div class="h-48 bg-gray-200 overflow-hidden">
                                     @if($product->productImages->isNotEmpty())
                                         <img src="{{ asset('storage/' . $product->productImages->first()->path_gambar) }}"

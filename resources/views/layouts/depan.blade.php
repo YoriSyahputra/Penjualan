@@ -241,19 +241,19 @@
                             @if(auth()->user()->is_super_admin)
                                 <a href="{{ route('super-admin.dashboard') }}"
                                 class="block px-4 py-2 text-red-600 hover:bg-red-50 transition-colors font-medium">
-                                    Super Admin Dashboard
+                                    Super Admin 
                                 </a>
                                 <div class="border-t border-gray-100 my-1"></div>
                             @elseif(auth()->user()->is_admin)
                                 <a href="{{ route('dashboard.index') }}"
                                 class="block px-4 py-2 text-indigo-600 hover:bg-indigo-50 transition-colors">
-                                    Admin Dashboard
+                                    Admin 
                                 </a>
                                 <div class="border-t border-gray-100 my-1"></div>
                             @elseif(auth()->user()->is_driver)
                                 <a href="{{ route('driver.dashboard') }}"
-                                class="block px-4 py-2 text-green-600 hover:bg-indigo-50 transition-colors">
-                                    driver Dashboard
+                                class="block px-4 py-2 text-blue-600 hover:bg-blue-50 transition-colors">
+                                    Driver 
                                 </a>
                                 <div class="border-t border-gray-100 my-1"></div>
                             @endif

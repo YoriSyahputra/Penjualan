@@ -105,7 +105,10 @@ class User extends Authenticatable
         return $this->hasOne(DriverWallet::class, 'driver_id');
     }
 
-
+    public function cancellation()
+    {
+        return $this->hasOne(OrderCancellation::class);
+    }
     /**
      * Get the URL of the user's profile photo.
      *
@@ -171,4 +174,15 @@ class User extends Authenticatable
         $path = $photo->store('profile-photos', 'public');
         $this->update(['profile_photo' => $path]);
     }
+// Di User.php, tambahkan:
+public function getRoleNames()
+{
+    // Contoh implementasi sederhana berdasarkan property yang ada
+    $roles = [];
+    if ($this->is_admin) $roles[] = 'admin';
+    if ($this->is_super_admin) $roles[] = 'super_admin';
+    if ($this->is_driver) $roles[] = 'driver';
+    
+    return collect($roles);
+}
 }
