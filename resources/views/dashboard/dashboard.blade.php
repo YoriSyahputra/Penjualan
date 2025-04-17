@@ -7,11 +7,7 @@
     <div class="flex justify-between items-center">
         <h2 class="text-2xl font-semibold text-gray-800">Dashboard Overview</h2>
         <div class="flex space-x-3">
-            <select id="timeRangeSelector" class="bg-white border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="7" {{ $selectedTimeRange == 7 ? 'selected' : '' }}>Last 7 Days</option>
-                <option value="30" {{ $selectedTimeRange == 30 ? 'selected' : '' }}>Last 30 Days</option>
-                <option value="90" {{ $selectedTimeRange == 90 ? 'selected' : '' }}>Last 90 Days</option>
-            </select>
+
         </div>
     </div>
 
@@ -383,11 +379,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Event listener for time range selector
-    document.getElementById('timeRangeSelector').addEventListener('change', function() {
-        // Redirect dengan parameter baru
-        window.location.href = '{{ route("dashboard.index") }}?time_range=' + this.value + '&month={{ $selectedMonth }}';
-    });
     
     // Event listener for month selector
     document.getElementById('monthSelector').addEventListener('change', function() {

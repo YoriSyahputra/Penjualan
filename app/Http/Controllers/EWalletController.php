@@ -181,7 +181,8 @@ class EWalletController extends Controller
         abort(403);
     }
     
-    return view('payment.transfer-successfully', compact('transfer'));
+    $walletBalance = auth()->user()->wallet->balance;
+    return view('payment.transfer-successfully', compact('transfer', 'walletBalance'));
 }
     public function showSearch()
     {

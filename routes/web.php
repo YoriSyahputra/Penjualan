@@ -27,21 +27,35 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
     return view('ecom.home');
 })->name('logout');
+    Route::get('/forgot-password', function () {
+        return view('auth.forgot-password');
+    })->middleware('guest')->name('password.request');
 
-// Home & Shop Routes
-Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/search', [ProductController::class, 'search'])->name('search');
-Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+    Route::post('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])
+        ->middleware('guest')
+        ->name('password.email');
 
-Route::get('/product/{id}', [ShopController::class, 'getProductDetail'])->name('product.show');
-Route::get('/api/product/{id}', [ShopController::class, 'getProductDetails'])->name('api.product.details');
+    Route::get('/reset-password/{token}', function ($token) {
+        return view('auth.reset-password', ['token' => $token]);
+    })->middleware('guest')->name('password.reset');
+
+    Route::post('/reset-password', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])
+        ->middleware('guest')
+        ->name('password.update');
+    // Home & Shop Routes
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/search', [ProductController::class, 'search'])->name('search');
+    Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+
+    Route::get('/product/{id}', [ShopController::class, 'getProductDetail'])->name('product.show');
+    Route::get('/api/product/{id}', [ShopController::class, 'getProductDetails'])->name('api.product.details');
 
 
-Route::get('/store/{storeId}/products/ajax', [ShopController::class, 'storeProductsAjax'])
-    ->name('store.products.ajax');
-Route::post('/product/{id}/addComment', [ShopController::class, 'addComment'])->name('product.addComment');
+    Route::get('/store/{storeId}/products/ajax', [ShopController::class, 'storeProductsAjax'])
+        ->name('store.products.ajax');
+    Route::post('/product/{id}/addComment', [ShopController::class, 'addComment'])->name('product.addComment');
 
-Route::prefix('cart')->name('cart.')->group(function () {
+    Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [ShopController::class, 'cart'])->name('index');
     Route::post('/add/{id}', [ShopController::class, 'addToCart'])->name('add');
     Route::post('/update/{key}', [ShopController::class, 'update'])->name('update');

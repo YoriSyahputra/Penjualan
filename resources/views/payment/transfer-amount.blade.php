@@ -100,18 +100,63 @@
 </div>
 
 @include('components.pin-modal')
-
+@include('components.create-pin-modal')
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Core elements
+        // Core elements
     const amountInput = document.getElementById('amount');
     const continueBtn = document.getElementById('continueBtn');
     const pinModal = document.getElementById('pinModal');
     const createPinModal = document.getElementById('createPinModal');
     const transferForm = document.getElementById('transferForm');
+
+    // PinState class definition
+    class PinState {
+        constructor(inputElement, maxLength = 6) {
+            this.value = '';
+            this.inputElement = inputElement;
+            this.maxLength = maxLength;
+        }
+
+        append(digit) {
+            if (this.value.length < this.maxLength) {
+                this.value += digit;
+                this.updateInput();
+            }
+        }
+
+        clear() {
+            this.value = '';
+            this.updateInput();
+        }
+
+        delete() {
+            this.value = this.value.slice(0, -1);
+            this.updateInput();
+        }
+
+        updateInput() {
+            this.inputElement.value = this.value;
+        }
+
+        get length() {
+            return this.value.length;
+        }
+
+        get pin() {
+            return this.value;
+        }
+    }
+
+    // Initialize PIN instances
+    window.pinInstances = {
+        pin: new PinState(document.getElementById('pinInput')),
+        newPin: document.getElementById('newPinInput') ? new PinState(document.getElementById('newPinInput')) : null
+    };
     
+
     // Get user balance from meta tag
     const currentBalance = parseInt(document.querySelector('meta[name="user-balance"]')?.content) || 0;
 
@@ -124,7 +169,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validate form and update continue button state
     function validateForm() {
         const amount = parseInt(amountInput.value.replace(/\D/g, '')) || 0;
-        continueBtn.disabled = amount < 1000 || amount > currentBalance;
+        const isValid = amount >= 1000 && amount <= currentBalance;
+        continueBtn.disabled = !isValid;
     }
 
     // Handle numpad input
@@ -133,9 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const newAmount = currentAmount + value;
         
         if (parseInt(newAmount) <= currentBalance) {
-            // Update the visible formatted field
             amountInput.value = formatAmount(newAmount);
-            // And update the hidden input with the raw number
             document.getElementById('amountValue').value = newAmount;
             validateForm();
         }
@@ -149,9 +193,11 @@ document.addEventListener('DOMContentLoaded', function() {
         validateForm();
     }
 
-    // Event Listeners
+    // Event Listeners for numpad
     document.querySelectorAll('.numpad-btn').forEach(btn => {
-        btn.addEventListener('click', () => handleNumpadInput(btn.dataset.value));
+        btn.addEventListener('click', () => {
+            handleNumpadInput(btn.dataset.value);
+        });
     });
 
     document.getElementById('backspace').addEventListener('click', handleBackspace);
@@ -159,69 +205,134 @@ document.addEventListener('DOMContentLoaded', function() {
     // PIN Input Handlers
     document.querySelectorAll('.pin-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const pinInput = document.getElementById('pinInput');
-            if (pinInput.value.length < 6) {
-                pinInput.value += this.dataset.value;
-            }
+            window.pinInstances.pin.append(btn.getAttribute('data-val'));
         });
     });
 
     // Create PIN Input Handlers
     document.querySelectorAll('.create-pin-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const newPinInput = document.getElementById('newPin');
-            if (newPinInput.value.length < 6) {
-                newPinInput.value += this.dataset.value;
-                document.getElementById('savePinBtn').disabled = newPinInput.value.length !== 6;
-            }
+            window.pinInstances.newPin.append(btn.getAttribute('data-val'));
         });
     });
 
-    // PIN Management Functions
-    window.clearPin = () => document.getElementById('pinInput').value = '';
-    window.deletePin = () => document.getElementById('pinInput').value = document.getElementById('pinInput').value.slice(0, -1);
-    window.clearNewPin = () => {
-        document.getElementById('newPin').value = '';
-        document.getElementById('savePinBtn').disabled = true;
+    // GLOBAL PIN MANAGEMENT FUNCTIONS
+    window.clearPin = () => {
+        window.pinInstances.pin.clear();
+        document.querySelectorAll('.pin-dot').forEach(dot => {
+            dot.classList.remove('bg-blue-600');
+        });
     };
-    window.deleteNewPin = () => {
-        const newPinInput = document.getElementById('newPin');
-        newPinInput.value = newPinInput.value.slice(0, -1);
-        document.getElementById('savePinBtn').disabled = true;
+    
+    window.deletePin = () => {
+        window.pinInstances.pin.delete();
+        const dots = document.querySelectorAll('.pin-dot');
+        if (dots && window.pinInstances.pin.length < dots.length) {
+            dots[window.pinInstances.pin.length].classList.remove('bg-blue-600');
+        }
     };
 
     // Modal Management
     window.cancelPin = () => {
-        pinModal.style.display = 'none';
-        clearPin();
+        if (pinModal) pinModal.classList.add('hidden');
+        window.clearPin();
     };
 
-    // Continue Button Handler - Updated to include amount in PIN modal
+    // Critical Handler for PIN Confirmation
+    window.confirmPin = () => {
+        if (window.pinInstances.pin.length !== 6) {
+            showAlert('warning', 'PIN tidak valid', 'Masukkan PIN 6 digit.');
+            return;
+        }
+
+        if (!transferForm) {
+            showAlert('error', 'Error', 'Form transfer tidak ditemukan.');
+            return;
+        }
+
+        const formData = new FormData(transferForm);
+        formData.append('pin', window.pinInstances.pin.pin);
+        
+        const confirmBtn = document.querySelector('[onclick="confirmPin()"]');
+        if (confirmBtn) {
+            confirmBtn.textContent = 'Processing...';
+            confirmBtn.disabled = true;
+        }
+
+        fetch(transferForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message || 'Transfer gagal'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                if (pinModal) pinModal.classList.add('hidden');
+                window.clearPin();
+                showAlert('success', 'Berhasil', 'Transfer berhasil dilakukan.');
+                setTimeout(() => window.location.href = data.redirect || '/dashboard', 1500);
+            } else {
+                throw new Error(data.message || 'Transfer gagal');
+            }
+        })
+        .catch(error => {
+            showAlert('error', 'Error', error.message);
+            window.clearPin();
+            if (confirmBtn) {
+                confirmBtn.textContent = 'Konfirmasi';
+                confirmBtn.disabled = false;
+            }
+        });
+    };
+
+    // Continue Button Handler
     continueBtn.addEventListener('click', function() {
         const hasPin = document.querySelector('meta[name="user-has-pin"]')?.content === 'true';
         const amount = parseInt(amountInput.value.replace(/\D/g, '')) || 0;
         
         if (amount < 1000) {
-            alert('Minimum transfer amount is Rp 1.000');
+            showAlert('warning', 'Validasi gagal', 'Minimum transfer amount is Rp 1.000');
             return;
         }
 
-        // Update amount in PIN modal summary
         const summaryAmount = document.getElementById('summaryAmount');
         if (summaryAmount) {
             summaryAmount.textContent = new Intl.NumberFormat('id-ID').format(amount);
         }
         
         if (!hasPin) {
-            createPinModal.style.display = 'flex';
+            if (createPinModal) createPinModal.classList.remove('hidden');
         } else {
-            pinModal.style.display = 'flex';
+            if (pinModal) pinModal.classList.remove('hidden');
         }
     });
 
+    // Alert helper function
+    function showAlert(type, title, message) {
+        if (window.Swal) {
+            Swal.fire({
+                icon: type,
+                title: title,
+                text: message
+            });
+        } else {
+            alert(`${title}: ${message}`);
+        }
+    }
+
     // Keyboard Support
     document.addEventListener('keydown', function(e) {
-        if (pinModal.style.display === 'flex' || createPinModal.style.display === 'flex') return;
+        const isModalOpen = (pinModal && getComputedStyle(pinModal).display === 'flex') || 
+                           (createPinModal && getComputedStyle(createPinModal).display === 'flex');
+        
+        if (isModalOpen) {
+            return;
+        }
 
         if (/^[0-9]$/.test(e.key)) {
             handleNumpadInput(e.key);
@@ -232,17 +343,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Modal Click Outside
     window.addEventListener('click', function(e) {
-        if (e.target === pinModal) cancelPin();
-        if (e.target === createPinModal) {
-            createPinModal.style.display = 'none';
-            clearNewPin();
+        if (e.target === pinModal) {
+            window.cancelPin();
         }
+        if (e.target === createPinModal) {
+            if (createPinModal) createPinModal.classList.add('hidden');
+            window.clearNewPin();
+        }
+    });
+
+    // Listen for pinCreated event from other components
+    document.addEventListener('pinCreated', () => {
+        setTimeout(() => {
+            if (pinModal) pinModal.classList.remove('hidden');
+        }, 1000);
     });
 });
 </script>
 
 <style>
-.numpad-btn:active, .pin-btn:active, .create-pin-btn:active {
+.numpad-btn:active, .pin-btn:active, .new-pin-btn:active {
     background-color: theme('colors.gray.200');
 }
 </style>

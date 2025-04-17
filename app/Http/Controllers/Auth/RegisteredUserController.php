@@ -43,7 +43,6 @@ class RegisteredUserController extends Controller
         'kota' => ['required', 'string'],
         'kecamatan' => ['required', 'string'],
         'kode_pos' => ['required', 'string'],
-        'gender' => ['required', 'in:male,female,prefer_not_to_say'],
         'phone_number' => ['required', 'string'],
     ]);
     
@@ -53,7 +52,6 @@ class RegisteredUserController extends Controller
         'email' => $request->email,
         'password' => Hash::make($request->password),
         'phone_number' => $request->phone_number,
-        'gender' => $request->gender,
         'is_driver' => $request->has('is_driver'),
     ]);
     

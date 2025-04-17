@@ -34,6 +34,7 @@ class DashboardController extends Controller
         $selectedTimeRange = $request->get('time_range', 7); // Default 7 days
         $wallet = SellerWallet::where('store_id', $storeId)->first();
         $walletBalance = $wallet ? $wallet->balance : 0;
+        
         // Mengambil total stock dari tabel Products yang punya seller ini aja
         $totalStock = Product::where('store_id', $storeId)
                 ->where('is_active', true)
@@ -46,8 +47,58 @@ class DashboardController extends Controller
         $selectedMonthSales = $this->getSelectedMonthSales($storeId, $selectedMonth);
         $topProducts = $this->getTopSellingProducts($storeId);
         $selectedYear = $request->get('year', Carbon::now()->format('Y'));
+        
         // Dapatkan list bulan untuk dropdown selector
         $availableMonths = $this->getAvailableMonths($storeId);
+
+        $stockAlerts = Product::where('store_id', $storeId)
+            ->where('is_active', true)
+            ->whereNotNull('stock_alert')
+            ->whereRaw('stock <= stock_alert')
+            ->select('id', 'name', 'stock', 'stock_alert')
+            ->get();
+
+        $stockAlertsCount = $stockAlerts->count();
+        if ($stockAlertsCount > 0) {
+            $firstAlert = $stockAlerts->first();
+            $remainingCount = $stockAlertsCount - 1;
+            $stockAlerts = [
+                [
+                    'type' => 'warning',
+                    'id' => 'stock-summary',
+                    'name' => $firstAlert->name,
+                    'count' => $remainingCount,
+                    'stock' => $firstAlert->stock,
+                    'stock_alert' => $firstAlert->stock_alert
+                ]
+            ];
+        } else {
+            $stockAlerts = [];
+        }
+
+        $newOrders = Order::where('store_id', $storeId)
+            ->where('status_order', 'pending')
+            ->whereNotNull('paid_at')
+            ->select('id', 'order_number', 'total', 'paid_at')
+            ->orderBy('paid_at', 'desc')
+            ->get();
+
+        $newOrdersCount = $newOrders->count();
+        if ($newOrdersCount > 0) {
+            $firstOrder = $newOrders->first();
+            $remainingCount = $newOrdersCount - 1;
+            $newOrders = [
+                [
+                    'type' => 'success',
+                    'id' => 'order-summary',
+                    'order_number' => $firstOrder->order_number,
+                    'total' => $firstOrder->total,
+                    'count' => $remainingCount
+                ]
+            ];
+        } else {
+            $newOrders = [];
+        }
 
         return view('dashboard.dashboard', compact(
             'totalStock',
@@ -60,8 +111,10 @@ class DashboardController extends Controller
             'selectedMonth',
             'selectedTimeRange',
             'walletBalance',
-            'selectedYear'
-        ));    
+            'selectedYear',
+            'stockAlerts',  
+            'newOrders'      
+        ));  
     }
 
     /**

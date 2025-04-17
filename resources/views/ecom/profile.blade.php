@@ -42,14 +42,6 @@
                             <div class="mt-3 space-y-2">
                                 <p class="text-gray-600">Nama: <span class="font-medium text-gray-800">{{ auth()->user()->name }}</span></p>
                                 <p class="text-gray-600">Email: <span class="font-medium text-gray-800">{{ auth()->user()->email }}</span></p>
-                                <p class="text-gray-600">Jenis Kelamin: <span class="font-medium text-gray-800">
-                                    @if(auth()->user()->gender == 'male')
-                                        Laki-laki
-                                    @elseif(auth()->user()->gender == 'female')
-                                        Perempuan
-                                    @else
-                                        Tidak ingin memberitahu
-                                    @endif
                                 </span></p>
                                 <p class="text-gray-600">Nomor Telepon: <span class="font-medium text-gray-800">{{ auth()->user()->phone_number }}</span></p>
                                     @php
@@ -114,18 +106,6 @@
                                             value="{{ old('email', auth()->user()->email) }}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                         @error('email')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-                                    <div>
-                                        <label for="gender" class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
-                                        <select name="gender" id="gender" required
-                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                            <option value="male" {{ auth()->user()->gender == 'male' ? 'selected' : '' }}>Laki-laki</option>
-                                            <option value="female" {{ auth()->user()->gender == 'female' ? 'selected' : '' }}>Perempuan</option>
-                                            <option value="prefer_not_to_say" {{ auth()->user()->gender == 'prefer_not_to_say' ? 'selected' : '' }}>Tidak ingin memberitahu</option>
-                                        </select>
-                                        @error('gender')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
                                     </div>

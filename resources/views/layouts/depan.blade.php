@@ -213,17 +213,16 @@
                     <div class="relative" x-data="{ isProfileOpen: false }">
                         <button @click="isProfileOpen = !isProfileOpen" 
                                 class="flex items-center space-x-2 focus:outline-none">
-                            @if(auth()->user()->is_super_admin)
-                                <!-- Super Admin Icon -->
-                                <div class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center border-2 border-red-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
-                                </div>
-                            @else
-                                <img src="{{ auth()->user()->profile_photo_url ?? '/api/placeholder/32/32' }}" 
+                            @if(auth()->user()->profile_photo_url)
+                                <img src="{{ auth()->user()->profile_photo_url }}" 
                                     alt="Profile photo" 
                                     class="h-8 w-8 rounded-full object-cover border-2 border-gray-200">
+                            @else
+                                <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
                             @endif
                         </button>
 

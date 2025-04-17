@@ -2,7 +2,6 @@
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\OrderCancellationController;
 use App\Http\Controllers\Api\DriverApiController;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

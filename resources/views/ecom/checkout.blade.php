@@ -235,7 +235,7 @@
                             </div>
                             <div class="flex justify-between text-gray-600">
                                 <span>Shipping Fee</span>
-                                <span>Rp {{ number_format($shippingFee, 0, ',', '.') }}</span>
+                                <span id="shippingFeeDisplay">-</span>
                             </div>
                             <div class="flex justify-between text-gray-600">
                                 <span>Service Fee</span>
@@ -247,7 +247,7 @@
                         <div class="border-t border-gray-200 pt-4 mb-6">
                             <div class="flex justify-between items-center">
                                 <span class="text-lg font-semibold text-gray-900">Total</span>
-                                <span class="text-2xl font-bold text-gray-900">
+                                <span class="text-2xl font-bold text-gray-900" id="totalDisplay">
                                     Rp {{ number_format($subtotal + $shippingFee + $serviceFee - ($discount ?? 0), 0, ',', '.') }}
                                 </span>
                             </div>
@@ -293,15 +293,27 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('List alamat ngga ada!');
         }
     }
-});
-    // Handle shipping method selection
+
+    // Handle shipping method selection with initial value
     const shippingInputs = document.querySelectorAll('input[name="shipping_method"]');
+    const shippingFeeDisplay = document.querySelector('#shippingFeeDisplay');
+    const totalDisplay = document.querySelector('#totalDisplay');
+    const subtotal = {{ $subtotal }};
+    const serviceFee = {{ $serviceFee }};
+    let currentShippingFee = 0;
+    
     shippingInputs.forEach(input => {
         input.addEventListener('change', function() {
-            const selectedMethod = this.value;
-            // Update shipping fee and total (anda perlu mengimplementasikan logika ini)
+            currentShippingFee = this.value === 'regular' ? 15000 : 30000;
+            shippingFeeDisplay.textContent = 'Rp ' + currentShippingFee.toLocaleString('id-ID');
+            const total = subtotal + currentShippingFee + serviceFee;
+            totalDisplay.textContent = 'Rp ' + total.toLocaleString('id-ID');
         });
     });
+    
+    // Initial total calculation
+    const total = subtotal + currentShippingFee + serviceFee;
+    totalDisplay.textContent = 'Rp ' + total.toLocaleString('id-ID');
 
     // Handle voucher code
     const voucherButton = document.querySelector('button[type="button"]');
@@ -323,6 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+});
 </script>
 @endpush
 @endsection

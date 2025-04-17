@@ -21,8 +21,6 @@ class ProfileController extends Controller
         'name'          => ['required', 'string', 'max:255'],
         'email'         => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . Auth::id()],
         'phone_number'  => ['nullable', 'string', 'max:20'],
-        'gender'        => ['required', 'in:male,female,prefer_not_to_say'],
-        // Validasi data alamat
         'alamat_lengkap'=> ['required', 'string'],
         'provinsi'      => ['required', 'string'],
         'kota'          => ['required', 'string'],
@@ -32,12 +30,11 @@ class ProfileController extends Controller
 
     $user = Auth::user();
 
-    // Update data user (nama, email, phone, gender)
+    // Update data user (nama, email, phone,)
     $user->update([
         'name'         => $validated['name'],
         'email'        => $validated['email'],
         'phone_number' => $validated['phone_number'],
-        'gender'       => $validated['gender'],
     ]);
 
     // Update atau buat alamat utama di tabel addresses

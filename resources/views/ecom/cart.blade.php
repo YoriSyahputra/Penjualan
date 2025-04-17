@@ -57,9 +57,14 @@
                                             <span class="text-indigo-600 font-medium">
                                                 Rp {{ number_format($item['price'], 0, ',', '.') }}
                                             </span>
-                                            <span class="ml-2 text-sm text-green-600">
-                                                -{{ round((($item['original_price'] - $item['price']) / $item['original_price']) * 100) }}%
-                                            </span>
+                                            @php
+                                                $discountPercentage = round((($item['original_price'] - $item['price']) / $item['original_price']) * 100);
+                                            @endphp
+                                            @if($discountPercentage > 0)
+                                                <span class="ml-2 text-sm text-green-600">
+                                                    -{{ $discountPercentage }}%
+                                                </span>
+                                            @endif
                                         @else
                                             <span class="text-indigo-600 font-medium">
                                                 Rp {{ number_format($item['price'], 0, ',', '.') }}

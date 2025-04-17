@@ -90,6 +90,7 @@
 </div>
 
 @include('components.pin-modal-2')
+@include('components.create-pin-modal')
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -281,71 +282,8 @@ document.addEventListener('DOMContentLoaded', function() {
         productPin.clear();
     }
 
-    // New PIN Management Functions
-    if (newProductPin) {
-        window.clearNewProductPin = function() {
-            newProductPin.clear();
-            saveProductPinBtn.disabled = true;
-        }
-        
-        window.deleteNewProductPin = function() {
-            newProductPin.delete();
-            saveProductPinBtn.disabled = newProductPin.length !== 6;
-        }
-        
-        // Event Listeners for new PIN
-        document.querySelectorAll('.new-product-pin-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                newProductPin.append(btn.getAttribute('data-val'));
-                saveProductPinBtn.disabled = newProductPin.length !== 6;
-            });
-        });
-        
-        // Save new PIN function
-        window.saveProductPin = function() {
-            if (newProductPin.length !== 6) {
-                showAlert('warning', 'PIN tidak valid', 'PIN harus 6 digit.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('pin', newProductPin.pin);
-            formData.append('pin_confirmation', newProductPin.pin);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-
-            fetch('/pin/create', {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.message || 'Gagal membuat PIN'); });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    createProductPinModal.classList.add('hidden');
-                    newProductPin.clear();
-                    showAlert('success', 'Berhasil', 'PIN berhasil dibuat.');
-                    
-                    // Setelah PIN berhasil dibuat, tampilkan modal verifikasi PIN
-                    setTimeout(() => {
-                        productPinModal.classList.remove('hidden');
-                    }, 1000);
-                } else {
-                    throw new Error(data.message || 'Gagal membuat PIN');
-                }
-            })
-            .catch(error => {
-                showAlert('error', 'Error', error.message);
-            });
-        }
-    }
-
     // Show PIN modal for product payment
-    window.showProductPinModal = function() {
+        window.showProductPinModal = function() {
         // Cek apakah user sudah punya PIN
         fetch('/user/has-pin', {
             method: 'GET',
@@ -364,12 +302,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.hasPin) {
                 // Jika sudah punya PIN, tampilkan modal verifikasi PIN
-                productPinModal.classList.remove('hidden');
-            } else if (createProductPinModal) {
-                // Jika belum punya PIN, tampilkan modal pembuatan PIN
-                createProductPinModal.classList.remove('hidden');
+                document.getElementById('productPinModal').classList.remove('hidden');
             } else {
-                showAlert('error', 'Error', 'Anda harus membuat PIN terlebih dahulu di pengaturan akun.');
+                // Jika belum punya PIN, tampilkan modal pembuatan PIN
+                document.getElementById('createPinModal').classList.remove('hidden');
             }
         })
         .catch(error => {
@@ -377,6 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert('error', 'Error', 'Gagal memeriksa status PIN');
         });
     }
+
 
     // PIN confirmation and payment processing
     window.confirmProductPin = function() {

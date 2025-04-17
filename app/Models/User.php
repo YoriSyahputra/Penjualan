@@ -28,7 +28,6 @@ class User extends Authenticatable
         'is_driver',
         'admin_status',
         'phone_number',
-        'gender',
         'profile_photo',
     ];
 
@@ -116,45 +115,11 @@ class User extends Authenticatable
      */
     public function getProfilePhotoUrlAttribute()
     {
-        if ($this->profile_photo) {
-            return Storage::url($this->profile_photo);
+        if ($this->profile_photo_path) {
+            return Storage::url($this->profile_photo_path);
         }
-
-        $baseUrl = 'https://api.dicebear.com/7.x/avataaars/svg';
-        $seed = urlencode($this->name);
         
-        $commonOptions = [
-            'seed=' . $seed,
-            'backgroundColor=b6e3f4',
-            'mouth=smile'
-        ];
-
-        switch ($this->gender) {
-            case 'male':
-                $options = array_merge($commonOptions, [
-                    'gender=male',
-                    'hairColor=brown',
-                    'clothes=shirt',
-                    'clothesColor=blue'
-                ]);
-                break;
-            case 'female':
-                $options = array_merge($commonOptions, [
-                    'gender=female',
-                    'hairColor=black',
-                    'clothes=blazer',
-                    'clothesColor=red'
-                ]);
-                break;
-            default:
-                $options = array_merge($commonOptions, [
-                    'clothes=hoodie',
-                    'clothesColor=gray'
-                ]);
-                break;
-        }
-
-        return $baseUrl . '?' . implode('&', $options);
+        return null; // Return null to trigger our default SVG icon
     }
 
     /**

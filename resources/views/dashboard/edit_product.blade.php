@@ -91,7 +91,7 @@
                             <label for="price" class="block text-sm font-medium text-gray-700">Price</label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 sm:text-sm">$</span>
+                                    <span class="text-gray-500 sm:text-sm">Rp.</span>
                                 </div>
                                 <input type="number" name="price" id="price" step="0.01" 
                                     class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -106,7 +106,7 @@
                             <label for="discount_price" class="block text-sm font-medium text-gray-700">Discount Price</label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 sm:text-sm">$</span>
+                                    <span class="text-gray-500 sm:text-sm">Rp.</span>
                                 </div>
                                 <input type="number" name="discount_price" id="discount_price" step="0.01" 
                                     class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -154,7 +154,7 @@
                                             placeholder="Enter variant name">
                                         <div class="relative shadow-sm rounded-md w-1/3">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-gray-500 sm:text-sm">$</span>
+                                                <span class="text-gray-500 sm:text-sm">Rp.</span>
                                             </div>
                                             <input type="number" name="variant_prices[]" value="{{ $variant->price }}" 
                                                 class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -188,7 +188,7 @@
                                             placeholder="Enter package name">
                                         <div class="relative shadow-sm rounded-md w-1/3">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-gray-500 sm:text-sm">$</span>
+                                                <span class="text-gray-500 sm:text-sm">Rp.</span>
                                             </div>
                                             <input type="number" name="package_prices[]" value="{{ $package->price }}" 
                                                 class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -266,7 +266,7 @@
                     <input type="text" name="variants[]" class="bg-transparent border-none focus:ring-0 w-full text-gray-700" placeholder="Enter variant name">
                     <div class="relative shadow-sm rounded-md w-1/3">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-gray-500 sm:text-sm">$</span>
+                            <span class="text-gray-500 sm:text-sm">R.</span>
                         </div>
                         <input type="number" name="variant_prices[]" class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Price" step="0.01" min="0">
                     </div>
@@ -291,7 +291,7 @@
                     <input type="text" name="packages[]" class="bg-transparent border-none focus:ring-0 w-full text-gray-700" placeholder="Enter package name">
                     <div class="relative shadow-sm rounded-md w-1/3">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-gray-500 sm:text-sm">$</span>
+                            <span class="text-gray-500 sm:text-sm">Rp.</span>
                         </div>
                         <input type="number" name="package_prices[]" class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Price" step="0.01" min="0">
                     </div>
