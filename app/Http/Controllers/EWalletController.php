@@ -7,7 +7,7 @@ use App\Models\Wallet;
 use App\Models\WalletTransfer;
 use App\Models\User;
 use App\Models\Pin;
-
+use App\Models\TopUp;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -292,4 +292,78 @@ class EWalletController extends Controller
         }
     }
 
+    public function showTopUp()
+    {
+        $presetAmounts = [
+            5000,
+            15000,
+            50000,
+            100000
+        ];
+        
+        return view('payment.top-up', compact('presetAmounts'));
+    }
+
+    public function processTopUp(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:5000',
+            'payment_method' => 'required|in:indomaret,alfamart,bank,ludwigmart'
+        ]);
+
+        $code = 'LWPBL' . strtoupper(uniqid());
+        
+        $topUp = DB::transaction(function () use ($request, $code) {
+            return TopUp::create([
+                'user_id' => auth()->id(),
+                'amount' => $request->amount,
+                'payment_method' => $request->payment_method,
+                'payment_code' => $code,
+                'status' => 'pending'
+            ]);
+        });
+
+        return redirect()->route('ewallet.top-up.instructions', $topUp);
+    }
+
+    public function showInstructions(TopUp $topUp)
+    {
+        if ($topUp->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $instructions = $this->getPaymentInstructions($topUp->payment_method);
+        return view('payment.top-up-instructions', compact('topUp', 'instructions'));
+    }
+
+    private function getPaymentInstructions($method)
+    {
+        $instructions = [
+            'indomaret' => [
+                'Kunjungi Indomaret terdekat',
+                'Beritahu kasir ingin melakukan pembayaran LudwigPay',
+                'Tunjukkan kode pembayaran kepada kasir',
+                'Lakukan pembayaran sesuai nominal'
+            ],
+            'alfamart' => [
+                'Kunjungi Alfamart terdekat',
+                'Beritahu kasir ingin melakukan pembayaran LudwigPay',
+                'Tunjukkan kode pembayaran kepada kasir',
+                'Lakukan pembayaran sesuai nominal'
+            ],
+            'bank' => [
+                'Transfer ke rekening bank yang tertera',
+                'Gunakan kode unik sebagai referensi transfer',
+                'Pastikan jumlah transfer sesuai dengan nominal'
+            ],
+            'ludwigmart' => [
+                'Kunjungi LudwigMart terdekat',
+                'Beritahu kasir ingin melakukan pembayaran LudwigPay',
+                'Tunjukkan kode pembayaran kepada kasir',
+                'Lakukan pembayaran sesuai nominal'
+            ]
+        ];
+
+        return $instructions[$method] ?? [];
+    }
 }

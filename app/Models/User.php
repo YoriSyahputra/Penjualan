@@ -105,6 +105,11 @@ class User extends Authenticatable
         return $this->hasOne(DriverWallet::class, 'driver_id');
     }
 
+    public function deliveryHistories()
+    {
+        return $this->hasMany(DeliveryHistory::class, 'driver_id');
+    }
+
     public function cancellation()
     {
         return $this->hasOne(OrderCancellation::class);

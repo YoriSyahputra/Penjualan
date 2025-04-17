@@ -26,6 +26,11 @@ class Store extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+
     public function sellerWallet()
     {
         return $this->hasOne(SellerWallet::class);

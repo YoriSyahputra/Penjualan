@@ -151,6 +151,11 @@ Route::post('/transfer', [EWalletController::class, 'transfer'])->name('ewallet.
         Route::put('/', [StoreController::class, 'update'])->name('update');
         Route::get('/settings', [StoreController::class, 'settings'])->name('settings');
     });
+
+    // Top Up Routes
+    Route::get('/top-up', [EWalletController::class, 'showTopUp'])->name('ewallet.top-up');
+    Route::post('/top-up', [EWalletController::class, 'processTopUp'])->name('ewallet.top-up.process');
+    Route::get('/top-up/{topUp}/instructions', [EWalletController::class, 'showInstructions'])->name('ewallet.top-up.instructions');
 });
 
 /*
@@ -208,6 +213,15 @@ Route::prefix('super-admin')
         Route::get('/dashboard', [SuperAdminController::class, 'index'])->name('dashboard');
         Route::post('/approve/{user}', [SuperAdminController::class, 'approveAdmin'])->name('approve');
         Route::post('/reject/{user}', [SuperAdminController::class, 'rejectAdmin'])->name('reject');
+        Route::get('/top-up-requests', [SuperAdminController::class, 'topUpRequests'])->name('top-up-requests');
+        Route::post('/top-up/{topUp}/confirm', [SuperAdminController::class, 'confirmTopUp'])->name('top-up.confirm');
+        Route::get('/manual-top-up', [SuperAdminController::class, 'manualTopUp'])->name('manual-top-up');
+        Route::get('/search-payment-code', [SuperAdminController::class, 'searchPaymentCode'])->name('search-payment-code');
+        Route::post('/manual-top-up/confirm', [SuperAdminController::class, 'confirmManualTopUp'])->name('manual-top-up.confirm');
+        Route::get('/refund-history', [SuperAdminController::class, 'refundHistory'])->name('refund-history');
+        Route::get('/order-history', [SuperAdminController::class, 'orderHistory'])->name('order-history');
+        Route::get('/driver-history', [SuperAdminController::class, 'driverHistory'])->name('driver-history');
+        Route::get('/seller-history', [SuperAdminController::class, 'sellerHistory'])->name('seller-history');
     });
 
 

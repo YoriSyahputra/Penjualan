@@ -39,7 +39,7 @@
                     <p class="text-sm text-gray-600">Transfer uang pada sesama Pengguna LudWig </p>
                 </a>
 
-                <div  class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer transition-colors">
+                <a href="{{ route('ewallet.top-up')}}" class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer transition-colors">
                     <div class="flex items-center mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -48,7 +48,7 @@
                     </div>
                     <p class="text-sm text-gray-600">Your Balance:</p>
                     <p class="text-lg font-bold text-indigo-600">Rp {{ number_format(auth()->user()->wallet->balance ?? 0, decimals: 0, decimal_separator: ',', thousands_separator: '.') }}</p>
-                </div>
+                </a>
 
                 <a href="{{ route('payment.search') }}" class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer transition-colors">
                     <div class="flex items-center mb-2">

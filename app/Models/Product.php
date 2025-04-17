@@ -56,11 +56,12 @@ class Product extends Model
     {
         return $this->hasMany(Cart::class);
     }
-    // In App\Models\Product
+
     public function store()
     {
-    return $this->belongsTo(Store::class, 'user_id', 'user_id');
+        return $this->belongsTo(Store::class);
     }
+
     public function comments()
     {
         return $this->hasMany(Comment::class);

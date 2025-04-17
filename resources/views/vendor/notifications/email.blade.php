@@ -8,7 +8,6 @@
 @else
 # @lang('Hello!')
 @endif
-@endif
 
 {{-- Intro Lines --}}
 @foreach ($introLines as $line)
