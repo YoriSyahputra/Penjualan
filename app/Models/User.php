@@ -53,6 +53,17 @@ class User extends Authenticatable
         'is_admin' => 'boolean',
         'is_super_admin' => 'boolean',
     ];
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function orderItems()
+    {
+        return $this->hasManyThrough(OrderItem::class, Order::class);
+    }
+
     public function wallet()
     {
         return $this->hasOne(Wallet::class);

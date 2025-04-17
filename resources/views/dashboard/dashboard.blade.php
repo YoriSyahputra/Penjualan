@@ -304,9 +304,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Monthly Sales Chart - Bar chart sesuai bulan yang dipilih
+    // Monthly Sales Chart - Bar chart sesuai bulan dan tahun yang dipilih
     const monthlyCtx = document.getElementById('monthlySalesChart').getContext('2d');
-    const monthlySalesChart = new Chart(monthlyCtx, {
+    let monthlySalesChart = new Chart(monthlyCtx, {
         type: 'bar',
         data: {
             labels: monthlyLabels,
@@ -382,12 +382,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event listener for month selector
     document.getElementById('monthSelector').addEventListener('change', function() {
-        // Redirect dengan parameter baru including year
-        window.location.href = '{{ route("dashboard.index") }}?month=' + this.value + '&time_range={{ $selectedTimeRange }}&year={{ $selectedYear ?? date("Y") }}';
+        const selectedYear = document.getElementById('yearSelector').value;
+        window.location.href = `{{ route("dashboard.index") }}?month=${this.value}&year=${selectedYear}&time_range={{ $selectedTimeRange }}`;
     });
     document.getElementById('yearSelector').addEventListener('change', function() {
-        // Redirect dengan parameter baru termasuk year
-        window.location.href = '{{ route("dashboard.index") }}?month={{ $selectedMonth }}&time_range={{ $selectedTimeRange }}&year=' + this.value;
+        const selectedMonth = document.getElementById('monthSelector').value;
+        window.location.href = `{{ route("dashboard.index") }}?month=${selectedMonth}&year=${this.value}&time_range={{ $selectedTimeRange }}`;
     });
 });
 </script>

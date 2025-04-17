@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductPaymentController;
 use App\Http\Controllers\LudwigPaymentController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\EWalletController;
@@ -13,7 +14,6 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShopController;
-
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -150,6 +150,9 @@ Route::post('/transfer', [EWalletController::class, 'transfer'])->name('ewallet.
         Route::get('/edit', [StoreController::class, 'edit'])->name('edit');
         Route::put('/', [StoreController::class, 'update'])->name('update');
         Route::get('/settings', [StoreController::class, 'settings'])->name('settings');
+        Route::get('/profile', [StoreController::class, 'edit'])->name('profile');
+        Route::put('/profile', [StoreController::class, 'update'])->name('profile.update');
+        Route::patch('/profile/logo', [StoreController::class, 'updateLogo'])->name('profile.logo');
     });
 
     // Top Up Routes
@@ -199,6 +202,9 @@ Route::prefix('dashboard')
         ->name('orders.bulk-resi-sticker');
         Route::get('/export-daily-sales', [DashboardController::class, 'exportDailySales'])->name('export.daily_sales');
         Route::get('/export-monthly-sales', [DashboardController::class, 'exportMonthlySales'])->name('export.monthly_sales');
+        Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
+
+        Route::get('/profile', [StoreController::class, 'profile'])->name('profile');
 });
 /*
 |--------------------------------------------------------------------------
