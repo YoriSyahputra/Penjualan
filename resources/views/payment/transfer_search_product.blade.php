@@ -82,10 +82,10 @@
 </div>
 
 <!-- Alert Component -->
-<div id="alert" class="fixed top-4 right-4 max-w-sm w-full hidden">
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+<div id="alert" class="fixed bottom-4 right-4 max-w-sm w-full hidden z-50">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg relative" role="alert">
         <strong class="font-bold" id="alertTitle">Error!</strong>
-        <span class="block sm:inline" id="alertMessage"></span>
+        <span class="block sm:inline ml-1" id="alertMessage"></span>
     </div>
 </div>
 
@@ -347,13 +347,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 showAlert('success', 'Berhasil', 'Pembayaran berhasil diproses.');
                 setTimeout(() => window.location.href = data.redirect || '/dashboard', 1500);
             } else {
-                throw new Error(data.message || 'Pembayaran gagal');
+                // Specific error handling for unauthorized access
+                if (data.message && data.message.includes('Akses tidak sah')) {
+                    showAlert('error', 'Akses Ditolak', 'Maaf, Anda tidak memiliki akses untuk membayar pesanan ini.');
+                } else {
+                    throw new Error(data.message || 'Pembayaran gagal');
+                }
+                productPinModal.classList.add('hidden');
             }
         })
         .catch(error => {
             console.error('Payment error:', error);
             showAlert('error', 'Error', error.message);
             productPin.clear();
+            productPinModal.classList.add('hidden');
         });
     }
 

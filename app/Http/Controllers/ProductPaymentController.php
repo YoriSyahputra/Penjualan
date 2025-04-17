@@ -525,6 +525,9 @@ class ProductPaymentController extends Controller
 
             DB::commit();
 
+            // Tambahkan session flag untuk memunculkan notifikasi wallet
+            session(['show_wallet_notification' => true]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Pembayaran berhasil',

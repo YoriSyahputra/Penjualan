@@ -24,20 +24,24 @@
 
 <div class="min-h-screen bg-gray-50 pt-16 py-8">
     <!-- Wallet Balance Notification -->
-    @if($showNotification)
-    <div id="walletNotification" class="fixed top-20 right-4 bg-white rounded-lg p-4 shadow-lg border border-green-100 slide-enter" style="z-index: 50;">
-        <div class="flex items-center">
-            <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm8 0a1 1 0 011-1h.01a1 1 0 110 2H15a1 1 0 01-1-1z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            <div class="ml-3">
-                <p class="text-sm font-medium text-gray-600">Wallet Balance</p>
-                <p class="text-lg font-bold text-green-600">Rp {{ number_format($walletBalance) }}</p>
+    @if(session('show_wallet_notification'))
+        @php
+        // Hapus session setelah digunakan agar notifikasi tidak muncul lagi
+        session()->forget('show_wallet_notification');
+        @endphp
+        <div id="walletNotification" class="fixed top-20 right-4 bg-white rounded-lg p-4 shadow-lg border border-green-100 slide-enter" style="z-index: 50;">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm8 0a1 1 0 011-1h.01a1 1 0 110 2H15a1 1 0 01-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-600">Wallet Balance</p>
+                    <p class="text-lg font-bold text-green-600">Rp {{ number_format($walletBalance) }}</p>
+                </div>
             </div>
         </div>
-    </div>
     @endif
 
     <div class="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen py-12">
