@@ -494,5 +494,101 @@ function showSuccessMessage(message, type = 'success') {
         setTimeout(() => messageDiv.remove(), 500);
     }, 3000);
 }
+
+// Update Profile Form Handler
+document.querySelector('form[action="{{ route("profile.update") }}"]').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: new FormData(this),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccessMessage('Profil berhasil diperbarui!');
+            closeEditProfileModal();
+            
+            // Update displayed profile info
+            document.querySelector('.text-2xl.md\\:text-3xl.font-bold').textContent = result.user.name;
+            // Update other profile fields as needed
+        } else {
+            showSuccessMessage(result.message || 'Terjadi kesalahan!', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showSuccessMessage('Terjadi kesalahan!', 'error');
+    }
+});
+
+// Add Address Form Handler
+document.getElementById('addAddressForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: new FormData(this),
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Terjadi kesalahan validasi');
+        }
+
+        if (result.success) {
+            const addressList = document.getElementById('addressList');
+            addressList.innerHTML = result.html;
+            
+            closeAddressModal();
+            showSuccessMessage('Alamat berhasil ditambahkan!');
+            this.reset();
+        } else {
+            showSuccessMessage(result.message || 'Terjadi kesalahan!', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showSuccessMessage(error.message || 'Terjadi kesalahan, silakan coba lagi.', 'error');
+    }
+});
+
+// Delete Address Handler
+async function deleteAddress(url) {
+    if (!confirm('Apakah Anda yakin ingin menghapus alamat ini?')) return;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('addressList').innerHTML = result.html;
+            showSuccessMessage('Alamat berhasil dihapus!');
+        } else {
+            showSuccessMessage(result.message || 'Terjadi kesalahan!', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showSuccessMessage('Terjadi kesalahan!', 'error');
+    }
+}
 </script>
 @endsection

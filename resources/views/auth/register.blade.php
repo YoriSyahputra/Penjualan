@@ -64,7 +64,7 @@
             @endif
 
             <!-- Registration Form -->
-            <form class="mt-8 space-y-4 sm:space-y-6" action="{{ route('register') }}" method="POST">                
+            <form class="mt-8 space-y-4 sm:space-y-6" action="{{ route('register') }}" method="POST" enctype="multipart/form-data">                
                 @csrf
                 <div class="rounded-md shadow-sm space-y-4">
                     <!-- First Name -->
@@ -146,90 +146,118 @@
                         </label>
                     </div>
 
+                    <!-- Profile Photo -->
+                    <div>
+                        <label for="photo" class="block text-sm font-medium text-gray-700 mb-2">Profile Photo (Required)</label>
+                        <div class="mt-1 flex items-center">
+                            <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-100">
+                                <img id="preview" src="" alt="" class="w-full h-full object-cover hidden">
+                                <div id="placeholder" class="w-full h-full flex items-center justify-center">
+                                    <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <input type="file" id="photo" name="photo" accept="image/*" class="hidden" required onchange="previewImage(this)">
+                                <button type="button" onclick="document.getElementById('photo').click()" 
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Upload Photo
+                                </button>
+                                <p class="mt-2 text-xs text-gray-500">JPG, PNG, GIF up to 1MB</p>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Address Steps -->
+                    <div x-data="{ 
+                        step: 1,
+                        label: '',
+                        alamat_lengkap: '',
+                        provinsi: '',
+                        kota: '',
+                        kecamatan: '',
+                        kode_pos: ''
+                    }">
+                        <div class="text-gray-500 px-4 mb-2">
+                            Alamat <span x-text="step"></span>/6
+                        </div>
+                        
+                        <!-- Label -->
+                        <div x-show="step === 1" class="flex items-center space-x-2">
+                            <div class="flex-grow">
+                                <input x-model="label" type="text" name="label" placeholder="Masukan Label Sesukamu" value="{{ old('label') }}" class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200">
+                            </div>
+                            <button type="button" @click="step = 2" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                Next
+                            </button>
+                        </div>
 
-                    <div class="text-gray-500 px-4">
-                        Alamat
-                    </div>
-                    
-                    <div>
-                        <label for="label" class="sr-only">Label</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
+                        <!-- Alamat Lengkap -->
+                        <div x-show="step === 2" class="flex items-center space-x-2">
+                            <div class="flex-grow">
+                                <input x-model="alamat_lengkap" type="text" name="alamat_lengkap" placeholder="Alamat Lengkap" value="{{ old('alamat_lengkap') }}" class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200">
                             </div>
-                            <input id="label" name="label" type="text" value="{{ old('label  ') }}" required
-                                class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200"
-                                placeholder="Masukan Label Sesukamu">
+                            <button type="button" @click="step = 3" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                Next
+                            </button>
+                        </div>
+
+                        <!-- Provinsi -->
+                        <div x-show="step === 3" class="flex items-center space-x-2">
+                            <div class="flex-grow">
+                                <input x-model="provinsi" type="text" name="provinsi" placeholder="Provinsi" value="{{ old('provinsi') }}" class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200">
+                            </div>
+                            <button type="button" @click="step = 4" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                Next
+                            </button>
+                        </div>
+
+                        <!-- Kota -->
+                        <div x-show="step === 4" class="flex items-center space-x-2">
+                            <div class="flex-grow">
+                                <input x-model="kota" type="text" name="kota" placeholder="Kota" value="{{ old('kota') }}"class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200">
+                            </div>
+                            <button type="button" @click="step = 5" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                Next
+                            </button>
+                        </div>
+
+                        <!-- Kecamatan -->
+                        <div x-show="step === 5" class="flex items-center space-x-2">
+                            <div class="flex-grow">
+                                <input x-model="kecamatan" type="text" name="kecamatan" placeholder="Kecamatan" value="{{ old('kecamatan') }}"class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200">
+                            </div>
+                            <button type="button" @click="step = 6" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                Next
+                            </button>
+                        </div>
+
+                        <!-- Kode Pos -->
+                        <div x-show="step === 6" class="flex items-center space-x-2">
+                            <div class="flex-grow">
+                                <input x-model="kode_pos" type="number" name="kode_pos" placeholder="Kode Pos" value="{{ old('kode_pos') }}"class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200">
+                            </div>
+                            <button type="button" @click="step = 1" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                                Done
+                            </button>
                         </div>
                     </div>
-                    <div>
-                        <label for="alamat_lengkap" class="sr-only">Alamat Lengkap</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                            </div>
-                            <input id="alamat_lengkap" name="alamat_lengkap" type="text" value="{{ old('alamat_lengkap  ') }}" required
-                                class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200"
-                                placeholder="Address">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="provinsi" class="sr-only">Provinsi</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                            </div>
-                            <input id="provinsi" name="provinsi" type="text" value="{{ old('provinsi  ') }}" required
-                                class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200"
-                                placeholder="Provinsi">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="kota" class="sr-only">Kota</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                            </div>
-                            <input id="kota" name="kota" type="text" value="{{ old('kota  ') }}" required
-                                class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200"
-                                placeholder="Kota">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="kecamatan" class="sr-only">Kecamatan</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                            </div>
-                            <input id="kecamatan" name="kecamatan" type="text" value="{{ old('kecamatan  ') }}" required
-                                class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200"
-                                placeholder="Kecamatan">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="kode_pos" class="sr-only">Kode Pos</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                            </div>
-                            <input id="kode_pos" name="kode_pos" type="number" value="{{ old('kode_pos') }}" required
-                                class="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 text-sm sm:text-base transition-all duration-200"
-                                placeholder="Kode Pos">
-                        </div>
-                    </div>
+
+                    <!-- Add this script at the end of your body tag -->
+                    <script>
+                        function previewImage(input) {
+                            if (input.files && input.files[0]) {
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    document.getElementById('preview').src = e.target.result;
+                                    document.getElementById('preview').classList.remove('hidden');
+                                    document.getElementById('placeholder').classList.add('hidden');
+                                }
+                                reader.readAsDataURL(input.files[0]);
+                            }
+                        }
+                    </script>
 
                 </div>
 

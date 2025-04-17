@@ -16,51 +16,58 @@ class ProfileController extends Controller
     }
 
     public function update(Request $request)
-{
-    $validated = $request->validate([
-        'name'          => ['required', 'string', 'max:255'],
-        'email'         => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . Auth::id()],
-        'phone_number'  => ['nullable', 'string', 'max:20'],
-        'alamat_lengkap'=> ['required', 'string'],
-        'provinsi'      => ['required', 'string'],
-        'kota'          => ['required', 'string'],
-        'kecamatan'     => ['required', 'string'],
-        'kode_pos'      => ['required', 'string'],
-    ]);
+    {
+        $validated = $request->validate([
+            'name'          => ['required', 'string', 'max:255'],
+            'email'         => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . Auth::id()],
+            'phone_number'  => ['nullable', 'string', 'max:20'],
+            'alamat_lengkap'=> ['required', 'string'],
+            'provinsi'      => ['required', 'string'],
+            'kota'          => ['required', 'string'],
+            'kecamatan'     => ['required', 'string'],
+            'kode_pos'      => ['required', 'string'],
+        ]);
 
-    $user = Auth::user();
+        $user = Auth::user();
 
-    // Update data user (nama, email, phone,)
-    $user->update([
-        'name'         => $validated['name'],
-        'email'        => $validated['email'],
-        'phone_number' => $validated['phone_number'],
-    ]);
+        // Update data user (nama, email, phone,)
+        $user->update([
+            'name'         => $validated['name'],
+            'email'        => $validated['email'],
+            'phone_number' => $validated['phone_number'],
+        ]);
 
-    // Update atau buat alamat utama di tabel addresses
-    $addressData = [
-        'alamat_lengkap' => $validated['alamat_lengkap'],
-        'provinsi'       => $validated['provinsi'],
-        'kota'           => $validated['kota'],
-        'kecamatan'      => $validated['kecamatan'],
-        'kode_pos'       => $validated['kode_pos'],
-        'is_primary'     => true,
-    ];
+        // Update atau buat alamat utama di tabel addresses
+        $addressData = [
+            'alamat_lengkap' => $validated['alamat_lengkap'],
+            'provinsi'       => $validated['provinsi'],
+            'kota'           => $validated['kota'],
+            'kecamatan'      => $validated['kecamatan'],
+            'kode_pos'       => $validated['kode_pos'],
+            'is_primary'     => true,
+        ];
 
-    // Cek apakah sudah ada alamat utama
-    $primaryAddress = $user->addresses()->where('is_primary', true)->first();
+        // Cek apakah sudah ada alamat utama
+        $primaryAddress = $user->addresses()->where('is_primary', true)->first();
 
-    if ($primaryAddress) {
-        // Update alamat utama
-        $primaryAddress->update($addressData);
-    } else {
-        // Jika belum ada, buat alamat baru sebagai alamat utama
-        $user->addresses()->create($addressData);
+        if ($primaryAddress) {
+            // Update alamat utama
+            $primaryAddress->update($addressData);
+        } else {
+            // Jika belum ada, buat alamat baru sebagai alamat utama
+            $user->addresses()->create($addressData);
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'user' => $user->fresh(),
+                'message' => 'Profile updated successfully!'
+            ]);
+        }
+
+        return back()->with('success', 'Profile updated successfully!');
     }
-
-    return back()->with('success', 'Profile updated successfully!');
-}
-
 
     public function updatePhoto(Request $request)
     {
@@ -86,26 +93,27 @@ class ProfileController extends Controller
             'provinsi' => 'required|string',
             'kota' => 'required|string',
             'kecamatan' => 'required|string',
-            'kode_pos' => 'required|digits:5',
+            'kode_pos' => 'required|string|size:5',
         ]);
-    
+
         if (Auth::user()->addresses()->count() >= 5) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda hanya dapat menambahkan maksimal 5 alamat.'
             ]);
         }
-    
+
         try {
-            $address = new Address($validated);
-            $address->user_id = Auth::id();
-            
-            if (Auth::user()->addresses()->count() === 0) {
-                $address->is_primary = true;
-            }
-            
-            $address->save();
-    
+            $address = Auth::user()->addresses()->create([
+                'label' => $validated['label'],
+                'alamat_lengkap' => $validated['alamat_lengkap'],
+                'provinsi' => $validated['provinsi'],
+                'kota' => $validated['kota'], 
+                'kecamatan' => $validated['kecamatan'],
+                'kode_pos' => $validated['kode_pos'],
+                'is_primary' => Auth::user()->addresses()->count() === 0 // Make first address primary
+            ]);
+
             if ($request->ajax()) {
                 $addresses = Auth::user()->addresses()->get();
                 $html = view('partials.address-list', compact('addresses'))->render();
@@ -116,14 +124,14 @@ class ProfileController extends Controller
                     'html' => $html
                 ]);
             }
-    
+
             return back()->with('success', 'Alamat berhasil ditambahkan!');
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Terjadi kesalahan saat menyimpan alamat.'
-                ]);
+                ], 422);
             }
             return back()->with('error', 'Terjadi kesalahan saat menyimpan alamat.');
         }
@@ -146,7 +154,10 @@ class ProfileController extends Controller
     {
         // Ensure the address belongs to the user
         if ($address->user_id !== Auth::id()) {
-            abort(403);
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
         }
 
         $was_primary = $address->is_primary;
@@ -158,6 +169,17 @@ class ProfileController extends Controller
             if ($new_primary) {
                 $new_primary->update(['is_primary' => true]);
             }
+        }
+
+        if (request()->ajax()) {
+            $addresses = Auth::user()->addresses()->get();
+            $html = view('partials.address-list', compact('addresses'))->render();
+            
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'message' => 'Address deleted successfully!'
+            ]);
         }
 
         return back()->with('success', 'Address deleted successfully!');

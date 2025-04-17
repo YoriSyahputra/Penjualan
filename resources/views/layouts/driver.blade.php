@@ -11,14 +11,32 @@
 </head>
 <body class="bg-gray-100">
     <div class="min-h-screen bg-gray-100">
-        <header class="bg-white shadow">
-            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                <a href="{{route ('driver.dashboard')}}" class="text-3xl font-bold text-gray-900">Driver Dashboard</a>
+        <nav class="bg-white border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <a href="{{route('driver.dashboard')}}" class="text-xl font-bold text-gray-900">Driver Dashboard</a>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <a href="{{ route('driver.customers') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Customers</a>
+                        <a href="{{ route('driver.profile') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Profile</a>
+                        <a href="{{ route('home') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Back to Shop</a>
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                            @csrf
+                            <button type="submit" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Logout</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </header>
-        <main class="min-h-screen pt-16">
-        @yield('content')
-    </main>
+        </nav>
+
+        <main class="py-10">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                @yield('content')
+            </div>
+        </main>
     </div>
 </body>
 </html>

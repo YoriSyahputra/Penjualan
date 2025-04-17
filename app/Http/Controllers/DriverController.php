@@ -343,15 +343,16 @@ class DriverController extends Controller
     
     public function deliveryHistoryDetail($id)
     {
-        $history = DeliveryHistory::with('order.customer')->findOrFail($id);
-        
+        $history = DeliveryHistory::with(['order', 'order.user', 'order.user.addresses'])
+            ->findOrFail($id);
+
         // Check if the logged-in driver is the owner of this delivery history
         if ($history->driver_id !== Auth::id()) {
             return redirect()->route('driver.delivery.history')
                 ->with('error', 'Anda tidak memiliki akses ke data pengiriman ini');
         }
-        
-        return view('driver.delivery_history_detail', compact('history'));
+
+        return view('driver.history.index', compact('history'));
     }
     
     public function exportDeliveryHistory(Request $request)
@@ -397,5 +398,50 @@ class DriverController extends Controller
             $pdf = PDF::loadView('exports.delivery_history_pdf', compact('histories'));
             return $pdf->download($fileName);
         }
+    }
+
+    public function profile()
+    {
+        $driver = Auth::user();
+        return view('driver.profile', compact('driver'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:20',
+            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
+
+        $driver = Auth::user();
+
+        // Handle profile photo upload
+        if ($request->hasFile('profile_photo')) {
+            $driver->updateProfilePhoto($request->file('profile_photo'));
+        }
+
+        // Update other profile information
+        $driver->update([
+            'name' => $request->name,
+            'phone_number' => $request->phone_number,
+        ]);
+
+        return redirect()
+            ->route('driver.profile')
+            ->with('success', 'Profile updated successfully');
+    }
+
+    public function customers(Request $request)
+    {
+        $deliveries = DeliveryHistory::with(['order', 'order.user'])
+            ->where('driver_id', Auth::id())
+            ->whereHas('order', function($query) {
+                $query->whereIn('status_order', ['on_delivery', 'completed']);
+            })
+            ->latest()
+            ->paginate(10);
+
+        return view('driver.delivery_costumers', compact('deliveries'));
     }
 }

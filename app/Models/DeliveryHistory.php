@@ -16,7 +16,7 @@ class DeliveryHistory extends Model
         'notes',
         'photo_proof',
         'delivered_at',
-        'status_history' // Nah, ini kolom baru yang kita tambahin
+        'status_history'
     ];
 
     // Cast kolom JSON ke array biar enak dipakainya

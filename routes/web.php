@@ -234,6 +234,14 @@ Route::middleware(['auth', 'driver'])
     Route::get('/delivery-history/{id}', [DriverController::class, 'deliveryHistoryDetail'])->name('delivery.history.detail');
     Route::get('/export-delivery-history', [DriverController::class, 'exportDeliveryHistory'])->name('export.delivery.history');
     
+    Route::get('/delivery-history', [DriverController::class, 'deliveryHistory'])
+        ->name('delivery.history');
+    Route::get('/delivery-history/{id}', [DriverController::class, 'deliveryHistoryDetail'])
+        ->name('delivery.history.detail');
+    Route::get('/export-delivery-history', [DriverController::class, 'exportDeliveryHistory'])
+        ->name('export.delivery.history');
+
     Route::get('/profile', [DriverController::class, 'profile'])->name('profile');
     Route::post('/profile/update', [DriverController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/customers', [DriverController::class, 'customers'])->name('customers');
 });

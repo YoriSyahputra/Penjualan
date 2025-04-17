@@ -125,21 +125,8 @@
                 </div>
             </a>
 
-            <!-- Dashboard Button -->
-            <a href="#" class="bg-white overflow-hidden shadow rounded-lg hover:bg-indigo-50 transition-colors duration-300">
-                <div class="p-6 text-center">
-                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-5">
-                        <svg class="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-medium text-gray-900">Dashboard</h3>
-                    <p class="mt-2 text-sm text-gray-500">Lihat statistik dan performa</p>
-                </div>
-            </a>
-
             <!-- Customers Button -->
-            <a href="#" class="bg-white overflow-hidden shadow rounded-lg hover:bg-indigo-50 transition-colors duration-300">
+            <a href="{{ route('driver.customers') }}" class="bg-white overflow-hidden shadow rounded-lg hover:bg-indigo-50 transition-colors duration-300">
                 <div class="p-6 text-center">
                     <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-purple-100 mb-5">
                         <svg class="h-8 w-8 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

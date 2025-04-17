@@ -904,6 +904,16 @@ public function orderConfirmation(Order $order)
         
         // Prepare full address for display
         $fullAddress = $this->formatFullAddress($order);
+        
+        // Get wallet balance for notification
+        $walletBalance = auth()->user()->wallet->balance ?? 0;
+        
+        // Check if this is a redirect from payment
+        $showNotification = session('payment_completed', false);
+        
+        // Clear the session flag
+        session()->forget('payment_completed');
+        
         return view('ecom.order_receipt', [
             'order' => $order,
             'items' => $items,
@@ -921,6 +931,8 @@ public function orderConfirmation(Order $order)
             'relatedOrders' => $relatedOrdersData,
             'totalAmount' => $totalAmount,
             'cancellationReason' => $cancellationReason,
+            'walletBalance' => $walletBalance,  // Add this
+            'showNotification' => $showNotification,  // Add this
         ]);
     }
     else {

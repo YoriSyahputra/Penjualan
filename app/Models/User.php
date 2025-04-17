@@ -29,6 +29,7 @@ class User extends Authenticatable
         'admin_status',
         'phone_number',
         'profile_photo',
+        'profile_photo_path' // Add this line
     ];
 
     /**

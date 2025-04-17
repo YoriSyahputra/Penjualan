@@ -24,7 +24,7 @@
 
 <div class="min-h-screen bg-gray-50 pt-16 py-8 sm:py-12">
     <!-- Wallet Balance Notification -->
-    <div id="walletNotification" class="fixed top-20 right-4 bg-white rounded-lg p-4 shadow-lg border border-green-100 slide-enter" style="z-index: 50;">
+    <div id="walletNotification" class="fixed top-20 right-4 bg-white rounded-lg p-4 shadow-lg  border-green-100 slide-enter" style="z-index: 50;">
         <div class="flex items-center">
             <div class="flex-shrink-0">
                 <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
