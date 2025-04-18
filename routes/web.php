@@ -21,6 +21,18 @@ use Illuminate\Support\Facades\Route;
 | Public Routes
 |--------------------------------------------------------------------------
 */
+Route::get('/test-email', function() {
+    try {
+        Mail::send('emails.test', ['content' => 'Test email content'], function($message) {
+            $message->from('yorisyahputra24@gmail.com', 'LudWig')
+                    ->to('yorisyahputra011@gmail.com')
+                    ->subject('Test Email from Laravel');
+        });
+        return 'Email sent successfully!';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
 Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
