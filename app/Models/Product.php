@@ -22,6 +22,9 @@ class Product extends Model
         'sold_count',
         'is_active'
     ];
+
+    protected $with = ['productImages'];
+
     public function variants()
     {
         return $this->hasMany(ProductVariant::class);

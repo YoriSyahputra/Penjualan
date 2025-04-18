@@ -56,6 +56,14 @@ LudWig adalah aplikasi ECommerce berbasis web yang dibangun menggunakan **Larave
 - **Seller History**  
   Mengawasi data seller termasuk jumlah produk dan saldo wallet.
 
+### Untuk Driver
+- **Pengiriman Paket**  
+  Melakukan pengiriman paket berdasarkan nomor resi yang tersedia dalam sistem.
+- **History Pengiriman**  
+  Melihat riwayat pengiriman paket beserta bukti foto pengiriman yang telah dilakukan.
+- **Detail Pelanggan**  
+  Akses informasi pelanggan seperti order number dan nomor telepon, dilengkapi dengan tombol WhatsApp untuk komunikasi langsung dengan pelanggan.
+
 ## Teknologi dan Package
 
 ### Core Packages

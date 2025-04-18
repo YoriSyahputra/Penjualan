@@ -172,8 +172,14 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="h-10 w-10 flex-shrink-0">
-                                    <img src="{{ Storage::url($product->productImages->first()->path_gambar) }}"
-                                        alt="{{ $product->name }}">
+                                <div class="h-10 w-10 flex-shrink-0">
+                                    @if($product->productImages && $product->productImages->isNotEmpty())
+                                        <img src="{{ Storage::url($product->productImages->first()->path_gambar) }}"
+                                            alt="{{ $product->name }}">
+                                    @else
+                                        <img src="/api/placeholder/100/100" alt="{{ $product->name }}">
+                                    @endif
+                                </div>
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">{{ $product->name }}</div>

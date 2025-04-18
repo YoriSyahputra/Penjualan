@@ -332,38 +332,69 @@ public function update(Request $request, Product $product)
                     ->withInput();
     }
 }
-   public function destroy(Product $product)
-   {
-       if ($product->user_id !== auth()->id()) {
-           abort(403);
-       }
+public function destroy(Product $product)
+{
+    if ($product->user_id !== auth()->id()) {
+        abort(403);
+    }
 
-       DB::beginTransaction();
+    DB::beginTransaction();
 
-       try {
-           foreach ($product->productImages as $image) {
-               $this->deleteProductImages($image->path_gambar);
-               $image->delete();
-           }
+    try {
+        // Hapus order_items yang terkait dengan product ini
+        DB::table('order_items')->where('product_id', $product->id)->delete();
+        
+        // Hapus order_items yang terkait dengan variants product ini
+        $variantIds = $product->variants()->pluck('id')->toArray();
+        if (!empty($variantIds)) {
+            DB::table('order_items')->whereIn('variant_id', $variantIds)->delete();
+        }
+        
+        // Hapus gambar produk
+        foreach ($product->productImages as $image) {
+            $this->deleteProductImages($image->path_gambar);
+            $image->delete();
+        }
 
-           $product->delete();
+        // Hapus variants, packages, dan comments
+        $product->variants()->delete();
+        $product->packages()->delete();
+        $product->comments()->delete();
 
-           DB::commit();
-           return redirect()->route('dashboard.list_sale')
-                          ->with('success', 'Product deleted successfully');
-       } catch (\Exception $e) {
-           DB::rollBack();
-           return back()->with('error', 'Error deleting product: ' . $e->getMessage());
-       }
-   }
+        // Terakhir hapus produknya
+        $product->delete();
 
-   private function deleteProductImages($path)
-   {
-       $filename = basename($path);
-       foreach (array_keys($this->imageSizes) as $type) {
-        Storage::disk('public')->delete("produk/{$type}/{$filename}");
-       }
-   }
+        DB::commit();
+        return redirect()->route('dashboard.list_sale')
+                      ->with('success', 'Product deleted successfully');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Product deletion error: ' . $e->getMessage());
+        return back()->with('error', 'Error deleting product: ' . $e->getMessage());
+    }
+}
+
+
+private function deleteProductImages($path)
+{
+    if (!$path) return;
+    
+    $filename = basename($path);
+    
+    // Hapus file dari semua ukuran
+    foreach (array_keys($this->imageSizes) as $type) {
+        $filePath = "produk/{$type}/{$filename}";
+        if (Storage::disk('public')->exists($filePath)) {
+            Storage::disk('public')->delete($filePath);
+        }
+    }
+    
+    // Hapus file original juga kalau ada
+    $originalPath = "produk/original/{$filename}";
+    if (Storage::disk('public')->exists($originalPath)) {
+        Storage::disk('public')->delete($originalPath);
+    }
+}
    public function deleteImage(ProductImage $image)
     {
         // Check if the associated product exists

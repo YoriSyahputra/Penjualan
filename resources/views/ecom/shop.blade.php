@@ -33,29 +33,29 @@
 <section class="py-12 bg-white">
     <div class="container mx-auto px-4">
         <!-- Product Grid -->
-        <div class="grid grid-cols-2 gap-3">
-    @foreach($products as $product)
-    <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
-        <a href="{{ route('product.show', ['id' => $product->id]) }}">
-            <!-- Product Image -->
-            <div class="relative overflow-hidden" style="height: 160px;"> 
-                @if($product->productImages->isNotEmpty())
-                    <img src="{{ asset('storage/' . $product->productImages->first()->path_gambar) }}"
-                         alt="{{ $product->name }}"
-                         class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
-                @else
-                    <img src="/api/placeholder/300/300" 
-                         alt="No image"
-                         class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
-                @endif
-                
-                <!-- Category Badge -->
-                <div class="absolute top-1 right-1">
-                    <span class="bg-black bg-opacity-50 text-white text-xs px-1.5 py-0.5 rounded text-[10px]">
-                        {{ $product->category->name }}
-                    </span>
-                </div>
-            </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            @foreach($products as $product)
+            <div class="bg-white rounded-lg shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <a href="{{ route('product.show', ['id' => $product->id]) }}">
+                    <!-- Product Image -->
+                    <div class="relative aspect-square overflow-hidden">
+                        @if($product->productImages->isNotEmpty())
+                            <img src="{{ asset('storage/' . $product->productImages->first()->path_gambar) }}"
+                                 alt="{{ $product->name }}"
+                                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
+                        @else
+                            <img src="/api/placeholder/300/300" 
+                                 alt="No image"
+                                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
+                        @endif
+                        
+                        <!-- Category Badge -->
+                        <div class="absolute top-2 right-2">
+                            <span class="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                {{ $product->category->name }}
+                            </span>
+                        </div>
+                    </div>
 
             <!-- Product Info -->
             <div class="p-2">
