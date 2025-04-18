@@ -39,6 +39,52 @@ LudWig adalah aplikasi ECommerce berbasis web yang dibangun menggunakan **Larave
   Dapatkan insight mendalam tentang performa penjualan melalui laporan terperinci.
 - **List Costumers Kontak**  
   Lihat daftar pelanggan beserta total barang yang telah dibeli oleh masing-masing pengguna. Admin juga dapat memulai percakapan langsung melalui tombol WhatsApp untuk komunikasi yang lebih cepat dan efisien.
+
+### Untuk Super Admin
+- **Admin Management**  
+  Mengelola persetujuan pendaftaran admin (seller) baru dengan sistem approval.
+- **Top Up Requests**  
+  Memantau dan mengelola daftar permintaan top up dari pengguna.
+- **Manual Top Up**  
+  Mengkonfirmasi top up saldo pengguna melalui sistem payment code.
+- **Refund History**  
+  Melihat dan mengelola riwayat refund dari semua order.
+- **Order History**  
+  Akses ke riwayat orders dari seluruh store dalam platform.
+- **Driver History**  
+  Memantau wallet driver dan total pengiriman yang telah dilakukan.
+- **Seller History**  
+  Mengawasi data seller termasuk jumlah produk dan saldo wallet.
+
+## Teknologi dan Package
+
+### Core Packages
+- **Laravel v10.48** - Framework PHP utama
+- **Laravel Breeze v1.29** - Scaffolding autentikasi minimal
+- **Laravel Sanctum v3.3** - API authentication system
+
+### Database & Storage
+- **Laravel Flysystem v3.29** - File storage abstraction
+- **Laravel Excel v3.1** - Export/import Excel files menggunakan PhpSpreadsheet
+- **PHPSpreadsheet v1.29** - Library untuk manipulasi file spreadsheet
+
+### UI & Frontend
+- **Intervention/Image v3.10** - Library manipulasi gambar
+- **DomPDF v3.1** - Konversi HTML ke PDF
+- **CSS-to-Inline-Styles v2.3** - Konversi CSS ke inline styles
+
+### Utilitas
+- **Faker v1.24** - Generator data palsu untuk testing
+- **Carbon v2.72** - Manipulasi tanggal dan waktu
+- **Guzzle v7.9** - HTTP client library
+- **Barcode v12.0** - Generator barcode dan QR code
+
+### Development & Testing
+- **PHPUnit v10.5** - Framework testing
+- **Laravel Pint v1.19** - Code style fixer
+- **Laravel Ignition v2.9** - Error page handler
+- **Laravel Tinker v2.10** - REPL untuk Laravel
+
 ## Instalasi
 
 Ikuti langkah-langkah berikut untuk menginstall dan menjalankan aplikasi:
@@ -88,5 +134,11 @@ Ikuti langkah-langkah berikut untuk menginstall dan menjalankan aplikasi:
    ```bash
    php artisan serve
    ```
+
+12. **Auto Confirm Orders (Opsional)**
+    Jika ingin menjalankan fitur konfirmasi order otomatis, jalankan perintah:
+    ```bash
+    php artisan queue:work
+    ```
 
 # Web Sudah Bisa Digunakan #
