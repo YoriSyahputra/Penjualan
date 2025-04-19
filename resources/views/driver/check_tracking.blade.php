@@ -14,7 +14,7 @@
                     </a>
                     <h2 class="text-2xl font-bold text-white">CEK RESI</h2>
                 </div>
-                <button type="button" id="faqButton" class="bg-white bg-opacity-20 text-white text-sm font-medium py-1.5 px-4 rounded-full hover:bg-opacity-30 transition-all flex items-center">
+                <button type="button" id="faqButton" class="bg-indigo bg-opacity-20 text-black text-sm font-medium py-1.5 px-4 rounded-full hover:bg-opacity-30 transition-all flex items-center">
                     FAQ
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M18 10c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8zm-9 3a1 1 0 112 0 1 1 0 01-2 0zm1-5a1 1 0 00-1 1v1a1 1 0 102 0V9a1 1 0 00-1-1z" clip-rule="evenodd" />

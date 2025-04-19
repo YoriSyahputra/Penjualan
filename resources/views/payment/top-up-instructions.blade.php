@@ -5,6 +5,7 @@
     <div class="text-center mb-8">
         <h2 class="text-3xl font-extrabold text-gray-900">Payment Instructions</h2>
         <p class="mt-2 text-gray-600">Please follow the instructions below to complete your payment</p>
+        <a href="{{ route('ewallet.top-up') }}" class="mt-2 text-gray-600">← Back To TOP UP</p>
     </div>
 
     <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">

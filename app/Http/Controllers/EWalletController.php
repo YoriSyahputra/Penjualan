@@ -62,7 +62,7 @@ class EWalletController extends Controller
         public function showPayment()
     {
         $total_amount = session('cart_total', 0);
-        return view('payment.ewallet', compact('total_amount'));
+        return view('payment.transfer_search', compact('total_amount'));
     }
     public function searchUsers(Request $request)
     {
@@ -365,5 +365,15 @@ class EWalletController extends Controller
         ];
 
         return $instructions[$method] ?? [];
+    }
+
+    public function showPaymentCodes()
+    {
+        $paymentCodes = TopUp::where('user_id', auth()->id())
+            ->whereIn('status', ['pending', 'processing'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('payment.payment-codes', compact('paymentCodes'));
     }
 }

@@ -140,6 +140,8 @@ Route::post('/transfer', [EWalletController::class, 'transfer'])->name('ewallet.
     Route::get('/transfer/success/{transfer}', [EWalletController::class, 'transferSuccess'])
     ->name('ewallet.transfer.success');
 
+    Route::get('/ewallet/payment-codes', [EWalletController::class, 'showPaymentCodes'])->name('ewallet.payment-codes');
+
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');

@@ -2,7 +2,16 @@
 
 @section('content')
 <div class="max-w-2xl mx-auto p-4">
-    <h2 class="text-2xl font-bold mb-6">Top Up LudwigPay</h2>
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Top Up LudwigPay</h2>
+        <a href="{{ route('ewallet.payment-codes') }}" 
+           class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            My Payment Codes
+        </a>
+    </div>
 
     <form action="{{ route('ewallet.top-up.process') }}" method="POST" class="space-y-6">
         @csrf

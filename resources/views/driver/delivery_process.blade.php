@@ -51,7 +51,7 @@
                             @csrf
                             <input type="hidden" name="lat" id="status_lat" value="{{ $delivery->location_lat ?? '' }}">
                             <input type="hidden" name="lng" id="status_lng" value="{{ $delivery->location_lng ?? '' }}">
-                            <select name="status" onchange="this.form.submit()" class="text-xs rounded border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200">
+                            <select name="status" onchange="this.form.submit()" class="text-xs rounded border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200 text-black">
                                 <option value="{{ \App\Constants\DeliveryStatus::SEDANG_DIANTAR }}" {{ $delivery->status == \App\Constants\DeliveryStatus::SEDANG_DIANTAR ? 'selected' : '' }}>Sedang Diantar</option>
                                 <option value="{{ \App\Constants\DeliveryStatus::MENUJU_ALAMAT }}" {{ $delivery->status == \App\Constants\DeliveryStatus::MENUJU_ALAMAT ? 'selected' : '' }}>Menuju Alamat</option>
                                 <option value="{{ \App\Constants\DeliveryStatus::TIBA_DI_TUJUAN }}" {{ $delivery->status == \App\Constants\DeliveryStatus::TIBA_DI_TUJUAN ? 'selected' : '' }}>Tiba di Tujuan</option>
