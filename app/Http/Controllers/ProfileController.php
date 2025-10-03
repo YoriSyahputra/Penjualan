@@ -75,12 +75,11 @@ class ProfileController extends Controller
             'photo' => ['required', 'image', 'max:1024'],
         ]);
 
-        // Hapus foto lama jika ada
         if (Auth::user()->profile_photo_path) {
             Storage::delete(Auth::user()->profile_photo_path);
         }
 
-        $path = $request->file('photo')->store('profile-photos');
+        $path = $request->file('photo')->store('public/storage/profile-photos');
         Auth::user()->update(['profile_photo_path' => $path]);
 
         return back()->with('success', 'Profile photo updated successfully!');

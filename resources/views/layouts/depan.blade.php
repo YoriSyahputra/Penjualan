@@ -215,7 +215,7 @@
                                 class="flex items-center space-x-2 focus:outline-none">
                             @if(auth()->user()->profile_photo_url)
                                 <img src="{{ auth()->user()->profile_photo_url }}" 
-                                    alt="Profile photo" 
+                                    alt="" 
                                     class="h-8 w-8 rounded-full object-cover border-2 border-gray-200">
                             @else
                                 <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
